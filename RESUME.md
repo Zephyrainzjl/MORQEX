@@ -1,6 +1,6 @@
 # MORQEX恢复入口
 
-更新：2026-11-24。软件0.0.3，分支 `research/certified-transport-report`。当前是三维线性核心+固定Fick浓度认证+离线测试HTML；**尚未完成论文框架、完整DFN或三项原创性验证**。本轮推导/实测见 [docs/CERTIFIED_TRANSPORT.md](docs/CERTIFIED_TRANSPORT.md)，旧线性证据见 [LINEAR_CORE](docs/LINEAR_CORE.md)。
+更新：2026-11-24。软件0.0.4，分支 `research/energy-certified-adaptivity`。当前是三维线性核心+固定Fick浓度认证+离线测试HTML；**尚未完成论文框架、完整DFN或三项原创性验证**。本轮推导/实测见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)，旧Fick证据见 [CERTIFIED_TRANSPORT](docs/CERTIFIED_TRANSPORT.md)，旧线性证据见 [LINEAR_CORE](docs/LINEAR_CORE.md)。
 
 ## 路径与限制
 
@@ -12,7 +12,7 @@
 
 ## 已实现且有证据
 
-1. Phase0/I审计：ZynJoule相关354文件/GEMsim336文件清单、物理缺陷、硬件预算、多候选比较、理论/门禁文件。41文献、24方法×25字段；新增抛物认证/Krylov先例，R08等复现仍缺，D类创新为空。
+1. Phase0/I审计：ZynJoule相关354文件/GEMsim336文件清单、物理缺陷、硬件预算、多候选比较、理论/门禁文件。45文献、28方法×25字段；新增抛物认证/Krylov先例，R08等复现仍缺，D类创新为空。
 2. GEMsim提交 `6fd789c78d58d49ef645c539414567fc2a2bc171` 的全部274源码迁入 `src/morqex/microstructure`；本轮未改这些迁移文件。运行不依赖外部checkout；可选AI/原生源码保留不等于数值认证。
 3. 独立FP64 Tet4：完整各向异性Mandel、非均匀本征应变、真孔隙、KUBC/PBC/Neumann、压力功/反力/残差、多RHS复用LU。处理每个孤岛及周期切割孤岛的相容刚体模态，拒绝不平衡载荷。
 4. 元素矩阵自由CG/Jacobi与同Tet装配交叉；4³/8³、刚度对比1/100应力差<1e-9，小规模更慢，不替代默认LU；尚无AMG/FFT/Hex8比较。
@@ -20,12 +20,20 @@
 6. 同源U/S/H/h/w0、平均应力/模式mu/一致切线、精确分相矩、P99/CVaR离散包络、ROI/全场、机械残差Gram与当前输入富集；算子校验/hash外置缓存。
 7. 二次化学能微结构双向扩散/力学及储库BV：封闭耗散、外部化学/机械功、库存/电流/BE数值耗散。默认在线不恢复体场；表面反应成本仍随表面数增长。
 8. 一维层合压力/厚度约束；checkpoint核对模型指纹/能量/库存，重启轨迹一致。不是完整电芯。
-9. 自身69测试通过，当前外部JUnit逐项记录。原GEMsim历史7通过/9可选依赖跳过，迁移代码未改故未重复，可选后端仍未认证。
-10. 0.0.3 wheel外部构建/安装、清空PYTHONPATH验证几何/FV/Tet/耦合/缓存/重启，并验证新Fick认证与P99树入口，不借源码/外部gem。
+9. 自身97测试通过，当前外部JUnit逐项记录。原GEMsim历史7通过/9可选依赖跳过，迁移代码未改故未重复，可选后端仍未认证。
+10. 0.0.4 wheel外部构建/安装、清空PYTHONPATH验证几何/FV/Tet/耦合/缓存/重启，并验证新Fick认证与P99树入口，不借源码/外部gem。
+
+## 0.0.4新增耦合适应与误差动力学
+
+推导、已有方法归属、失败候选及限制见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)。新模块gradient_transport/adaptive_transport/error_dynamics在固定二次耦合系统上实现质量Riesz方向、能量投影、图界/辅助误差动力学、嵌套富集、包含当前场的非嵌套重启和校验检查点。全生成元与既有CoupledTransport独立交叉；不把Fick证书直接套到耦合系统。
+
+3结构×2工况×8候选，80步；16维误差动力学候选六例均完成，纠正14–15次、浓度阶24–28，应力轨迹误差约0.12%–0.16%；外部最终JSON为核定值。相对保守图界减少查询，但仍慢于N=80复用LU全阶。r=16额外状态、离线稠密谱空间和全部重建/纠正计费。完整/压缩响应块失败、24维重启更贵均保留。失败前缀不报完整时域精度/加速。
+
+新增28项测试覆盖非零初始误差、谱余项/非零跨块泄漏、转移/预算拒绝、重启、物理界和安装入口；总数以JUnit为准。硬限制N≤512，未认证非线性BV/完整DFN。R26–R29为直接先例，D仍为空。
 
 ## 本轮HTML与新证据
 
-- 外部 `reports/MORQEX_test_report.html` 为约2.8MB单文件离线报告；含69项测试、实际场切片、各结构/候选/工况筛选、原始JSON下载、失败门槛和复现。`test_report_manifest.json`保存hash。
+- 外部 `reports/MORQEX_test_report.html` 为单文件离线报告；含97项测试、实际场切片、各结构/候选/工况筛选、原始JSON下载、失败门槛和复现。`test_report_manifest.json`保存hash。
 - `scripts/check_test_report.py`检查DOM/导航/PNG/证据hash，并以QuickJS DOM夹具运行筛选/导出；`reports/test_report_validation.json`留证。没有本地浏览器，未声称完整浏览器渲染验证。QuickJS只装外部venv，不是核心依赖。
 - `boundary_resolvent`构造已知表面通量响应空间；`ControlledDiffusion`预投影输入通道；`DiffusionCertificate`按每分量常数/零均值分解，使用图生成树Poincaré下界和离线QR残差，在线不恢复体场。
 - `CertifiedControlledDiffusion`超误差容限或物理误差包络拒绝步进，不返回不合格状态，旧状态只读/模型绑定。独立反例：平均模式为正、完整FV表面层为负，新增误差包络能拒绝。
@@ -54,6 +62,7 @@ python scripts/run_local.py --label reference_convergence -- /home/zephyrain/lw/
 python scripts/run_local.py --label linear_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/run_linear_study.py --config /home/zephyrain/lw/MORQEX/configs/linear_study.toml
 python scripts/run_local.py --label mechanics_backends -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/compare_mechanics_backends.py
 python scripts/run_local.py --label controlled_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_controlled_transport.py --config /home/zephyrain/lw/MORQEX/configs/controlled_transport.toml
+python scripts/run_local.py --label energy_adaptivity -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_energy_adaptivity.py --config /home/zephyrain/lw/MORQEX/configs/energy_adaptivity.toml
 python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_test_report.py
 python scripts/run_local.py --label html_validation -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/check_test_report.py
 ```
@@ -62,10 +71,12 @@ python scripts/run_local.py --label html_validation -- /home/zephyrain/lw/morph_
 
 ## 下一步顺序
 
-1. 新通量方向更新后的嵌套富集、累计浓度界传递、质量/能量状态转移；目前只做拒绝/显式重建，不声称已自动热力学切换。
+1. 固定二次系统状态转移/误差动力学已验证；下一步低成本大N耦合H/余项强制性构建、局部空间与目标误差，保留任意高频失败工况。
 2. 机械mu/尾部目标误差与profile；保留小网格向量化默认，树性能不佳不隐藏，研究局部谱/目标受限空间并保留高频失败工况。
 3. 拟合/高阶离散、AMG/FFT/Hex8资格，降低界面误差与分解内存，不无预算扩网格。
 4. 原始公式核对、独立短时三维全耦合及非凸化学门禁后，DFN替换固扩散状态，补电解液/电荷/端电压与OCV不重复计入。
 5. 多SVE/CT/真实参数、先进基线、设计案例、完整消融和Pareto后，才能决定论文方法与D类贡献。
 
 继续前必读RESEARCH_PLAN、LINEAR_CORE、THEORY、NOVELTY_MATRIX、RESOURCE_BUDGET；查看Git和最新manifest，不用旧日志替代当前验证。未push或公开发布私有GEMsim。
+
+0.0.4最终交付：97测试、0.0.4外部wheel/清空PYTHONPATH安装探测、45文献/28方法完整性与资源探测均通过。HTML约5.14MB，7图/48耦合候选/96旧通量记录，DOM/证据hash/QuickJS筛选导出通过；仍未做完整浏览器渲染。所有研究失败门槛继续显示，源代码不含运行大文件。

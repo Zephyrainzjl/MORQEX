@@ -8,7 +8,7 @@ from scipy.sparse.linalg import eigsh, splu
 from .transport import ConcentrationInfeasible
 
 
-def _orthogonal(candidates, weights, *, initial=None, count=None):
+def _orthogonal(candidates, weights, *, initial=None, count=None, relative_tolerance=1e-9):
     columns = [] if initial is None else [x.copy() for x in initial.T]
     if count is not None and len(columns) >= count: return np.column_stack(columns[:count])
     for column in np.asarray(candidates).T:
@@ -17,7 +17,7 @@ def _orthogonal(candidates, weights, *, initial=None, count=None):
         for _ in range(2):
             for previous in columns: vector -= previous*np.dot(weights*previous, vector)
         norm = np.sqrt(np.dot(weights, vector*vector))
-        if norm > 1e-9*norm0 and norm > np.finfo(float).tiny:
+        if norm > relative_tolerance*norm0 and norm > np.finfo(float).tiny:
             columns.append(vector/norm)
         if count is not None and len(columns) >= count: break
     if count is not None and len(columns) < count: raise ValueError("Insufficient independent concentration directions")

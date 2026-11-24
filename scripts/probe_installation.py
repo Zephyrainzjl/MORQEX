@@ -64,3 +64,19 @@ print(json.dumps({"installed_module": microstructure.__file__, "no_external_gem_
 print(json.dumps({"installed_certified_Fick_error_bound": checked_state.error.total_bound,
                   "installed_quantile_tree_converged": tail.converged}, indent=2))
 
+
+from morqex.gradient_transport import QuadraticGradientSystem
+from morqex.adaptive_transport import AdaptiveGradientTransport
+identity = ConcentrationBasis(np.eye(len(diffusion.weights)),diffusion.weights.copy(),"identity",diffusion.n_components)
+full_response = ResponseBuilder(solver,bind_chemical_modes(solver,diffusion,identity,np.array([1e-6]*3+[0.]*3))).exact()
+gradient_system = QuadraticGradientSystem(full_response,diffusion,identity,patterns,chemical_curvature=.1,
+    reference_concentration=20000.,maximum_concentration=40000.)
+adaptive = AdaptiveGradientTransport(gradient_system,response_basis,maximum_modes=8,certificate_method="spectral",error_modes=2)
+gradient_state = adaptive.initialize(np.zeros(gradient_system.n),error_tolerance=.5)
+gradient_state,gradient_diag = adaptive.step(gradient_state,.5,[1e-5,0.],error_tolerance=.5)
+adaptive_path = adaptive.save_checkpoint(gradient_state,ws,str(Path.cwd().relative_to(ws.root)/"installed_adaptive"))
+restarted,reloaded = AdaptiveGradientTransport.load_checkpoint(gradient_system,adaptive_path)
+assert reloaded.time == gradient_state.time and reloaded.error.total_bound == gradient_state.error.total_bound
+assert abs(gradient_diag.dynamics.energy_balance) < 1e-7
+print(json.dumps({"installed_coupled_adaptive":"energy metric + signed error dynamics + checkpoint",
+    "energy_error_bound":reloaded.error.total_bound,"additional_error_coordinates":restarted.model.error_space.count}))

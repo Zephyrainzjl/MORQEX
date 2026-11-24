@@ -132,3 +132,7 @@ first_tet_stress = response.stress(q, [0])    # Level C, requested ROI only
 纯Python基础wheel已支持；微结构图像/网格依赖在`geometry` extra，AI与仿真在独立extra。默认安装不编译Cython或AMReX，不触发训练/下载数据。`setup.py`通过显式 `MORQEX_BUILD_GEOMETRY=1` 启用六个Cython扩展；需先在外部构建环境安装Cython>=3.1、NumPy和C++编译器，再用`--no-build-isolation`构建。生成C++、对象、metadata、wheel均外置。此可选全原生构建尚未数值认证。
 
 echemAMR保留独立原生构建入口和原模型/许可证；默认CPU。安装它不代表参考方程与容限已通过MORQEX资格门禁。未来若后端成为默认，须为原始量输出、收敛和物理导数增加统一适配并单独验证。
+
+## 0.0.4耦合认证/富集入口
+
+`QuadraticGradientSystem`要求完整活性identity浓度坐标的机械响应，N≤512；不是可扩展黑箱DFN。`PortGradientModel(..., certificate_method="spectral", error_modes=16)`返回只读H误差状态并按容限/物理包络接受；`AdaptiveGradientTransport`在拒绝后执行计费的全阶浓度纠正，保留旧误差和能量/库存，预算失败不提交候选。检查点绑定完整系统、误差空间、实现与数组hash。旧Fick证书仍仅Fick；新证书仅固定二次耦合。详见 [ENERGY_ADAPTIVITY](ENERGY_ADAPTIVITY.md)。

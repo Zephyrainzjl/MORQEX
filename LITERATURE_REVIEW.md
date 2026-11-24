@@ -4,7 +4,7 @@
 
 ## 证据与检索协议
 
-文献登记为 [literature/references.tsv](literature/references.tsv)，现含41条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。追加抛物降阶认证与Krylov响应空间先例。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
+文献登记为 [literature/references.tsv](literature/references.tsv)，现含45条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。追加抛物降阶认证与Krylov响应空间先例。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
 
 本轮检索覆盖1992–2026的基础方法及近期竞争模型，关键词组合包括 battery + multiscale + mechanics + homogenization + reduced order；NTFA/EHM + energy/spectral/error；stress statistics/quantile + reduced order；diffusion + internal variables/chemical potential。围绕用户列出的10篇重点文章逐一检索，并沿它们的参考文献查到Dvorak、Michel–Suquet、EHM、FE²、FFT、ECSW、经验求积和误差估计；检索题名、DOI和后续引用中找到 solver-free ROH、双宏观化学势、局部场DMN及2026应力SPMe。
 
@@ -78,3 +78,7 @@ R25：[Antoulas，Krylov方法章节，SIAM343–361，在线2012](https://epubs
 
 三项研究方向仍只是**C类待验证假设**。单独的统一自由能、静态凝聚、响应叠加、多场均匀化、场恢复、误差驱动富集和近DFN复杂度均有充分先例。可继续研究的焦点是：真实不规则颗粒的守恒浓度动力学、以机械mu/尾部风险约束的联合空间，以及共用能量演化下可量化的三级输出成本。是否构成D类核心创新，必须等待全文差异核查、定理适用范围和公平消融；当前D类为空。
 
+
+## 0.0.4：结构保持与误差动力学直接先例
+
+现45篇/28方法×25字段，新增R26–R29。R26的pH Petrov–Galerkin、R27的在线低秩更新、R28的FV演化认证属于成熟先例。R29（2024，Adv Comput Math 50:100，10.1007/s10444-024-10195-8）原文第2–3节已读：辅助线性误差问题和分层界可减少普通残差界的高估，需额外低维求解。因此本轮16维误差动力学不能列为原创。各条primary_url及已读层级在TSV；没有冒称复现作者整套算法。MORQEX的独立受限推导/消融见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)。

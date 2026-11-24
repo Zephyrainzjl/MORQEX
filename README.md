@@ -2,7 +2,7 @@
 
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-当前 **0.0.3：浓度后验界与离线HTML验证报告**。在三维线性核心之上加入通量响应空间、固定Fick误差界/超限拒绝和逐查询P99区间；自身69测试通过。已知通量域低阶精度改善，新热点须拒绝/重建；尾部树宽度通过但速度未过。完整DFN/CT/先进基线与论文创新仍未完成，见 [本轮方法与证据](docs/CERTIFIED_TRANSPORT.md)。
+当前 **0.0.4：固定二次耦合认证、状态保持富集与辅助误差动力学**。97项自身测试通过；三结构、两工况、八候选保留失败与完整成本。16维误差动力学候选完成全部80步，14–15次纠正，应力轨迹误差0.119%–0.161%；尚慢于小全阶，稠密离线N≤512。完整DFN/CT/先进基线与论文创新仍未完成，见 [本轮方法与证据](docs/ENERGY_ADAPTIVITY.md)。
 
 测试HTML在外部 `morph_workspace/reports/MORQEX_test_report.html`，单文件离线打开，包含逐项JUnit、实算场/图、失败门槛与原始证据下载；源码只保留生成/检查脚本。
 
@@ -47,6 +47,7 @@ python scripts/run_local.py --label budget -- python /home/zephyrain/lw/MORQEX/s
 python scripts/run_local.py --label linear_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/run_linear_study.py --config /home/zephyrain/lw/MORQEX/configs/linear_study.toml
 python scripts/run_local.py --label reference_convergence -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/qualify_reference.py --fitted-refinement 24
 python scripts/run_local.py --label controlled_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_controlled_transport.py --config /home/zephyrain/lw/MORQEX/configs/controlled_transport.toml
+python scripts/run_local.py --label energy_adaptivity -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_energy_adaptivity.py --config /home/zephyrain/lw/MORQEX/configs/energy_adaptivity.toml
 python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_test_report.py
 ```
 
@@ -58,7 +59,8 @@ python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_worksp
 
 - [RESUME.md](RESUME.md)、[RESEARCH_LOG.md](RESEARCH_LOG.md)：恢复入口、实测结果、失败与下一步。
 - [CODE_AUDIT.md](CODE_AUDIT.md)：已有物理、可复用能力及实测问题。
-- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：41条文献、24方法矩阵及创新门禁。
+- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：45条文献、28方法矩阵及创新门禁。
+- [docs/ENERGY_ADAPTIVITY.md](docs/ENERGY_ADAPTIVITY.md)：同能量耦合、状态转移、辅助误差动力学及八候选消融。
 - [docs/CERTIFIED_TRANSPORT.md](docs/CERTIFIED_TRANSPORT.md)：后验界推导、通量/新热点试验与HTML说明。
 - [docs/LINEAR_CORE.md](docs/LINEAR_CORE.md)：实际物理接口、解析/守恒验证、失败结果及性能范围。
 - [THEORY.md](THEORY.md)、[ALGORITHM_COMPARISON.md](ALGORITHM_COMPARISON.md)：数学基础和多候选比较。

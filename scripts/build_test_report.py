@@ -65,7 +65,7 @@ def pytest_data(path):
     return tests
 
 
-def gates(controlled, reference, tests):
+def gates(controlled, reference, tests, adaptive):
     measured = [r for c in controlled["cases"] for r in c["comparison"] if r["status"] == "measured"]
     old = [r for r in measured if r["method"] != "resolvent-rebuilt-with-hotspot"]
     rebuilt = [r for r in measured if r["method"] == "resolvent-rebuilt-with-hotspot" and r["domain"] == "held-out-surface-hotspot"]
@@ -87,6 +87,9 @@ def gates(controlled, reference, tests):
         ("完整 DFN / 电荷 / 电解液 / 端电压", "pending", "当前试验是受控 Fick 扩散与单向力学恢复；原二次储库耦合另有测试"),
         ("独立创新、先进基线、CT与真实材料设计", "pending", "未完成；静态凝聚、POD、响应空间、残差界和区间细分均不单独宣称原创"),
     ]
+    selected = [m for c in adaptive["cases"] for result in c["results"] for m in result["methods"] if m["method"] == "adaptive-spectral-certificate"]
+    rows.insert(1,("固定二次耦合：自适应全时域接受", "pass" if all(m["steps_completed"] == adaptive["config"]["steps"] and m["qualified_steps"] == adaptive["config"]["steps"] and m["bound_coverage"] == 1 for m in selected) else "fail", "三结构×两工况；全生成元H误差界、质量/能量转移及校验重启；不覆盖非线性BV/DFN/空间误差"))
+    rows.insert(2,("耦合步进整体加速", "fail", "16维误差动力学减少纠正查询，但包含纠正/证书/重建后仍慢于N=80复用LU全阶；不报告近DFN加速"))
     return rows
 
 
@@ -138,9 +141,10 @@ def main():
     manifest_c, directory_c, controlled = latest("controlled_study", "controlled_study.json")
     manifest_l, directory_l, linear = latest("linear_study", "linear_study.json")
     manifest_r, directory_r, reference = latest("reference_convergence", "qualification.json")
+    manifest_a, directory_a, adaptive = latest("energy_adaptivity", "energy_adaptivity.json")
     manifest_t, directory_t, _ = latest("final_tests")
     tests = pytest_data(directory_t/"test_results.xml")
-    gate_rows = gates(controlled, reference, tests)
+    gate_rows = gates(controlled, reference, tests, adaptive)
     passed = sum(t["status"] == "passed" for t in tests)
     rows = [r for c in controlled["cases"] for r in c["comparison"] if r["status"] == "measured"]
     coverage = min(r["bound_coverage"] for r in rows)
@@ -148,8 +152,27 @@ def main():
     commit = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     dirty = bool(subprocess.check_output(["git", "-C", str(ROOT), "status", "--porcelain"], text=True).strip())
     sections = []
-    sections.append('<section id="gates"><h2>研究门槛：测试通过与方法达标分开判断</h2><p>本轮补齐固定 Fick 扩散的后验误差检查和超容限拒绝步进。浓度误差、既定浓度模式内的机械误差、风险采样误差分别处理。</p>'+
+    sections.append('<section id="gates"><h2>研究门槛：测试通过与方法达标分开判断</h2><p>本轮推进固定二次能量双向耦合的全生成元认证、状态转移和误差动力学；保留前一版固定 Fick 证据。浓度误差、既定浓度模式内的机械误差、风险采样误差分别处理。</p>'+
         table(["验证门槛", "状态", "证据与适用范围"], [[escape(name), badge(status), escape(detail)] for name,status,detail in gate_rows])+ '</section>')
+    adaptive_rows, summary_rows, offline_rows = [],[],[]
+    names = {"static-mass-projection":"静态质量投影", "static-energy-projection":"静态能量投影", "adaptive-snapshot":"图界快照富集", "adaptive-resolvent-block":"完整移位响应块", "adaptive-compressed-block":"压缩移位响应块", "adaptive-state-restart":"24维状态重启", "adaptive-dynamics-restart":"24维驱动重启", "adaptive-spectral-certificate":"16维误差动力学+快照"}
+    for case in adaptive["cases"]:
+        offline_rows.append([str(case["seed"]),str(case["active_voxels"]),num(case["full_mechanical_response_offline_s"]),num(case["full_concentration_hessian_setup_s"]),num(case["shared_spectral_certificate_offline_s"]),str(case["shared_spectral_certificate_array_bytes"])])
+        for result in case["results"]:
+            for row in result["methods"]:
+                complete = row["status"] == "measured"
+                qualified = complete and row["qualified_steps"] == adaptive["config"]["steps"]
+                label = badge("pass" if qualified else "fail")
+                accuracy = pct(row["relative_stress_trajectory_error"]) if complete else "— 前缀不作全时域比较"
+                tail_accuracy = pct(row["worst_P99_relative_error"]) if complete else "—"
+                ratio = num(row["online_seconds_including_enrichment"]/result["reference_online_total_s"])+"×" if complete else "—"
+                reason = '' if not row["failure"] else '<details><summary>预算拒绝原因</summary>'+escape(row["failure"])+'</details>'
+                cells = [str(case["seed"]),escape(result["protocol"]),names[row["method"]],label+reason,str(row["steps_completed"])+"/"+str(adaptive["config"]["steps"]),str(row["qualified_steps"]),str(row["initial_modes"])+"→"+str(row["final_modes"]),str(row["retained_error_modes"]),str(row["high_fidelity_correction_queries"]),str(row["resolvent_right_hand_sides"])+" / "+str(row["resolvent_factorizations"]),accuracy,tail_accuracy,num(1000*row["online_seconds_including_enrichment"]),ratio]
+                adaptive_rows.append('<tr class="adaptive-row" data-method="'+row["method"]+'" data-seed="'+str(case["seed"])+'" data-complete="'+str(complete).lower()+'">'+''.join('<td>'+v+'</td>' for v in cells)+'</tr>')
+                if row["method"] == "adaptive-spectral-certificate":
+                    summary_rows.append([str(case["seed"]),escape(result["protocol"]),str(row["final_modes"])+" + "+str(row["retained_error_modes"]),str(row["high_fidelity_correction_queries"]),accuracy,num(row["maximum_energy_norm_bound"]),num(row["maximum_energy_balance_J_m3"]),num(row["maximum_component_mass_error_mol"]),num(row["maximum_transfer_energy_jump_J_m3"]),num(row["maximum_transfer_mass_jump_mol"])])
+    adaptive_headers = ["种子","工况","候选","容限/预算","完成步","合格步","浓度总阶","额外误差阶","全阶纠正","移位RHS/分解","全轨迹应力L2","最坏P99误差","在线总ms","在线/全阶"]
+    sections.append('<section id="adaptive"><h2>新增：同能量双向耦合、自适应富集与误差动力学</h2><p>固定几何/刚度、二次化学能、指定摩尔通量与宏观应变。完整浓度生成元与既有CoupledTransport独立交叉，化学膨胀为零退化至FV；各结构末时刻应力另用完整FEM核对。新热点端口已在残差库声明，未进入初始基。</p><div class="formula">F(c,E) = ½cᵀHc + cᵀ(GE+g₀) + F_macro(E)，H = κM + H_el<br>ċ = −A(Hc+GE+g₀) + bu；质量Riesz方向 H⁻¹Mχ 显式保留<br>耦合误差单位 sqrt(J/m³)；容限 sqrt(0.1)×2 ≈ 0.63246</div><p>保留误差的带符号低维演化，避免每步仅累计残差模长；未解析余项采用Gershgorin/图下界及跨块耦合上界。嵌套扩阶继承旧误差，非嵌套重启包含当前物理场并计入转移缺陷；未读取真实轨迹来决定接受。</p><p class="note">该候选减少自身图界版本的纠正，但整体仍慢于小全阶。稠密H/谱空间仅离线、硬限制N≤512；本实验N=80。额外16个误差坐标、核坐标/界状态及离线/重建/全阶查询全部计费。不能据此宣称大规模或近DFN性能。</p>'+table(["种子","工况","浓度+误差阶","纠正查询","应力轨迹误差","最大H误差界","最大能量账误差 J/m³","最大分量质量误差 mol","最大转移能量跳变","最大转移库存跳变"],summary_rows)+image(directory_a/"adaptive_bound_and_modes.png","三独立结构×两工况：实际耦合H误差、误差上界和浓度模式数；额外16维误差状态单独列入表格。")+image(directory_a/"energy_projection_comparison.png","八候选消融：全时域误差和包含纠正/重建/证书的在线耗时比。缺线表示某结构预算失败，不是零误差；不把失败前缀和完整80步轨迹平均。")+'<h3>完整逐例对照 · 48条候选记录</h3><p>静态质量/能量投影使用同V且都保持降阶耗散；未合格的静态trial轨迹只用于分析，不由生产step返回。完整移位块、压缩块和更昂贵的重启候选保留。合格步依据误差/物理包络，事后应力不参与接受。</p><div class="table-wrap"><table id="adaptive-table"><thead><tr>'+''.join('<th>'+h+'</th>' for h in adaptive_headers)+'</tr></thead><tbody>'+''.join(adaptive_rows)+'</tbody></table></div><h3>共享离线成本另列</h3>'+table(["种子","活性N","机械响应s","全浓度H构建s","误差谱空间s","误差空间数组bytes"],offline_rows)+'<p class="muted">所有方法参考使用相同输入/步长/网格，在线统一输出浓度步进+能量+逐分量库存；完整场验证不计入任何在线时长。全阶复用LU，预计算宏观驱动，不每步重新装配。低维模型setup另存在内嵌JSON，以上共享离线成本不能隐藏。该误差界仅相同离散线性问题，FP64裕量不是区间浮点证明。</p><p>方法归属：<a href="https://epubs.siam.org/doi/10.1137/15M1055085">结构保持pH投影（2016）</a>、<a href="https://link.springer.com/article/10.1007/s10444-024-10195-8">辅助误差问题与改进pH误差界（2024）</a>均有直接先例。本次是有出处的适配与检验，未认定原创；D类贡献仍为空。</p></section>')
     picks = []
     tolerance = controlled["config"]["concentration_absolute_tolerance_mol_m3"]
     for case in controlled["cases"]:
@@ -195,26 +218,27 @@ def main():
     commands = ["python scripts/run_local.py --label final_tests -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python -m pytest /home/zephyrain/lw/MORQEX/tests -q --junitxml=test_results.xml --basetemp=/home/zephyrain/lw/morph_workspace/tmp/final_certified_tests",
         "python scripts/run_local.py --label controlled_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_controlled_transport.py --config /home/zephyrain/lw/MORQEX/configs/controlled_transport.toml",
         "python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_test_report.py"]
+    commands.insert(1,"python scripts/run_local.py --label energy_adaptivity -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_energy_adaptivity.py --config /home/zephyrain/lw/MORQEX/configs/energy_adaptivity.toml")
     provenance = []
-    for label, manifest, directory, filename in [("controlled_study",manifest_c,directory_c,"controlled_study.json"),("linear_study",manifest_l,directory_l,"linear_study.json"),("reference_convergence",manifest_r,directory_r,"qualification.json"),("final_tests",manifest_t,directory_t,"test_results.xml")]:
+    for label, manifest, directory, filename in [("energy_adaptivity",manifest_a,directory_a,"energy_adaptivity.json"),("controlled_study",manifest_c,directory_c,"controlled_study.json"),("linear_study",manifest_l,directory_l,"linear_study.json"),("reference_convergence",manifest_r,directory_r,"qualification.json"),("final_tests",manifest_t,directory_t,"test_results.xml")]:
         artifact = directory/filename
         provenance.append({"label":label,"path":str(artifact),"sha256":hashlib.sha256(artifact.read_bytes()).hexdigest(),"manifest":manifest})
     sections.append('<section id="reproduce"><h2>复现与来源</h2><p>全部实验默认单 CPU 线程、nice +15、GPU 隐藏；组 RSS 上限 1.5 GiB、虚拟空间 3 GiB、每任务 180 s。源码内不放数据、算子、图像或构建产物。当前研究使用合成参数，不能导出定量材料设计结论。</p>'+
         table(["运行", "UTC", "Wall s", "采样组RSS MiB", "数据 SHA256"], [[p["label"],p["manifest"]["started_utc"],num(p["manifest"]["wall_seconds"]),num(p["manifest"]["peak_group_rss_bytes_sampled"]/2**20),'<code>'+p["sha256"]+'</code>'] for p in provenance])+
-        '<h3>运行命令</h3><pre>'+escape('\n\n'.join(commands))+'</pre><details><summary>本轮完整配置</summary><pre>'+escape(json.dumps({"controlled":controlled["config"],"geometry":controlled["geometry_config"]}, ensure_ascii=False, indent=2))+'</pre></details>'+
+        '<h3>运行命令</h3><pre>'+escape('\n\n'.join(commands))+'</pre><details><summary>本轮完整配置</summary><pre>'+escape(json.dumps({"controlled":controlled["config"],"geometry":controlled["geometry_config"],"energy_adaptivity":adaptive["config"]}, ensure_ascii=False, indent=2))+'</pre></details>'+
         '<h3>方法先例与后续门槛</h3><p>残差认证参照 <a href="https://numdam.org/item/M2AN_2005__39_1_157_0/">Grepl–Patera (2005)</a>；响应空间属于 <a href="https://epubs.siam.org/doi/10.1137/1.9780898718713.ch11">Krylov / moment-matching</a> 已有思想。本实现的树 Poincaré 推导与区间细分需和先进目标降阶方法继续比较，不称原创。下一步仍包括完整 DFN、独立双向参考、有效尾部加速、SVE/CT、先进基线与真实参数设计。</p><button id="download-evidence" type="button">下载内嵌原始证据 JSON</button><p class="muted">报告不依赖 CDN、服务器或网络连接；正文与表格在关闭 JavaScript 时仍可阅读。JS仅用于筛选和导出。</p></section>')
     payload = {"generated_utc":now,"source_commit":commit,"source_dirty":dirty,"provenance":provenance,
         "tests":tests,"research_gates":[{"name":n,"status":s,"detail":d} for n,s,d in gate_rows],
-        "controlled":controlled,"linear":linear,"reference":reference}
+        "controlled":controlled,"linear":linear,"reference":reference,"energy_adaptivity":adaptive}
     embedded = json.dumps(payload, ensure_ascii=False, allow_nan=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
     failed_gates = sum(s == "fail" for _,s,_ in gate_rows)
     cards = f'<div class="cards"><div class="card"><strong>{passed}/{len(tests)}</strong><span>实际测试通过</span></div><div class="card"><strong>{len(controlled["cases"])}</strong><span>独立 GEMsim 结构</span></div><div class="card"><strong>{pct(coverage)}</strong><span>本轮离散误差界覆盖</span></div><div class="card"><strong>{failed_gates}</strong><span>研究门槛仍未通过</span></div></div>'
-    links = [('gates','验收门槛'),('controlled','浓度与应力'),('bounds','误差与 P99'),('reference','参考与负结果'),('tests','测试明细'),('reproduce','复现与来源')]
-    document = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; connect-src \'none\'; base-uri \'none\'; object-src \'none\'"><title>MORQEX · 测试与研究验证报告</title><style>'+CSS+'</style></head><body><header><div class="eyebrow">MORQEX / RESEARCH VERIFICATION</div><h1>测试、误差与计算证据</h1><span class="tag">研究原型 · 尚未达到论文验收</span><p>三维微结构 · 守恒扩散 · 响应算子 · 离散后验界 · 应力尾部<br>本次报告展示真实结果，失败项与待完成项保留。</p><div class="muted" style="color:#ccdae6">'+escape(now)+' · commit '+escape(commit[:12])+(' · 含未提交工作树' if dirty else ' · 工作树干净')+'</div></header><div class="layout"><nav aria-label="报告导航">'+''.join(f'<a href="#{ident}">{label}</a>' for ident,label in links)+'</nav><main>'+cards+''.join(sections)+'</main></div><footer>本地可复现实验报告。算法可靠性、模型适用性、材料真实性与发表标准分别验证；数值测试数量不替代方法学贡献。</footer><script type="application/json" id="evidence-json">'+embedded+'</script><script id="report-interactions">'+JS+'</script></body></html>'
+    links = [('gates','验收门槛'),('adaptive','新增耦合适应'),('controlled','浓度与应力'),('bounds','误差与 P99'),('reference','参考与负结果'),('tests','测试明细'),('reproduce','复现与来源')]
+    document = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; connect-src \'none\'; base-uri \'none\'; object-src \'none\'"><title>MORQEX · 测试与研究验证报告</title><style>'+CSS+'</style></head><body><header><div class="eyebrow">MORQEX / RESEARCH VERIFICATION</div><h1>测试、误差与计算证据</h1><span class="tag">研究原型 · 尚未达到论文验收</span><p>三维微结构 · 双向二次耦合 · 状态保持富集 · 辅助误差动力学 · 应力尾部<br>本次报告展示真实结果，失败项与待完成项保留。</p><div class="muted" style="color:#ccdae6">'+escape(now)+' · commit '+escape(commit[:12])+(' · 含未提交工作树' if dirty else ' · 工作树干净')+'</div></header><div class="layout"><nav aria-label="报告导航">'+''.join(f'<a href="#{ident}">{label}</a>' for ident,label in links)+'</nav><main>'+cards+''.join(sections)+'</main></div><footer>本地可复现实验报告。算法可靠性、模型适用性、材料真实性与发表标准分别验证；数值测试数量不替代方法学贡献。</footer><script type="application/json" id="evidence-json">'+embedded+'</script><script id="report-interactions">'+JS+'</script></body></html>'
     destination.parent.mkdir(parents=True, exist_ok=True); destination.write_text(document, encoding="utf-8")
     record = {"html":str(destination),"bytes":destination.stat().st_size,"sha256":hashlib.sha256(destination.read_bytes()).hexdigest(),
         "source_commit":commit,"source_dirty":dirty,"tests":len(tests),"passed":passed,"research_failed_gates":failed_gates,
-        "self_contained":True,"renderer_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+        "coupled_candidate_rows":len(adaptive_rows),"self_contained":True,"renderer_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     (WS/"reports/test_report_manifest.json").write_text(json.dumps(record, ensure_ascii=False, indent=2))
     print(json.dumps(record, ensure_ascii=False, indent=2))
 

@@ -1,0 +1,17 @@
+schema = "morqex-energy-adaptivity-1"
+geometry_config = "linear_study.toml"
+steps = 80
+dt_s = 0.5
+initial_nonconstant_modes = 8
+maximum_modes = 48
+maximum_enrichments_per_step = 3
+concentration_equivalent_tolerance_mol_m3 = 2.0
+hotspot_start_step = 40
+flux_scale_mol_m2_s = 2e-5
+macro_strain_amplitude = 0.0005
+protocols = ["flux-hotspot", "flux-hotspot-and-macro"]
+resolvent_shifts_per_s = [0.025, 0.1, 0.5, 2.0]
+block_rank = 2
+restart_dimension = 24
+retained_error_modes = 16
+flux_channel_bounds_mol_m2_s = [2.4e-5, 6e-6, 6e-6, 6e-6, 6.6e-5]
