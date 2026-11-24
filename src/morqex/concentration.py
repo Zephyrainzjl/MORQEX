@@ -1,10 +1,10 @@
 """Mass-preserving geometric, diffusion-spectral, POD and joint-metric spaces."""
 from dataclasses import dataclass
 import numpy as np
-from scipy.linalg import eigh
+from scipy.linalg import eigh, lu_factor, lu_solve
 from scipy.ndimage import distance_transform_edt
 from scipy.sparse import diags
-from scipy.sparse.linalg import eigsh
+from scipy.sparse.linalg import eigsh, splu
 from .transport import ConcentrationInfeasible
 
 
@@ -101,6 +101,35 @@ class ConcentrationBasis:
         values = _orthogonal(candidates, diffusion.weights, initial=constants, count=count)
         return cls(values, diffusion.weights.copy(), "joint-metric-POD" if target_action is not None else "mass-POD", diffusion.n_components)
 
+    @classmethod
+    def boundary_resolvent(cls, diffusion, count, flux_patterns, *, shifts=(.01, .1, 1., 10.), moments=2):
+        """Established rational-resolvent response space, with exact mass modes.
+
+        Patterns are dimensionless spatial face shapes; their time coefficients
+        have inward molar-flux units. Shifts have units 1/s. No training-time
+        trajectories or validation outputs enter this construction.
+        """
+        patterns = np.asarray(flux_patterns, dtype=float)
+        shifts = np.asarray(shifts, dtype=float)
+        if patterns.ndim != 2 or patterns.shape[0] != len(diffusion.face_areas) or not np.isfinite(patterns).all():
+            raise ValueError("Flux patterns need finite [boundary faces, channels] values")
+        if shifts.ndim != 1 or not len(shifts) or not np.isfinite(shifts).all() or np.any(shifts <= 0) or moments < 1:
+            raise ValueError("Positive resolvent shifts and moment count required")
+        if not diffusion.n_components <= count <= len(diffusion.weights): raise ValueError("Invalid concentration dimension")
+        constants = component_constants(diffusion)
+        if count == diffusion.n_components:
+            return cls(constants, diffusion.weights.copy(), "boundary-resolvent", diffusion.n_components)
+        source = np.asarray(diffusion.flux_operator @ patterns)
+        columns = []
+        for shift in shifts:
+            factor = splu((diffusion.stiffness+shift*diffusion.mass).tocsc())
+            block = factor.solve(source)
+            for _ in range(moments):
+                columns.append(block)
+                block = factor.solve(diffusion.weights[:, None]*block)
+        values = _orthogonal(np.column_stack(columns), diffusion.weights, initial=constants, count=count)
+        return cls(values, diffusion.weights.copy(), "boundary-resolvent", diffusion.n_components)
+
 
 class ReducedDiffusion:
     def __init__(self, diffusion, basis):
@@ -125,4 +154,38 @@ class ReducedDiffusion:
         c = baseline+self.basis.decode(updated)
         if np.any(c < -1e-10) or (maximum is not None and np.any(c > maximum)):
             raise ConcentrationInfeasible("Reduced diffusion is not automatically positive; enrich/reject rather than clip")
+        return updated
+
+
+class ControlledDiffusion:
+    """Low-dimensional stepping for a declared face-flux channel library.
+
+    Retains only m-sized data online and uses a conservative sufficient physical
+    concentration test. Full concentration recovery is explicitly separate.
+    """
+    def __init__(self, diffusion, basis, flux_patterns, *, reference_concentration, maximum_concentration):
+        reduced = ReducedDiffusion(diffusion, basis)
+        patterns = np.asarray(flux_patterns, dtype=float)
+        if patterns.ndim != 2 or patterns.shape[0] != len(diffusion.face_areas) or not np.isfinite(patterns).all():
+            raise ValueError("Finite boundary-face channel patterns required")
+        if not 0 < reference_concentration < maximum_concentration or not np.isfinite([reference_concentration, maximum_concentration]).all():
+            raise ValueError("Physical constant reference concentration required")
+        self.mass, self.stiffness = reduced.mass, reduced.stiffness
+        self.source = reduced.flux_operator @ patterns
+        self.suprema = np.max(np.abs(basis.values), axis=0)
+        self.reference, self.maximum = float(reference_concentration), float(maximum_concentration)
+        self.margin = min(reference_concentration, maximum_concentration-reference_concentration)
+        self._dt, self._factor = None, None
+
+    def step(self, coefficients, dt, channel_flux):
+        a, u = np.asarray(coefficients, dtype=float), np.asarray(channel_flux, dtype=float)
+        if a.shape != (len(self.mass),) or u.shape != (self.source.shape[1],) or not np.isfinite(a).all() or not np.isfinite(u).all() or not np.isfinite(dt) or dt <= 0:
+            raise ValueError("Finite coefficients, channel flux and positive dt required")
+        if self._dt != dt:
+            self._factor = lu_factor(self.mass+dt*self.stiffness); self._dt = dt
+        if self.suprema @ np.abs(a) > self.margin:
+            raise ConcentrationInfeasible("Initial reduced concentration fails the sufficient physical bound")
+        updated = lu_solve(self._factor, self.mass @ a+dt*self.source @ u)
+        if self.suprema @ np.abs(updated) > self.margin:
+            raise ConcentrationInfeasible("Sufficient concentration bound failed; use an explicit exact check or enrich/reject")
         return updated

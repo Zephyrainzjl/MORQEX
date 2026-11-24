@@ -46,9 +46,21 @@ state, diagnostic = model.step(state, .5)
 assert abs(diagnostic.energy_balance_density) < 1e-7
 checkpoint = model.save_state(state, ws, str(Path.cwd().relative_to(ws.root)/"installed_state.json"))
 assert model.load_state(checkpoint).time == .5
+from morqex.certification import CertifiedControlledDiffusion
+from morqex.tail import QuantileTree
+patterns = np.column_stack([diffusion.face_normals[:, 0] > .5, diffusion.face_normals[:, 1] > .5]).astype(float)
+response_basis = ConcentrationBasis.boundary_resolvent(diffusion, 3, patterns)
+certified = CertifiedControlledDiffusion(diffusion, response_basis, patterns,
+    reference_concentration=20000., maximum_concentration=40000.)
+checked_state = certified.initialize(np.zeros(len(diffusion.weights)), error_tolerance=2.)
+checked_state = certified.step(checked_state, .5, [1e-6, 0.], error_tolerance=2.)
+tail = QuantileTree(restored).query(np.r_[state.macro_strain, state.coefficients], absolute_tolerance=1000.)
+assert tail.converged and checked_state.error.total_bound <= 2.
 print(json.dumps({"installed_module": microstructure.__file__, "no_external_gem_dependency": True,
                   "tetrahedra": len(mesh.cells), "formats": ["npz", "vtu", "mphtxt"],
                   "native_input_template": "verified; engine not executed",
                   "installed_linear_core": "FV + Tet4 + modal energy + coupling + operator cache + restart",
                   "coupling_energy_balance_J_m3": diagnostic.energy_balance_density}, indent=2))
+print(json.dumps({"installed_certified_Fick_error_bound": checked_state.error.total_bound,
+                  "installed_quantile_tree_converged": tail.converged}, indent=2))
 

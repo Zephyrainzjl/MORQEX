@@ -15,6 +15,8 @@ MORQEX/
     statistics.py           # 精确矩、主应力/P99/CVaR离散包络
     coupling.py             # 二次化学能微结构双向/储库反应、checkpoint
     adaptivity.py           # 机械Galerkin富集；能量修正外显
+    certification.py        # 固定Fick浓度后验界/目标传递/事务式拒绝
+    tail.py                 # 全离散覆盖的P99区间细分与预算状态
     macroscale.py           # 一维多层压力/厚度约束
     microstructure/         # 已集成：原GEMsim全部src/gem源码
       core/                 # 颗粒图、体素场、分布、光栅/Cython/EDT
@@ -116,6 +118,14 @@ first_tet_stress = response.stress(q, [0])    # Level C, requested ROI only
 ```
 
 谱空间维数不得小于扩散分量数且不得超过活性体素数。将反应表面trace用于储库步进时，在线成本随实际表面代表数增长；默认不恢复体场不代表所有在线成本均与N无关。完整示例/同阶对照使用 `benchmarks/run_linear_study.py`，所有输出仅在外部工作区。
+
+## 0.0.3认证入口和报告
+
+`ConcentrationBasis.boundary_resolvent(diffusion, m, patterns)`支持声明通量空间方向的响应基。`CertifiedControlledDiffusion`在同一M/K、基与通量库上初始化浓度偏差，返回只读、模型绑定的状态；`step(..., error_tolerance=...)`超误差或物理包络时抛出错误，旧状态保持不变。调用方需要显式富集/重新离线构造/高保真回退；接口不会无依据重置累计误差，也没有自动转移双向历史。
+
+该证书仅固定Fick，不可直接接到上例`CoupledTransport`冒充认证。`QuantileTree.query`的`converged`只代表P99区间宽度，必须另看预算/耗时及浓度误差。当前小网格树慢于向量化全统计。详细推导与域内/新热点对照见 [CERTIFIED_TRANSPORT](CERTIFIED_TRANSPORT.md)。
+
+`scripts/build_test_report.py`消费外部受控试验、原协议、球参考和JUnit，生成外部单文件HTML；`scripts/check_test_report.py`校验DOM/数据/PNG及QuickJS筛选/导出。当前不含全浏览器渲染检查。内嵌原始数据可下载，关闭JS仍可读正文。
 
 ## 构建与可选依赖
 

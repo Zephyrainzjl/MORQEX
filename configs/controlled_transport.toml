@@ -1,0 +1,14 @@
+schema = "morqex-controlled-study-1"
+geometry_config = "linear_study.toml"
+additional_modes = [4, 8, 12, 20]
+dt_s = 0.5
+steps = 40
+training_cases = 3
+validation_cases = 3
+flux_scale_mol_m2_s = 2e-5
+resolvent_shifts_per_s = [0.01, 0.1, 1.0, 10.0]
+resolvent_moments = 2
+quantile_relative_width = 0.05
+quantile_absolute_width_Pa = 1000.0
+quantile_node_budgets = [63, 255, 2047]
+concentration_absolute_tolerance_mol_m3 = 2.0

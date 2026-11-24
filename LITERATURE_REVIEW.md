@@ -4,7 +4,7 @@
 
 ## 证据与检索协议
 
-文献登记为 [literature/references.tsv](literature/references.tsv)，现含39条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。新增球形基准勘误与仿射EHM先例。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
+文献登记为 [literature/references.tsv](literature/references.tsv)，现含41条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。追加抛物降阶认证与Krylov响应空间先例。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
 
 本轮检索覆盖1992–2026的基础方法及近期竞争模型，关键词组合包括 battery + multiscale + mechanics + homogenization + reduced order；NTFA/EHM + energy/spectral/error；stress statistics/quantile + reduced order；diffusion + internal variables/chemical potential。围绕用户列出的10篇重点文章逐一检索，并沿它们的参考文献查到Dvorak、Michel–Suquet、EHM、FE²、FFT、ECSW、经验求积和误差估计；检索题名、DOI和后续引用中找到 solver-free ROH、双宏观化学势、局部场DMN及2026应力SPMe。
 
@@ -66,6 +66,12 @@
 [R23，2024仿射EHM](https://doi.org/10.1088/1361-651X/ad8ad7)，MSMSE 32:085017，已有瞬时模量及局部化更新先例。作者页面验证出处；出版社检索能读取方法内容，直接下载受robots限制，未取得完整可运行实现。未来C(c)/塑性更新不能把“重新计算局部化”独立称新。
 
 [B16球形颗粒勘误](https://scholars.uky.edu/en/publications/erratum-evolution-of-stress-within-a-spherical-insertion-electrod/)，Cheng与Verbrugge，JPS196(4):2430–2431，DOI 10.1016/j.jpowsour.2010.07.004。球验证使用独立推导的多项式浓度解析应力/位移/能量；与文献能量图比较须同时核对勘误，不直接照搬旧图。出版社部分请求403与作者PDF直接URL首次失败均保留为访问限制；经实验室点击成功，不将受限下载写成“文献不存在”。
+
+## 0.0.3认证与输入可达空间先例
+
+R24：[Grepl–Patera，2005，ESAIM M2AN39(1):157–181](https://numdam.org/item/M2AN_2005__39_1_157_0/)，DOI10.1051/m2an:2005006。原始记录明确已有抛物问题离线—在线降阶、后验输出误差与贪心选样；“给扩散ROM加残差界”不是新意。当前只实现固定Fick离散误差的简明版本，未声称复现其完整方法。
+
+R25：[Antoulas，Krylov方法章节，SIAM343–361，在线2012](https://epubs.siam.org/doi/10.1137/1.9780898718713.ch11)，DOI10.1137/1.9780898718713.ch11。响应/矩匹配空间属已有方法。0.0.3边界响应基的收益只在声明输入库内评价；新热点重建有额外已知方向，不能充作零样本优越性。能力矩阵增至24行；D仍为空。
 | GEMsim | 用户私有仓库已完整取到并在src内迁移，提交/逐文件来源可追踪 | 不发布、不重授权第三方源码；数值验证独立进行 |
 
 ## 本阶段结论

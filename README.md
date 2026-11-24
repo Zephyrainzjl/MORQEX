@@ -2,7 +2,9 @@
 
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-当前 **0.0.2：经独立检查的三维线性研究原型**。已实现Tet4/矩阵自由力学、守恒扩散/浓度模式、统一能量响应、三级输出、残差富集和储库反应双向构件。自身53测试通过；三结构对照同时发现低秩精度和尾部包络未达标。完整DFN/CT/先进基线与论文创新尚未完成，见 [线性核心报告](docs/LINEAR_CORE.md)。
+当前 **0.0.3：浓度后验界与离线HTML验证报告**。在三维线性核心之上加入通量响应空间、固定Fick误差界/超限拒绝和逐查询P99区间；自身69测试通过。已知通量域低阶精度改善，新热点须拒绝/重建；尾部树宽度通过但速度未过。完整DFN/CT/先进基线与论文创新仍未完成，见 [本轮方法与证据](docs/CERTIFIED_TRANSPORT.md)。
+
+测试HTML在外部 `morph_workspace/reports/MORQEX_test_report.html`，单文件离线打开，包含逐项JUnit、实算场/图、失败门槛与原始证据下载；源码只保留生成/检查脚本。
 
 源码：`/home/zephyrain/lw/MORQEX`。所有数据、测试输出、编译产物、安装环境、权重和缓存：`/home/zephyrain/lw/morph_workspace`。独立Git仓库，不修改、不依赖ZynJoule。
 
@@ -38,12 +40,14 @@ geometry.to_volume(structure).save(ws.path('outputs', 'example.npz'))
 
 ```bash
 cd /home/zephyrain/lw/MORQEX
-python scripts/run_local.py --label tests -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python -m pytest /home/zephyrain/lw/MORQEX/tests -q --basetemp=/home/zephyrain/lw/morph_workspace/tmp/morqex_tests
+python scripts/run_local.py --label final_tests -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python -m pytest /home/zephyrain/lw/MORQEX/tests -q --junitxml=test_results.xml --basetemp=/home/zephyrain/lw/morph_workspace/tmp/final_certified_tests
 python scripts/run_local.py --label energy_algebra -- python /home/zephyrain/lw/MORQEX/benchmarks/verify_energy_algebra.py
 python scripts/run_local.py --label source_audit -- python /home/zephyrain/lw/MORQEX/scripts/audit_sources.py
 python scripts/run_local.py --label budget -- python /home/zephyrain/lw/MORQEX/scripts/probe_budget.py
 python scripts/run_local.py --label linear_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/run_linear_study.py --config /home/zephyrain/lw/MORQEX/configs/linear_study.toml
 python scripts/run_local.py --label reference_convergence -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/qualify_reference.py --fitted-refinement 24
+python scripts/run_local.py --label controlled_study -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_controlled_transport.py --config /home/zephyrain/lw/MORQEX/configs/controlled_transport.toml
+python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_test_report.py
 ```
 
 默认单逻辑CPU、nice+15、GPU禁用；虚拟内存3GiB、进程组RSS1.5GiB、单任务180s。工作目录、缓存和日志全部外置，具体限制见 [RESOURCE_BUDGET.md](RESOURCE_BUDGET.md)。外部`reports/*_latest.json`指向各次运行日志，历史失败不会覆盖。
@@ -54,7 +58,8 @@ python scripts/run_local.py --label reference_convergence -- /home/zephyrain/lw/
 
 - [RESUME.md](RESUME.md)、[RESEARCH_LOG.md](RESEARCH_LOG.md)：恢复入口、实测结果、失败与下一步。
 - [CODE_AUDIT.md](CODE_AUDIT.md)：已有物理、可复用能力及实测问题。
-- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：39条文献、22方法矩阵及创新门禁。
+- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：41条文献、24方法矩阵及创新门禁。
+- [docs/CERTIFIED_TRANSPORT.md](docs/CERTIFIED_TRANSPORT.md)：后验界推导、通量/新热点试验与HTML说明。
 - [docs/LINEAR_CORE.md](docs/LINEAR_CORE.md)：实际物理接口、解析/守恒验证、失败结果及性能范围。
 - [THEORY.md](THEORY.md)、[ALGORITHM_COMPARISON.md](ALGORITHM_COMPARISON.md)：数学基础和多候选比较。
 - [REFERENCE_SOLVER_PLAN.md](REFERENCE_SOLVER_PLAN.md)、[BENCHMARK_PROTOCOL.md](BENCHMARK_PROTOCOL.md)：最短正确性闭环与公平实验。
