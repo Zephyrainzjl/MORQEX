@@ -1,0 +1,19 @@
+# Enforced by scripts/run_local.py, before importing numerical libraries.
+[resources]
+cpu_threads = 1
+nice = 15
+address_space_mib = 3072
+resident_memory_mib = 1536
+wall_seconds = 180
+cpu_seconds = 120
+run_disk_mib = 128
+file_size_mib = 64
+minimum_available_memory_mib = 4096
+maximum_load_per_cpu = 0.75
+gpu_enabled = false
+
+[research]
+seed = 20261124
+precision = "float64"
+stage = "phase-0-and-I"
+

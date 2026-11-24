@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "gemsim": {
+    "url": "https://github.com/Zephyrainzjl/GEMsim.git",
+    "commit": "6fd789c78d58d49ef645c539414567fc2a2bc171",
+    "source_relative_to_workspace": "upstream/GEMsim",
+    "integration": "pinned external source; no automatic training or native build",
+    "root_license": "not declared by upstream; preserve private local use",
+    "echemamr_commit": "29fb99f450481c8e5f2e3f132b44ab14ee054871",
+    "amrex_commit": "9ed35ab0e58462f951528462376cc379ba834826"
+  },
+  "zynjoule_audit_only": {
+    "commit": "2ef98200e90a52e7a5e0c78ae1f420838b0b0cf6",
+    "runtime_dependency": false
+  }
+}
+
