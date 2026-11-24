@@ -4,7 +4,7 @@
 
 ## 证据与检索协议
 
-文献登记为 [literature/references.tsv](literature/references.tsv)，含37条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
+文献登记为 [literature/references.tsv](literature/references.tsv)，现含39条候选相关研究、年份、作者、卷页、DOI、原始来源和阅读深度。新增球形基准勘误与仿射EHM先例。来源优先出版社、arXiv、作者/高校存储库和 Crossref 原始登记，不从二手介绍推断技术细节。
 
 本轮检索覆盖1992–2026的基础方法及近期竞争模型，关键词组合包括 battery + multiscale + mechanics + homogenization + reduced order；NTFA/EHM + energy/spectral/error；stress statistics/quantile + reduced order；diffusion + internal variables/chemical potential。围绕用户列出的10篇重点文章逐一检索，并沿它们的参考文献查到Dvorak、Michel–Suquet、EHM、FE²、FFT、ECSW、经验求积和误差估计；检索题名、DOI和后续引用中找到 solver-free ROH、双宏观化学势、局部场DMN及2026应力SPMe。
 
@@ -25,7 +25,7 @@
 | R07 | Ekre, Larsson, Runesson & Jänicke，CMAME **389** (2022) 114334，[作者全文](https://research.chalmers.se/publication/528316/file/528316_Fulltext.pdf) | POD压力空间与NTFA位移空间、基于线性化误差方程的后验估计；要区分其近似/假设与严格线性恒等式，不能将“可计算”直接等同无条件严格界 |
 | R04 | Nasirov & Oskay，IJNME **125(18)** (2024) e7547，[原文](https://onlinelibrary.wiley.com/doi/10.1002/nme.7547) | 变分谱空间高效构造EHM局部化/相互作用张量；离线响应构造、兼容性和零均值约束均已有直接先例 |
 | R05 | Mishra et al.，IJNME **125(16)** (2024) e7501，[原文](https://onlinelibrary.wiley.com/doi/10.1002/nme.7501) | enhanced NTFA 与多尺度非线性计算；非均匀变换场的增强及多尺度使用不是新概念 |
-| R06 | Nasirov & Oskay，CMAME **452, Part B** (2026) 118772，[原文记录](https://www.sciencedirect.com/science/article/pii/S0045782526000460) | 高阶非均匀本征应变与代理积分用于多晶塑性；仅“更多非均匀模式+更快积分”不足以立项为核心新意。当前为摘要/元数据级，全文细节待补 |
+| R06 | Nasirov & Oskay，CMAME **452, Part B** (2026) 118772，[作者全文](https://cdn.vanderbilt.edu/t2-my/my-prd/wp-content/uploads/sites/246/2026/01/Nasirov_Oskay_CMAME_2026.pdf) | 已核对方法段：高阶非均匀本征应变与代理积分用于多晶塑性；仍未本地复现。非均匀模式/离线影响函数/降维变分不是独立新意 |
 
 另核对指定 NTFA 目标导向文章：**X. Ju, R. Mahnken, Y. Xu, L. Liang**，CMAME **398** (2022) **115199**，[10.1016/j.cma.2022.115199](https://doi.org/10.1016/j.cma.2022.115199)。目标导向时空自适应和NTFA的结合已有先例；目前未完成其全文公式复现。
 
@@ -57,7 +57,15 @@
 | B04/B06 | 找到作者/高校手稿及方法参考链；未确认可执行完整算法仓库 | 用原公式建立逐项复现清单 |
 | B08/R04 | 原文数据声明为向作者合理申请获取；未找到公开下载的完整计算包 | 记录“未取得”，不声称“没有代码”或擅自联系作者 |
 | B09 | 找到支持文件 `nme70378-sup-0001-Supinfo.pdf`（236.4KB），下载接口返回403；数据同样按需提供 | 保存URL和失败状态；不编造补充内容 |
-| R06/R08 | 出版信息和摘要已核实，出版社全文请求受限 | 在原创性最终认定前补齐公式和假设对照 |
+| R06/R08 | R06经作者实验室链接取得46页手稿，已核对方法段；R08全文仍缺 | R06保留未复现标签，R08继续补公式和假设 |
+
+## 0.0.2追加审查
+
+[R06作者手稿](https://cdn.vanderbilt.edu/t2-my/my-prd/wp-content/uploads/sites/246/2026/01/Nasirov_Oskay_CMAME_2026.pdf)以多项式型高阶空间表示非均匀非弹性应变，离线构造影响响应，在线求解演化并降低本构积分成本。对MORQEX的意义是明确已有方法边界；当前固定线性算子不能因加入更多模式就称原创。
+
+[R23，2024仿射EHM](https://doi.org/10.1088/1361-651X/ad8ad7)，MSMSE 32:085017，已有瞬时模量及局部化更新先例。作者页面验证出处；出版社检索能读取方法内容，直接下载受robots限制，未取得完整可运行实现。未来C(c)/塑性更新不能把“重新计算局部化”独立称新。
+
+[B16球形颗粒勘误](https://scholars.uky.edu/en/publications/erratum-evolution-of-stress-within-a-spherical-insertion-electrod/)，Cheng与Verbrugge，JPS196(4):2430–2431，DOI 10.1016/j.jpowsour.2010.07.004。球验证使用独立推导的多项式浓度解析应力/位移/能量；与文献能量图比较须同时核对勘误，不直接照搬旧图。出版社部分请求403与作者PDF直接URL首次失败均保留为访问限制；经实验室点击成功，不将受限下载写成“文献不存在”。
 | GEMsim | 用户私有仓库已完整取到并在src内迁移，提交/逐文件来源可追踪 | 不发布、不重授权第三方源码；数值验证独立进行 |
 
 ## 本阶段结论

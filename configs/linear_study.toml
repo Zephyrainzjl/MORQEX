@@ -1,0 +1,23 @@
+# Synthetic verification parameters, NOT calibrated battery material properties.
+schema = "morqex-linear-study-1"
+seeds = [104, 205, 306]
+shape_zyx = [5, 5, 5]
+fractions = [0.12, 0.64, 0.24] # pore / active / CBD
+spacing_m = 1e-6
+diffusivity_xyz_m2_s = [1e-14, 2e-14, 0.8e-14]
+young_active_Pa = 1e9
+young_cbd_Pa = 2e8
+expansion_m3_mol = [1e-5, 0.6e-5, 1.4e-5, 0.0, 0.0, 0.0]
+concentration_scale_mol_m3 = 1000.0
+stress_scale_Pa = 1e7
+chemical_curvature_J_m3_mol2 = 0.1
+reference_concentration_mol_m3 = 20000.0
+maximum_concentration_mol_m3 = 40000.0
+additional_modes = [2, 4, 6]
+training_cases = 8
+training_steps = 5
+validation_cases = 4
+validation_steps = 4
+dt_s = 0.5
+coupling_steps = 20
+timing_repeats = 40

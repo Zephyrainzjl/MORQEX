@@ -63,7 +63,7 @@ def main():
         reader = csv.DictReader(f, delimiter="\t")
         methods = list(reader)
         assert len(reader.fieldnames) == 25
-    assert len(refs) == 37 and len({r["id"] for r in refs}) == 37
+    assert len(refs) == 39 and len({r["id"] for r in refs}) == 39
     assert len(methods) == 22
     assert all(r["source_id"] == "THEORY/RESEARCH_PLAN" or r["source_id"] in {x["id"] for x in refs} for r in methods)
     print(json.dumps({"integrated_files": len(rows), "intentional_additional_adaptations": sum(r["additional_local_adaptation"] for r in rows),

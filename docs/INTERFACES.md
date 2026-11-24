@@ -1,6 +1,6 @@
 # 体系结构与接口契约
 
-当前是可演进研究架构，不预先指定最终压缩算法。已有源码在src内实际集成；未来物理模块只在通过阶段门禁后添加，不用空实现冒充能力。
+当前是可演进研究架构，不预先指定最终压缩算法。已有源码在src内实际集成；新增线性模块具备独立验证，完整系统门禁仍未通过。详细边界/失败记录见 [LINEAR_CORE](LINEAR_CORE.md)。
 
 ```text
 MORQEX/
@@ -8,6 +8,14 @@ MORQEX/
     geometry.py             # 已实现：显式相语义/SI/不可变标签/几何指纹
     workspace.py            # 已实现：外部路径约束
     gemsim.py               # 已实现：内部微结构与统一数据契约转换
+    mechanics/              # Mandel、Tet4、KUBC/PBC/Neumann、LU/元素CG
+    transport.py            # 真实活性域守恒FV、显式表面/颗粒ID
+    concentration.py        # 几何/谱/POD/联合度量、每分量质量模式
+    energy.py               # H/h/w0、U/S、模式mu、机械残差Gram与缓存
+    statistics.py           # 精确矩、主应力/P99/CVaR离散包络
+    coupling.py             # 二次化学能微结构双向/储库反应、checkpoint
+    adaptivity.py           # 机械Galerkin富集；能量修正外显
+    macroscale.py           # 一维多层压力/厚度约束
     microstructure/         # 已集成：原GEMsim全部src/gem源码
       core/                 # 颗粒图、体素场、分布、光栅/Cython/EDT
       generate/             # v0、条件扩散、混合/空间/重构/选择
@@ -25,14 +33,15 @@ MORQEX/
 flowchart LR
   CT[CT或生成结构] --> G[集成微结构与显式相/尺度契约]
   G --> M[共节点网格/真实界面]
-  M --> R[待验证3D参考后端]
+  M --> R[Tet4参考与矩阵自由交叉]
   R --> C[守恒浓度基候选]
   R --> H[同源U/S/H能量算子]
   C --> H
   H --> A[宏观应力/能量/机械mu]
   H --> B[加权应力统计/尾部]
   H --> L[按需ROI或全场]
-  A <--> D[未来DFN状态替换/宏观力学]
+  A <--> D[已实现微结构储库耦合/层合]
+  D -.待实现.-> DFN[DFN状态替换/电解液/电荷]
   E[分源误差/适用域] --> D
   E --> R
 ```
@@ -58,7 +67,7 @@ provider.to_volume(data).save(ws.path('outputs', 'example.npz'))
 
 `MicrostructureData`为面向物理的契约，`morqex.microstructure.Microstructure`为原GEMsim流式facade，两者含义不同。标签ZYX、spacing/origin也ZYX；点坐标XYZ。相标签、颗粒ID和晶粒ID不得混为一个字段。当前后两项未由契约自动推断；未来以独立可选数组及出处加入。
 
-## 后续模块的输入/输出（尚未实现）
+## 输入/输出契约（完整目标；具体已实现子集见LINEAR_CORE）
 
 | 模块 | 输入 | 输出及不变量 |
 |---|---|---|
@@ -74,6 +83,39 @@ provider.to_volume(data).save(ws.path('outputs', 'example.npz'))
 | 宏观力学 | 各位置算子、几何/层合、载荷 | 电极/电芯应变应力、外功、代表性误差 |
 
 算子manifest至少记录schema、几何/材料/基/BC/求积hash、代码提交、单位、张量顺序、参考态、有效范围、精度、离线残差及源数据。禁止仅以文件名作为缓存身份。路径/状态恢复失败必须显式报错。
+
+当前算子保存数据校验及内容/实现指纹，实验manifest配合Git提交；它不是有材料出处数据库的完整工业算子注册表。`bind_chemical_modes`用母体素ID检查FV库存与Tet活性体积一致，不能只按数组长度连接不同几何。
+
+## 新物理核心的最小入口
+
+```python
+import numpy as np
+from morqex.mechanics import TetMesh, ElasticitySolver, isotropic_stiffness
+from morqex.transport import VoxelDiffusion
+from morqex.concentration import ConcentrationBasis, ReducedDiffusion
+from morqex.coupling import bind_chemical_modes, CoupledTransport
+from morqex.energy import ResponseBuilder
+
+volume = provider.to_volume(data)
+diffusion = VoxelDiffusion(volume, active_phases=[1], diffusivity=1e-14,
+                           reactive_phases=[0])
+basis = ConcentrationBasis.spectral(diffusion, diffusion.n_components + 4)
+mesh = TetMesh.from_volume(volume, solid_phases=[1, 2])
+# Synthetic illustration only: replace with sourced phase/texture tensors.
+solver = ElasticitySolver(mesh, isotropic_stiffness(1e9, .25), boundary='kubc')
+beta = np.array([1e-6, 1e-6, 1e-6, 0., 0., 0.])
+builder = ResponseBuilder(solver, bind_chemical_modes(solver, diffusion, basis, beta))
+response = builder.exact()
+model = CoupledTransport(response, ReducedDiffusion(diffusion, basis),
+    chemical_curvature=.1, reference_concentration=20000., maximum_concentration=40000.)
+state = model.initialize(np.zeros(basis.values.shape[1]))
+state, diagnostics = model.step(state, .5)
+q = np.r_[state.macro_strain, state.coefficients]
+mean_stress = response.macro_stress(q)        # Level A, no micro traversal
+first_tet_stress = response.stress(q, [0])    # Level C, requested ROI only
+```
+
+谱空间维数不得小于扩散分量数且不得超过活性体素数。将反应表面trace用于储库步进时，在线成本随实际表面代表数增长；默认不恢复体场不代表所有在线成本均与N无关。完整示例/同阶对照使用 `benchmarks/run_linear_study.py`，所有输出仅在外部工作区。
 
 ## 构建与可选依赖
 
