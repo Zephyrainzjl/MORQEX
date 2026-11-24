@@ -2,14 +2,14 @@ import os
 from pathlib import Path
 import numpy as np
 import pytest
-from morph.gemsim import GEMsim
-from morph.microstructure import Microstructure
-from morph.workspace import Workspace
+from morqex.gemsim import GEMsim
+from morqex.geometry import MicrostructureData
+from morqex.workspace import Workspace
 
 
 @pytest.fixture
 def gem():
-    return GEMsim(Workspace(Path(os.environ["MORPH_WORKSPACE"])))
+    return GEMsim(Workspace(Path(os.environ["MORQEX_WORKSPACE"])))
 
 
 def test_real_upstream_generation_roundtrip_and_axis_order(gem, tmp_path):
@@ -45,13 +45,13 @@ def test_reject_missing_semantics_and_gray_values(gem):
 
 def test_geometry_owns_input_and_cache_identity():
     a = np.zeros((2, 3, 4), dtype=np.uint8)
-    s = Microstructure(a, (1., 2., 3.), (0., 0., 0.), {0: "pore"}, {})
+    s = MicrostructureData(a, (1., 2., 3.), (0., 0., 0.), {0: "pore"}, {})
     key = s.fingerprint
     a[:] = 255
     assert s.fingerprint == key
     with pytest.raises(ValueError):
         s.labels[0, 0, 0] = 1
-    assert Microstructure(np.zeros_like(a), (2., 2., 3.), (0., 0., 0.), {0: "pore"}, {}).fingerprint != key
+    assert MicrostructureData(np.zeros_like(a), (2., 2., 3.), (0., 0., 0.), {0: "pore"}, {}).fingerprint != key
 
 
 def test_workspace_rejects_source_and_escape():
@@ -59,11 +59,11 @@ def test_workspace_rejects_source_and_escape():
     with pytest.raises(ValueError):
         Workspace(source / "outputs")
     with pytest.raises(ValueError):
-        Workspace(source.parent / "morph_workspace").path("..", "MORPH", "bad.npy")
+        Workspace(source.parent / "morph_workspace").path("..", "MORQEX", "bad.npy")
 
 
 def test_native_geometry_export_is_explicit_and_x_fast(gem, tmp_path):
-    from gem.simulate.electrochemistry import export_geometry
+    from morqex.microstructure.simulate.electrochemistry import export_geometry
     a = np.array([0, 128, 255, 255, 128, 0], dtype=np.uint8).reshape(1, 2, 3)
     v = gem.volume_type(a, spacing=(1e-6, 2e-6, 3e-6))
     files = export_geometry(v, tmp_path, {0: 6, 128: 5, 255: 7})

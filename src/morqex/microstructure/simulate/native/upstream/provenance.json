@@ -1,0 +1,6 @@
+{
+  "url": "https://github.com/NatLabRockies/echemAMR",
+  "commit": "29fb99f450481c8e5f2e3f132b44ab14ee054871",
+  "amrex_commit": "9ed35ab0e58462f951528462376cc379ba834826",
+  "policy": "Source only; geometry and experimental data excluded; modifications documented separately"
+}

@@ -40,7 +40,7 @@ def fetch(job):
         url = "https://api.crossref.org/works/" + urllib.parse.quote(query, safe="")
     else:
         url = "https://api.crossref.org/works?" + urllib.parse.urlencode({"query.title": query, "rows": 2})
-    req = urllib.request.Request(url, headers={"User-Agent": "MORPH-local-research-audit/0.0.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "MORQEX-local-research-audit/0.0.1"})
     try:
         with urllib.request.urlopen(req, timeout=12) as response:
             record = json.load(response)["message"]
@@ -50,7 +50,7 @@ def fetch(job):
 
 
 def main():
-    root = Path(os.environ["MORPH_WORKSPACE"]) / "evidence/literature"
+    root = Path(os.environ["MORQEX_WORKSPACE"]) / "evidence/literature"
     root.mkdir(parents=True, exist_ok=True)
     jobs = [("doi", x) for x in DOIS] + [("title", x) for x in TITLES]
     with ThreadPoolExecutor(max_workers=2) as pool:

@@ -21,7 +21,7 @@
 | 参数来源 | GEMsim cell 指向 PyBaMM `Chen2020`；ZynSim OCP/几何参数为文献量级参考；NMC 力学默认明确未校准 | 来源链必须追至原文表格/版本；默认参数不得得出真实材料机理结论 |
 | 有效输运 | NGSolve FEM 能量积分与方向导通；孔道贯通分量曲折度；独立完整 3×3 周期输运张量源码 | 非贯通分量、区域面积及体积归一化需基准；NGSolve 当前缺失，数值测试跳过 |
 | 三维浓度 | GEMsim evolution 为隐式标量扩散；echemAMR 为笛卡尔 AMR 物种/电势/BV；ZynSim FFT 有占位率演化；3D battery 保留每宏观单元球形径向状态 | 不能把后者认作任意真实颗粒浓度；真实界面通量闭合尚需新实现 |
-| FEM/FV/FFT | ZynSim Tet4 稀疏 FEM、FV P2D、FFT 力学已存在；GEMsim NGSolve 与 echemAMR C++/AMReX 源码存在 | Python Tet4 可作交叉检查；保留独立 MORPH 求解器候选，不能将既有混合模型整体当真值 |
+| FEM/FV/FFT | ZynSim Tet4 稀疏 FEM、FV P2D、FFT 力学已存在；GEMsim NGSolve 与 echemAMR C++/AMReX 源码存在 | Python Tet4 可作交叉检查；保留独立 MORQEX 求解器候选，不能将既有混合模型整体当真值 |
 | 硬件 | Ryzen 7 9800X3D，16 逻辑 CPU；约30 GiB RAM；RTX5080 16303 MiB，审计时已用7749 MiB | 单 CPU、GPU禁用；硬件测量是时点快照，运行前重新检测 |
 | 可直接复用 | GEMsim Volume/网格/随机场与原生几何导出经本地桥接测试；ZynJoule 的分层命名、物性 provider、诊断结构可借鉴 | 无 ZynJoule 运行依赖；其源码仅只读审计，不复制整个大框架 |
 | 需重构 | 张量约定、周期约束、非均匀本征应变、浓度质量闭合、统一自由能导数和残差诊断 | 新增独立接口；原稳定代码保持不动 |
@@ -34,18 +34,20 @@
 1. `zynsim/fem/assembly.py`、`elements.py`、`problems.py`：Tet4 小变形各向同性，含本征应变载荷和反力。Python 弹性装配逐单元循环，每单元 144 个 COO 项；每次 `solve()` 重装配并求解，无默认多 RHS 分解复用。独立 2³ 体素自由本征应变探测：最大应力约 `2.60e-17`（E=100 的合成单位算例），位移误差 `1.08e-19`。不据此认证复杂界面或各向异性。
 2. `zynsim/battery/p2d/{model,numerics,parameters}.py`：FV 球形固相扩散、势方程非线性求解及外层 Picard，守恒诊断存在。2/2/2 宏观网格、3 个径向单元、0.1 A、0.01 s 的独立单步得到 3.616350055 V，势残差 `1.38e-11`、库存误差约 `1e-16`。没有执行全倍率/全循环/网格收敛或与 PyBaMM 对照，不能当 DFN 已完全验证。
 3. `zynsim/battery/threed/model.py:_mechanics_step`：由每单元球形浓度平均构造各向同性本征应变，指定边界固定，返回位移；电化学求解路径未见由此弹性能变分构造的多模式机械化学势。该实现并非本需求的完整微结构双向解。
-4. `zynsim/battery/mechanics/multiscale.py:synchronize_theta`：均值平移后逐点裁剪。构造 27 个活性体素（13 个 0.01、14 个0.99），请求均值0.95，实测0.7312619509，误差0.2187380491。**确认该同步在裁剪激活时不守恒**；方法名/注释的 conservative 不能当证据。MORPH 后续应使用带盒约束和质量等式的投影，投影失败显式回退。
+4. `zynsim/battery/mechanics/multiscale.py:synchronize_theta`：均值平移后逐点裁剪。构造 27 个活性体素（13 个 0.01、14 个0.99），请求均值0.95，实测0.7312619509，误差0.2187380491。**确认该同步在裁剪激活时不守恒**；方法名/注释的 conservative 不能当证据。MORQEX 后续应使用带盒约束和质量等式的投影，投影失败显式回退。
 5. `mechanics/spectral.py:_chemical_potential` 含 `-sigma:deps_ch/dtheta/cmax`；`materials.py` 刚度随浓度变化。固定总应变、均匀theta=0.5、h=1e-6 的局部能量导数探测：机械化学势有限差分 `331.3041007 J/mol`，实现值 `-197.5216778 J/mol`，差 `528.8257785 J/mol`。梯度项为零。**该组合不满足当前弹性能的完整浓度导数**；后续须加入 C'，并跨步长/状态验证。本探测不等同于验证其全部自由能和耗散律。
 6. `spectral.py:_mechanical_equilibrium`：非活性区使用有限弱刚度，不是真空；自由宏观变形通过平均本征应变调整，并非求解零平均应力方程；外压同时影响平均应变和显式应力，需要独立外功/压力基准排查重复作用。循环中应变更新后返回此前应力，迭代超限仍返回结果，调用方不能只依赖返回对象判断收敛。默认 `fft_workers=-1` 可能用满 CPU，禁止沿用。本任务探测显式设为1。
 7. `gem/simulate/elasticity.py`：仅 (E,nu) 各向同性 KUBC 六载荷，无浓度本征应变参数、周期力学/流体压力/刚体模态专项验证。`transport.to_ngsolve(periodic=True)` 的节点识别属于另一条输运路径，不能当作已有周期力学证据。
 8. 原生 `simulate/native/upstream/Source/echemAMR_MechanicsSolve.cpp` 使用 AMReX MLTensorOp；机械 `mlmg.solve(...,0.005,0.0)` 有固定容限。Microstructure/Mechanics.H 使用 Lamé 参数及化学膨胀源。该默认容限不可直接作为1e-6能量导数参考。CMake 固定 AMReX、CPU默认、MPI/OMP关闭；尚未编译，也未核实所有各向异性/双向项，不宣布其具备本项目全部高保真能力。
-9. **分量冲突**：ZynSim FEM 是 `[xx,yy,zz,xy,yz,xz]`，GEMsim 弹性是 `[xx,yy,zz,yz,xz,xy]`。工程剪切与张量剪切还相差2。MORPH 内部拟用 Mandel，任何后端转换需能量不变量测试。ZynSim 体素工具按 XYZ 解释轴，亦不能直接接收 GEMsim ZYX。
+9. **分量冲突**：ZynSim FEM 是 `[xx,yy,zz,xy,yz,xz]`，GEMsim 弹性是 `[xx,yy,zz,yz,xz,xy]`。工程剪切与张量剪切还相差2。MORQEX 内部拟用 Mandel，任何后端转换需能量不变量测试。ZynSim 体素工具按 XYZ 解释轴，亦不能直接接收 GEMsim ZYX。
 
 ## 原测试执行与缺失依赖
 
-执行 GEMsim 的 pipeline、physics、periodic、cell_contract 四个原测试文件：**6通过、9跳过、1失败**。失败为 COMSOL 导出链导入 `edt` 缺失；跳过来自 NGSolve、PyBaMM、Diffusers 缺失。保留原失败，不静默删除测试或自动安装大型 AI/原生依赖。MORPH 自身桥接5项通过。原始生成器/Cython/TetGen/ACVD/AMReX 未编译验证；其历史 Windows/Linux 成功说明不是当前机器证据。
+执行 GEMsim 的 pipeline、physics、periodic、cell_contract 四个原测试文件：**6通过、9跳过、1失败**。失败为 COMSOL 导出链导入 `edt` 缺失；跳过来自 NGSolve、PyBaMM、Diffusers 缺失。保留原失败，不静默删除测试或自动安装大型 AI/原生依赖。MORQEX 自身桥接5项通过。原始生成器/Cython/TetGen/ACVD/AMReX 未编译验证；其历史 Windows/Linux 成功说明不是当前机器证据。
 
 当前基础解释器 Python3.13.9；NumPy2.3.5、SciPy1.16.3、pytest8.4.2、scikit-image0.25.2、tifffile2025.10.4。缺 NGSolve/PyBaMM/PETSc/AMG/Torch/meshio/edt。未来原生依赖优先外部 Python3.11/3.12 环境，与上游CI覆盖版本对齐；不修改现有 ZynJoule 环境。
+
+后续集成复核：按用户追加要求，完整274文件已迁入`MORQEX/src/morqex/microstructure`，运行无外部checkout依赖。在外部venv仅补edt3.1.2/meshio5.3.5后，迁移导入原测试7通过/9跳过，自身11项通过；独立安装wheel后清空PYTHONPATH完成NPZ/VTU/COMSOL和输入模板验证。上述基础解释器缺失情况是初始快照，不能覆盖外部环境的后续补充记录。
 
 ## 结论和门禁
 

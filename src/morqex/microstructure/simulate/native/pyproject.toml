@@ -1,0 +1,14 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "gem-echemamr"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Native upstream echemAMR C++ engine for GEM"
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+wheel.packages = []
+

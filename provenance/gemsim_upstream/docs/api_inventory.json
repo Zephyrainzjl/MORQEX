@@ -1,0 +1,741 @@
+[
+  {
+    "module": "gem/analysis.py",
+    "public_definitions": [
+      "describe",
+      "two_point",
+      "compare"
+    ]
+  },
+  {
+    "module": "gem/cli.py",
+    "public_definitions": [
+      "main"
+    ]
+  },
+  {
+    "module": "gem/core/distributions.py",
+    "public_definitions": [
+      "DiscreteDnsFunc",
+      "smooth",
+      "same"
+    ]
+  },
+  {
+    "module": "gem/core/graph_codec.py",
+    "public_definitions": [
+      "dfs",
+      "transpose",
+      "get_sccs"
+    ]
+  },
+  {
+    "module": "gem/core/particle_graph.py",
+    "public_definitions": [
+      "auto_check",
+      "auto_memo",
+      "hex_id",
+      "OrderSet",
+      "Node",
+      "Link",
+      "ProcessBar",
+      "FeatureFunc",
+      "NNFeatureFunc",
+      "NNDst",
+      "NNLoc",
+      "SymLoc",
+      "Std2PntCor",
+      "DistFunc",
+      "dist_error",
+      "data_error",
+      "MulNormDist",
+      "NormDist",
+      "UniformDist",
+      "IndependDist",
+      "ExponDist",
+      "BetaDist",
+      "DiscreteDist",
+      "SmoothDist",
+      "CompDist",
+      "Region",
+      "MSPRegion",
+      "Region2D",
+      "Splitor",
+      "rths_mod",
+      "RadSplitor",
+      "MulOtsuRadSplitor",
+      "UniRadSplitor",
+      "RndSplitor",
+      "ExpSplitor",
+      "PropSplitor",
+      "Object",
+      "Seeds",
+      "closest_axes",
+      "ellipsoids_to_circles",
+      "oblate_ellipsoids_to_ellipsoids",
+      "Phase",
+      "AnisoPhase",
+      "ConstPhase",
+      "ConstAnisoPhase",
+      "CompPhase",
+      "PCNodeOperation",
+      "PCNodeSample",
+      "PCNodeFit",
+      "PhaseSeeds",
+      "RefSeeds",
+      "SelfRef",
+      "PhaseRef",
+      "RadItvRef",
+      "RadThRef",
+      "RandRef",
+      "BatRef",
+      "RadBatRef",
+      "MulRadBatRef",
+      "RndBatRef",
+      "QueBatRef",
+      "RefOperator",
+      "AndRef",
+      "OrRef",
+      "SubRef",
+      "Bound",
+      "FillBound",
+      "Cylinder",
+      "Cube",
+      "ImgObject",
+      "FileImg",
+      "CompObject",
+      "CompImg",
+      "ObjectPnt",
+      "AlphaShape",
+      "InvAShape",
+      "PolyShape",
+      "VoroShape",
+      "SeedsShape",
+      "AnisoShape",
+      "SeedsPnt",
+      "ConstSeedsPnt",
+      "CumSeedsPnt",
+      "HrcSeedsPnt",
+      "SeedsPntOperator",
+      "AddSeedsPnt",
+      "PhaseObject",
+      "ConstPhaseObject",
+      "ObjectRelation",
+      "PhaseRelation",
+      "SeedsPntCor",
+      "PCEdgeOperation",
+      "PCEdgeSample",
+      "PCEdgeSampleInit",
+      "PCEdgeFit",
+      "PCEdgeCheck",
+      "PCFuncFit",
+      "PCEdgeMove",
+      "PCGAssumption",
+      "AnnealAssumption",
+      "PhsRltSCC",
+      "PhsRltGraph",
+      "tgt_itsc",
+      "idp_decomp",
+      "srs_itsc",
+      "sub_phss",
+      "sub_comp_rlts",
+      "get_pcg",
+      "get_sccs",
+      "get_sccs_nodes",
+      "Voronoi",
+      "LaguerreVoro",
+      "filter_region",
+      "PolyVoro",
+      "Generator"
+    ]
+  },
+  {
+    "module": "gem/core/rasterization.py",
+    "public_definitions": [
+      "shperef_mask",
+      "shperef_rcoord",
+      "circlef_mask",
+      "circlef_rcoord",
+      "period_clip",
+      "bound_clip",
+      "Voxelizer"
+    ]
+  },
+  {
+    "module": "gem/core/voxel_fields.py",
+    "public_definitions": [
+      "dist_trans",
+      "fedt",
+      "invfedt",
+      "edt",
+      "cdt",
+      "ndt",
+      "invdt",
+      "hex_id",
+      "auto_vol",
+      "DataVol",
+      "ObjVol",
+      "PhaseVol",
+      "remove_dul_points",
+      "color_nodes",
+      "DistVol",
+      "ProbVol",
+      "vol_pos",
+      "list_pos",
+      "move_axes",
+      "s2_point_correlation",
+      "s2_pntcor_data",
+      "c2_point_correlation",
+      "calculate_3d_correlation_lengths",
+      "calculate_3d_autocorrelation",
+      "find_correlation_length"
+    ]
+  },
+  {
+    "module": "gem/design.py",
+    "public_definitions": [
+      "random_field"
+    ]
+  },
+  {
+    "module": "gem/generate/conditioning.py",
+    "public_definitions": [
+      "composition_potential"
+    ]
+  },
+  {
+    "module": "gem/generate/config.py",
+    "public_definitions": [
+      "GANConfig",
+      "train_gan",
+      "sample_gan"
+    ]
+  },
+  {
+    "module": "gem/generate/constraints.py",
+    "public_definitions": [
+      "surface_coating"
+    ]
+  },
+  {
+    "module": "gem/generate/hybrid.py",
+    "public_definitions": [
+      "Generator",
+      "Discriminator",
+      "HybridConfig",
+      "distill",
+      "sample_student"
+    ]
+  },
+  {
+    "module": "gem/generate/reconstruction.py",
+    "public_definitions": [
+      "Reconstructor"
+    ]
+  },
+  {
+    "module": "gem/generate/selection.py",
+    "public_definitions": [
+      "Candidate",
+      "rve_references",
+      "descriptors",
+      "error",
+      "benchmark"
+    ]
+  },
+  {
+    "module": "gem/generate/spatial.py",
+    "public_definitions": [
+      "VoxelDiffusionConfig",
+      "Residual",
+      "Denoiser",
+      "AxialAttention",
+      "SliceCritic",
+      "Chain",
+      "fit_volume",
+      "draw_volume"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/adversarial.py",
+    "public_definitions": [
+      "Trainer"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/evaluation_images.py",
+    "public_definitions": [
+      "batch_crop_two_slice_folders"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/fields.py",
+    "public_definitions": [
+      "dist_trans",
+      "fedt",
+      "invfedt",
+      "edt",
+      "cdt",
+      "ndt",
+      "invdt",
+      "hex_id",
+      "auto_vol",
+      "DataVol",
+      "ObjVol",
+      "PhaseVol",
+      "remove_dul_points",
+      "color_nodes",
+      "DistVol",
+      "ProbVol",
+      "vol_pos",
+      "list_pos",
+      "move_axes",
+      "s2_point_correlation",
+      "s2_pntcor_data",
+      "c2_point_correlation",
+      "calculate_3d_correlation_lengths",
+      "calculate_3d_autocorrelation",
+      "find_correlation_length"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/inference.py",
+    "public_definitions": [
+      "generator",
+      "generator_checkpoint",
+      "save_3d_tif_to_2d_slices",
+      "save_3d_tif_to_2d_slices_denoise",
+      "denoise_3D_tif",
+      "smooth_voxel_domains_iterative",
+      "remove_small_islands"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/operations.py",
+    "public_definitions": [
+      "load_config",
+      "mkdr",
+      "weights_init",
+      "calc_gradient_penalty",
+      "show_training_time",
+      "plot_transfer",
+      "training_plotter",
+      "dinamic_plot",
+      "generate_img",
+      "generate_img_checkpoint",
+      "generate_img_cond"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/patches.py",
+    "public_definitions": [
+      "CreateTensorDataset"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/restoration.py",
+    "public_definitions": [
+      "advanced_denoising_pipeline",
+      "sota_detail_preserving_pipeline",
+      "remove_small_regions_strict",
+      "final_advanced_pipeline",
+      "snap_to_closest"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/settings.py",
+    "public_definitions": [
+      "ConfigDict",
+      "ConfigProcessor"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/stacks.py",
+    "public_definitions": [
+      "save_3d_tif_to_2d_slices"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/synthesis.py",
+    "public_definitions": [
+      "AdaptiveUpsample3D",
+      "PixelShuffle3D",
+      "SELayer3D",
+      "upsample_net",
+      "upsample_net_conv"
+    ]
+  },
+  {
+    "module": "gem/generate/v0/unavailable_conditioned.py",
+    "public_definitions": [
+      "generator",
+      "save_3d_tif_to_2d_slices",
+      "save_3d_tif_to_2d_slices_denoise",
+      "denoise_3D_tif",
+      "smooth_voxel_domains_iterative",
+      "remove_small_islands"
+    ]
+  },
+  {
+    "module": "gem/generate/v1.py",
+    "public_definitions": [
+      "DiffusionConfig",
+      "train",
+      "sample",
+      "tune_batch_size"
+    ]
+  },
+  {
+    "module": "gem/helper/desktop.py",
+    "public_definitions": [
+      "float_repr",
+      "custom_display_hook",
+      "custom_format",
+      "TKUI",
+      "RedirectText",
+      "RedirectBox",
+      "set_scaling",
+      "exec_in_main_thread",
+      "Context",
+      "tkinit_dec",
+      "tkregister",
+      "tklayout",
+      "tklayout_left",
+      "tkrepr_dec",
+      "tkunrepr",
+      "tkstr_dec",
+      "tkredraw",
+      "tkprocess",
+      "tkstart",
+      "tkinc",
+      "tkend",
+      "plt_vol",
+      "plt_legend",
+      "plt_view_vol",
+      "plt_dist",
+      "plt_compdist",
+      "TKUI",
+      "exec_str_ret",
+      "dist_init",
+      "dist_str",
+      "TKDistFunc",
+      "init_compdist",
+      "TKCompDist",
+      "TKRegion",
+      "TKRegion2D",
+      "phs_init",
+      "TKPhase",
+      "aniphs_init",
+      "TKAniPhase",
+      "TKCompPhase",
+      "TKAlphaShape",
+      "view_vol",
+      "pobj_init",
+      "TKPhasePnt",
+      "TKFillBound",
+      "TKCylinder",
+      "TKFileImg",
+      "imgobj_init",
+      "TKImage",
+      "compobj_init",
+      "TKCompObject",
+      "tetmesh_init",
+      "TKTetMesh",
+      "phsvol_init",
+      "TKPhaseVol",
+      "rlt_init",
+      "TKRelation",
+      "init_pcg",
+      "TKPCG",
+      "TKSeeds",
+      "voro_init",
+      "TKVoro",
+      "view_str",
+      "view_cfg_init",
+      "ViewConfig",
+      "save_str",
+      "save_cfg_init",
+      "SaveConfig",
+      "view_reg_init",
+      "ViewRegion",
+      "aload",
+      "asave",
+      "jsonlize",
+      "objectlize"
+    ]
+  },
+  {
+    "module": "gem/helper/persistence.py",
+    "public_definitions": [
+      "Config",
+      "SaveConfig",
+      "jsonlize",
+      "jcsvlize",
+      "objectlize",
+      "auto_load",
+      "auto_save",
+      "save_vol",
+      "load_vol"
+    ]
+  },
+  {
+    "module": "gem/helper/plotting.py",
+    "public_definitions": [
+      "Config",
+      "ViewConfig",
+      "plt_vol",
+      "plt_vol_sem",
+      "plt_cb",
+      "plt_legend",
+      "plt_data",
+      "plt_dns",
+      "plt_bar",
+      "plt_bar_stack",
+      "poly",
+      "plt_img_save",
+      "adjust_pts_order",
+      "plt_circle2d",
+      "plt_voro2d",
+      "stereographic_projection",
+      "plot_pole_figure",
+      "normalize",
+      "cubic_ipf_sector_reduce",
+      "plot_pole_figure_kde",
+      "ipf_sector_projection",
+      "plot_ipf_sector",
+      "data_vol_plt",
+      "phs_vol_plt",
+      "obj_plt",
+      "obj_pnt_plt",
+      "seeds_pnt_plt",
+      "pnt_opt_plt",
+      "dist_func_plt",
+      "seeds_plt",
+      "rnd_sp_plt",
+      "hist_plt",
+      "error_plt",
+      "curve_error"
+    ]
+  },
+  {
+    "module": "gem/image.py",
+    "public_definitions": [
+      "load_stack",
+      "segment",
+      "clean",
+      "save_slices"
+    ]
+  },
+  {
+    "module": "gem/io.py",
+    "public_definitions": [
+      "load_legacy",
+      "convert_legacy_volume"
+    ]
+  },
+  {
+    "module": "gem/legacy_generator/network.py",
+    "public_definitions": [
+      "ResBlock3D",
+      "ResBlock2D",
+      "Generator",
+      "Discriminator"
+    ]
+  },
+  {
+    "module": "gem/legacy_generator/train.py",
+    "public_definitions": [
+      "create_dummy_data_if_not_exists",
+      "load_data",
+      "main_process"
+    ]
+  },
+  {
+    "module": "gem/legacy_generator/utils.py",
+    "public_definitions": [
+      "compute_gradient_penalty",
+      "post_process_output",
+      "save_checkpoint"
+    ]
+  },
+  {
+    "module": "gem/mesh/elements.py",
+    "public_definitions": [
+      "set_float_precision",
+      "hex_id",
+      "Mesh",
+      "LineMesh",
+      "TriMesh",
+      "remove_degenerate",
+      "remove_entities",
+      "fix_tetrahedrons",
+      "TetMesh",
+      "attr_marching_cubes",
+      "extract_surface_triangles",
+      "sur_optimize",
+      "sur_tetgen",
+      "remove_dul_points",
+      "remove_unuse_points",
+      "remove_dul_points_xyz",
+      "face_ncell",
+      "edge_length",
+      "QuadMesh",
+      "HexMesh",
+      "HsHexMesh",
+      "where_xyz",
+      "np_mode",
+      "extract_faces_tet",
+      "extract_tets_hex",
+      "extract_faces_hex",
+      "extract_faces_quad",
+      "query_value",
+      "subdivide_mesh",
+      "compute_face_normals",
+      "compute_vertex_normals",
+      "vert_face_normals",
+      "orient_tetrahedrons",
+      "calc_voro",
+      "voro_extract",
+      "file_str_list",
+      "read_node",
+      "read_ele",
+      "read_face",
+      "read_neigh",
+      "read_tetgen",
+      "VoronoiMesh"
+    ]
+  },
+  {
+    "module": "gem/mesh/pyacvd/clustering.py",
+    "public_definitions": [
+      "Clustering",
+      "cluster_centroid",
+      "create_mesh",
+      "unique_row_indices",
+      "weighted_points",
+      "neighbors_from_mesh",
+      "compute_face_normals",
+      "compute_vertex_normals"
+    ]
+  },
+  {
+    "module": "gem/mesh/pyacvd/clustering_bk.py",
+    "public_definitions": [
+      "Clustering",
+      "cluster_centroid",
+      "create_mesh",
+      "unique_row_indices",
+      "weighted_points",
+      "neighbors_from_mesh"
+    ]
+  },
+  {
+    "module": "gem/mesh/tetgen/pytetgen.py",
+    "public_definitions": [
+      "TetGen"
+    ]
+  },
+  {
+    "module": "gem/mesh/voxel.py",
+    "public_definitions": [
+      "FEMesh",
+      "voxel_to_hex",
+      "voxel_to_tetra",
+      "surface"
+    ]
+  },
+  {
+    "module": "gem/pipeline.py",
+    "public_definitions": [
+      "Microstructure"
+    ]
+  },
+  {
+    "module": "gem/reporting.py",
+    "public_definitions": [
+      "structure_html"
+    ]
+  },
+  {
+    "module": "gem/simulate/cell.py",
+    "public_definitions": [
+      "discharge",
+      "microstructure_parameters"
+    ]
+  },
+  {
+    "module": "gem/simulate/elasticity.py",
+    "public_definitions": [
+      "homogenize_elasticity"
+    ]
+  },
+  {
+    "module": "gem/simulate/electrochemistry.py",
+    "public_definitions": [
+      "assemble_cell",
+      "prepare_case",
+      "export_geometry",
+      "AMRConfig",
+      "run",
+      "DischargeSettings",
+      "DischargeCurve",
+      "read_discharge",
+      "discharge_3d"
+    ]
+  },
+  {
+    "module": "gem/simulate/evolution.py",
+    "public_definitions": [
+      "DiffusionHistory",
+      "diffuse"
+    ]
+  },
+  {
+    "module": "gem/simulate/homogenization.py",
+    "public_definitions": [
+      "homogenize",
+      "tortuosity"
+    ]
+  },
+  {
+    "module": "gem/simulate/periodic.py",
+    "public_definitions": [
+      "conductivity_tensor"
+    ]
+  },
+  {
+    "module": "gem/simulate/transport.py",
+    "public_definitions": [
+      "to_ngsolve",
+      "ConductionResult",
+      "conduction",
+      "save_field"
+    ]
+  },
+  {
+    "module": "gem/simulate/voxel_transport.py",
+    "public_definitions": [
+      "effective_diffusion"
+    ]
+  },
+  {
+    "module": "gem/view.py",
+    "public_definitions": [
+      "slices",
+      "mesh",
+      "raytrace"
+    ]
+  },
+  {
+    "module": "gem/volume.py",
+    "public_definitions": [
+      "Volume"
+    ]
+  },
+  {
+    "module": "gem/workspace.py",
+    "public_definitions": [
+      "Workspace"
+    ]
+  }
+]

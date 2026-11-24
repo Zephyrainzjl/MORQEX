@@ -1,42 +1,61 @@
-# MORPH
+# MORQEX
 
-**Multiscale Operator-based Reconstruction and Physics-consistent Homogenization**
+面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-复杂电极微结构电化学—力学跨尺度方法的独立研究仓库。当前版本为 **0.0.1：Phase 0/I 研究基础**，不是已验证的 MORPH-0，也没有宣称达到论文性能目标。最终数值架构由基准与消融决定。
+当前 **0.0.1：Phase0/I研究基础与完整微结构源码集成**。最终算法和论文创新尚未确立，完整MORQEX-0参考求解器及双向耦合尚未认证。
 
-源码：`/home/zephyrain/lw/MORPH`；全部测试、依赖源码、数据、日志、缓存和结果：`/home/zephyrain/lw/morph_workspace`。不依赖、不修改 ZynJoule。保留 MORPH 作为工作名；已检索到 [LANL 同名 PDE 项目](https://github.com/lanl/MORPH)及 [MORLab/MORpH](https://github.com/MORLab/MORpH)，因此不声称名称独占或“无人使用”，投稿名称另行审查。
+源码：`/home/zephyrain/lw/MORQEX`。所有数据、测试输出、编译产物、安装环境、权重和缓存：`/home/zephyrain/lw/morph_workspace`。独立Git仓库，不修改、不依赖ZynJoule。
 
-## 当前可运行内容
+## 已实际集成到src
 
-- 固定提交的 GEMsim 直接源码集成：生成随机场微结构、读写 Volume、四面体/六面体网格；保留原生成器和原生求解器源码。
-- 显式相语义、SI 尺度、ZYX/XYZ 转换、几何内容指纹与来源追踪。
-- 本地受限运行器：单逻辑 CPU、低优先级、进程组内存监控、超时、单任务锁、GPU 隐藏。
-- 源码清单审计、既有 FEM/P2D/FFT 小规模独立探测、能量静态凝聚代数验证。
-- 文献登记、候选方法比较、理论、参考求解器设计、阶段门禁及恢复记录。
+原GEMsim固定提交 `6fd789c78d58d49ef645c539414567fc2a2bc171` 的全部274个源码文件已迁入 [src/morqex/microstructure](src/morqex/microstructure)，统一为 `morqex.microstructure` 命名空间。包含体素/颗粒图、图像处理、v0/条件扩散/混合生成、重构、Tet/Hex/曲面网格、TetGen/ACVD/Cython、NGSolve输运/扩散/均匀化、PyBaMM和echemAMR原生源码。
 
-NGSolve、PyBaMM、echemAMR 原生插件及 AI 生成器的数值验证尚未完成；存在源码不等于功能已经认证。GEMsim 顶层未声明许可证，当前保持用户授权的本地私有集成，不将其重授权或发布。
+**运行时不读取外部GEMsim checkout，也不需要导入`gem`。** 外部原始checkout仅作迁移/审计依据；逐文件SHA256和转换记录见 [provenance/gemsim_migration.json](provenance/gemsim_migration.json)。数据和二进制未迁入。
 
-## 本地运行
+保留已有算法不等于所有算法已验证。当前随机场、体素/网格、数据格式及输入模板已测试；AI训练、NGSolve、PyBaMM与AMReX尚缺独立数值资格验证，均为可选依赖。
 
-当前已使用本机 Anaconda Python 3.13.9、NumPy 2.3.5、SciPy 1.16.3、pytest 8.4.2 完成基础检查。无需安装 AI/GPU 依赖。
+## 使用
 
-```bash
-cd /home/zephyrain/lw/MORPH
-python scripts/run_local.py --label bootstrap -- python /home/zephyrain/lw/MORPH/scripts/bootstrap_gemsim.py
-python scripts/run_local.py --label bridge_tests -- python -m pytest /home/zephyrain/lw/MORPH/tests -q --basetemp=/home/zephyrain/lw/morph_workspace/tmp/bridge_tests
-python scripts/run_local.py --label energy_algebra -- python /home/zephyrain/lw/MORPH/benchmarks/verify_energy_algebra.py
-python scripts/run_local.py --label source_audit -- python /home/zephyrain/lw/MORPH/scripts/audit_sources.py
-python scripts/run_local.py --label existing_probes -- python /home/zephyrain/lw/MORPH/scripts/probe_existing.py
+```python
+from pathlib import Path
+from morqex import Workspace
+from morqex.gemsim import GEMsim
+
+ws = Workspace(Path('/home/zephyrain/lw/morph_workspace'))
+geometry = GEMsim(ws)
+structure = geometry.random_field(
+    shape=(8, 8, 8), fractions=(.3, .6, .1),
+    length_scale=(1., 1., 1.), spacing=(1e-6,)*3, seed=7,
+    phase_kinds={0:'pore', 1:'active', 2:'cbd'},
+)
+mesh = geometry.mesh(structure, cell_type='tetra')
+geometry.to_volume(structure).save(ws.path('outputs', 'example.npz'))
 ```
 
-运行器将工作目录切换到外部 `runs/<UTC>_<label>`，保存 `manifest.json`、`stdout.txt`、`stderr.txt`；最近运行位置见外部 `reports/*_latest.json`。重复运行保留历史日志；pytest 临时目录仅供可重建测试使用。
+也可直接使用集成入口 `from morqex.microstructure import Volume, Microstructure`。体素与尺度采用ZYX，网格点XYZ，SI米；相语义必须显式指定。统一数据对象为`morqex.MicrostructureData`。
 
-## 阅读顺序
+## 本地受限运行
 
-1. [RESUME.md](RESUME.md)：已完成、失败证据和下一步。
-2. [CODE_AUDIT.md](CODE_AUDIT.md)：复用边界与现有物理问题。
-3. [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：证据与创新审查。
-4. [THEORY.md](THEORY.md)、[ALGORITHM_COMPARISON.md](ALGORITHM_COMPARISON.md)：数学基础与候选比较。
-5. [REFERENCE_SOLVER_PLAN.md](REFERENCE_SOLVER_PLAN.md)、[BENCHMARK_PROTOCOL.md](BENCHMARK_PROTOCOL.md)：参考解与最短验证闭环。
-6. [RESEARCH_PLAN.md](RESEARCH_PLAN.md)、[RESOURCE_BUDGET.md](RESOURCE_BUDGET.md)、[docs/INTERFACES.md](docs/INTERFACES.md)：推进计划、资源与可演进接口。
+```bash
+cd /home/zephyrain/lw/MORQEX
+python scripts/run_local.py --label tests -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python -m pytest /home/zephyrain/lw/MORQEX/tests -q --basetemp=/home/zephyrain/lw/morph_workspace/tmp/morqex_tests
+python scripts/run_local.py --label energy_algebra -- python /home/zephyrain/lw/MORQEX/benchmarks/verify_energy_algebra.py
+python scripts/run_local.py --label source_audit -- python /home/zephyrain/lw/MORQEX/scripts/audit_sources.py
+python scripts/run_local.py --label budget -- python /home/zephyrain/lw/MORQEX/scripts/probe_budget.py
+```
+
+默认单逻辑CPU、nice+15、GPU禁用；虚拟内存3GiB、进程组RSS1.5GiB、单任务180s。工作目录、缓存和日志全部外置，具体限制见 [RESOURCE_BUDGET.md](RESOURCE_BUDGET.md)。外部`reports/*_latest.json`指向各次运行日志，历史失败不会覆盖。
+
+纯Pythonwheel可用`pip wheel . --no-deps --no-build-isolation --wheel-dir /home/zephyrain/lw/morph_workspace/wheels`构建；请通过运行器执行。`geometry`、`ai`、`simulation`、`view`分别管理额外依赖。Cython仅在显式`MORQEX_BUILD_GEOMETRY=1`时构建；默认不编译AMReX、不下载训练数据、不启动GPU。`setup.py`将所有生成文件放到外部workspace。
+
+## 研究文档
+
+- [RESUME.md](RESUME.md)、[RESEARCH_LOG.md](RESEARCH_LOG.md)：恢复入口、实测结果、失败与下一步。
+- [CODE_AUDIT.md](CODE_AUDIT.md)：已有物理、可复用能力及实测问题。
+- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：37条文献、22方法矩阵及创新门禁。
+- [THEORY.md](THEORY.md)、[ALGORITHM_COMPARISON.md](ALGORITHM_COMPARISON.md)：数学基础和多候选比较。
+- [REFERENCE_SOLVER_PLAN.md](REFERENCE_SOLVER_PLAN.md)、[BENCHMARK_PROTOCOL.md](BENCHMARK_PROTOCOL.md)：最短正确性闭环与公平实验。
+- [RESEARCH_PLAN.md](RESEARCH_PLAN.md)、[docs/INTERFACES.md](docs/INTERFACES.md)：逐阶段验收和体系接口。
+
+第三方来源与未验证项见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。本地私有研究集成，不重授权或公开发布用户私有GEMsim源码。
 

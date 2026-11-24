@@ -83,7 +83,7 @@ def main():
     check("p2d_one_small_step", p2d)
     check("spectral_uniform_and_sync", spectral)
     check("concentration_dependent_stiffness_chemical_potential", variable_stiffness_mu)
-    out = Path(os.environ["MORPH_WORKSPACE"]) / "evidence/existing_probes.json"
+    out = Path(os.environ["MORQEX_WORKSPACE"]) / "evidence/existing_probes.json"
     out.write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
 

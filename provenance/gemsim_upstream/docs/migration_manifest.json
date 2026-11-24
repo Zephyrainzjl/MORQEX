@@ -1,0 +1,330 @@
+[
+  {
+    "source": "core\\DataVol.py",
+    "target": "src/gem/core/voxel_fields.py",
+    "sha256_original": "4f6d5819094fbee70c85825ed384642f4ad3fd4ca5e25196f0183b84424dc9f0"
+  },
+  {
+    "source": "core\\GraphParse.py",
+    "target": "src/gem/core/graph_codec.py",
+    "sha256_original": "d38e0b15cdce1f28ec1809fce2a285c2860141df189923dbd696d768f7f30904"
+  },
+  {
+    "source": "core\\PCGCore.py",
+    "target": "src/gem/core/particle_graph.py",
+    "sha256_original": "e184766f7c1c26df78684aa1ba9a18072631514699e0c765b6d9b871bc6b1566"
+  },
+  {
+    "source": "core\\Stats.py",
+    "target": "src/gem/core/distributions.py",
+    "sha256_original": "0e8c32b287aa94396b553f909dc28f12e2efb6edee2df7943cf7095094f9a49f"
+  },
+  {
+    "source": "core\\Voxelizer.py",
+    "target": "src/gem/core/rasterization.py",
+    "sha256_original": "13f36b6028deaf837e672cf6dfa347a1c65ad876a88294bdf47d17b88235bda3"
+  },
+  {
+    "source": "core\\cyfunc\\backup.pyx",
+    "target": "src/gem/core/cyfunc/backup.pyx",
+    "sha256_original": "501f79ef4c65ddb32367cfe96a96738f786d4cbaee0bb4185f5ea4b1bfa54aed"
+  },
+  {
+    "source": "core\\cyfunc\\cy_discrete.pyx",
+    "target": "src/gem/core/cyfunc/cy_discrete.pyx",
+    "sha256_original": "8f4f8e136e5ffe67a905f4bf93d3d3f9da8c99dc74e425767f3bb44abbff36b3"
+  },
+  {
+    "source": "core\\cyfunc\\cy_geometry.pyx",
+    "target": "src/gem/core/cyfunc/cy_geometry.pyx",
+    "sha256_original": "de6826dd5da64c5decf1d998965f518b1e374250f1b5228981fedeaf3c0b9623"
+  },
+  {
+    "source": "core\\cyfunc\\cy_morphology.pyx",
+    "target": "src/gem/core/cyfunc/cy_morphology.pyx",
+    "sha256_original": "6c0ee44b8fc8228c7221677babde803f575977878a42b4923d4b0cb1069e2578"
+  },
+  {
+    "source": "core\\cyfunc\\__init__.py",
+    "target": "src/gem/core/cyfunc/__init__.py",
+    "sha256_original": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "core\\edt\\edt.hpp",
+    "target": "src/gem/core/edt/edt.hpp",
+    "sha256_original": "400a97e1d4d0c1182a8c71375af4b3b02d5765f1214354d8630fba8a086f5dfe"
+  },
+  {
+    "source": "core\\edt\\edt.pyx",
+    "target": "src/gem/core/edt/edt.pyx",
+    "sha256_original": "7b76f3b4ff2eb1af3e19f9b1fa8ac34012ba353adf5ed51c83c3b09184f2bc4a"
+  },
+  {
+    "source": "core\\edt\\edt_voxel_graph.hpp",
+    "target": "src/gem/core/edt/edt_voxel_graph.hpp",
+    "sha256_original": "d268761ad5f5294c0feeff230bb852999921e1021e26069ea57d2fd7c46814d8"
+  },
+  {
+    "source": "core\\edt\\threadpool.h",
+    "target": "src/gem/core/edt/threadpool.h",
+    "sha256_original": "1d3976dea0a023759b0957c6b9363e90e6382f374decaeaa77b2a2bb11215468"
+  },
+  {
+    "source": "core\\edt\\__init__.py",
+    "target": "src/gem/core/edt/__init__.py",
+    "sha256_original": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "mesh\\Mesh.py",
+    "target": "src/gem/mesh/elements.py",
+    "sha256_original": "02026aa8598d23295a305194fb95f1d9a9efed9dfa574375c111b2dbf18e9814"
+  },
+  {
+    "source": "mesh\\pyacvd\\clustering.py",
+    "target": "src/gem/mesh/pyacvd/clustering.py",
+    "sha256_original": "86515fd755687946f5cf969d07906abff9d28c745a1a2d1393ce5c08da652e60"
+  },
+  {
+    "source": "mesh\\pyacvd\\clustering_bk.py",
+    "target": "src/gem/mesh/pyacvd/clustering_bk.py",
+    "sha256_original": "1ea6448eb8e191aff368acb7ee2987d1d49b3e6115da3ec32d90f2211f59fe3e"
+  },
+  {
+    "source": "mesh\\pyacvd\\_version.py",
+    "target": "src/gem/mesh/pyacvd/_version.py",
+    "sha256_original": "9a4b11d02561a673a2bd80cd375c0ade8aa7a3fabc75edb514254e9da52aa849"
+  },
+  {
+    "source": "mesh\\pyacvd\\__init__.py",
+    "target": "src/gem/mesh/pyacvd/__init__.py",
+    "sha256_original": "ddebb7252cc182fe603f19ab98e48dd093d5a51d940b0abd7dede4f468a054da"
+  },
+  {
+    "source": "mesh\\tetgen\\pytetgen.py",
+    "target": "src/gem/mesh/tetgen/pytetgen.py",
+    "sha256_original": "6dc5113eff97bb00d6d670bb6d85b5d711739c94b7b328522c02fabf372935d9"
+  },
+  {
+    "source": "mesh\\tetgen\\_version.py",
+    "target": "src/gem/mesh/tetgen/_version.py",
+    "sha256_original": "c5c4870f02c7898e577311f74aaf2c11e651783d30670437559a03eaec763403"
+  },
+  {
+    "source": "mesh\\tetgen\\__init__.py",
+    "target": "src/gem/mesh/tetgen/__init__.py",
+    "sha256_original": "674cbdd5c19fa72b173511a09402b4d130f2d2331d0ac33e08bf4cfdc86f9b9f"
+  },
+  {
+    "source": "mesh\\pyacvd\\cython\\_clustering.pyx",
+    "target": "src/gem/mesh/pyacvd/cython/_clustering.pyx",
+    "sha256_original": "f4e06b974be21b482eee43df7fef1ba0fbbe7556ed73aff0d29021376816fff1"
+  },
+  {
+    "source": "mesh\\pyacvd\\cython\\_clustering_bk.pyx",
+    "target": "src/gem/mesh/pyacvd/cython/_clustering_bk.pyx",
+    "sha256_original": "3305500dea5fdf60ed2c110348beaf37b20fafef4831c6d16944787b22964cf6"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\predicates.cxx",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/predicates.cxx",
+    "sha256_original": "ee3d87b61c915109f44ff66d7809da3504c0159309242ecad104a703754d2a69"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\tetgen.cxx",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/tetgen.cxx",
+    "sha256_original": "622d043ed2fb20f3807ce78bc524c5ddc7f12425990cd3eccfcc8f97ddb87bea"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\tetgen.h",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/tetgen.h",
+    "sha256_original": "50afcf03c480629284548b6f137caa7fc1839b5fa06657649ced6231f14ef32e"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\tetgen_wrap.cxx",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/tetgen_wrap.cxx",
+    "sha256_original": "81819b89973af6b2e8f888969b8870940910cfe7407a0dbd01526db33f366e1e"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\tetgen_wrap.h",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/tetgen_wrap.h",
+    "sha256_original": "c1dc03d207f25d90e4243eb55d4deb4da16e0d949f07b893aade2adad11acfd9"
+  },
+  {
+    "source": "mesh\\tetgen\\cython\\tetgen\\_tetgen.pyx",
+    "target": "src/gem/mesh/tetgen/cython/tetgen/_tetgen.pyx",
+    "sha256_original": "70f81ee9bd4f91e8ab8a50f40faf13b5654a913e61e665f46074e7beb023aaef"
+  },
+  {
+    "source": "helper\\PCGIO.py",
+    "target": "src/gem/helper/persistence.py",
+    "sha256_original": "16a6705adae354d2f5b77ffa6e502d70796d09b68ec9e5102d96b79b60dc561e"
+  },
+  {
+    "source": "helper\\PCGUI.py",
+    "target": "src/gem/helper/desktop.py",
+    "sha256_original": "b69057b86202dade8ee0a26ebb0b1722e49132ed40215683844d40d18b2264aa"
+  },
+  {
+    "source": "helper\\PCGView.py",
+    "target": "src/gem/helper/plotting.py",
+    "sha256_original": "bc33316eb75d7f356b286490c51311244249cbb5a887d9ad8e2e491bb3b5e48f"
+  },
+  {
+    "source": "generator\\network.py",
+    "target": "src/gem/legacy_generator/network.py",
+    "sha256_original": "e796b0f251d1e24d84642492ba62e8134079072cc5249a39d9ae562629fbddb2"
+  },
+  {
+    "source": "generator\\train.py",
+    "target": "src/gem/legacy_generator/train.py",
+    "sha256_original": "632e0d11d0e06a443123702d26945160efd97901c4314ce96c1b51c9e498fad9"
+  },
+  {
+    "source": "generator\\utils.py",
+    "target": "src/gem/legacy_generator/utils.py",
+    "sha256_original": "eba70b6738fde51255008cbacb17ca9cad1d7a0fae269977e6bff130115e5367"
+  },
+  {
+    "source": "generator\\__init__.py",
+    "target": "src/gem/legacy_generator/__init__.py",
+    "sha256_original": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "MGENERATE\\EMR\\DataVol.py",
+    "target": "src/gem/generate/v0/fields.py",
+    "sha256_original": "4f6d5819094fbee70c85825ed384642f4ad3fd4ca5e25196f0183b84424dc9f0"
+  },
+  {
+    "source": "MGENERATE\\EMR\\denoise.py",
+    "target": "src/gem/generate/v0/restoration.py",
+    "sha256_original": "bdecdcddba3dfaeeaa8073e785d373867f649b37194ea12aad1bccd8952d845f"
+  },
+  {
+    "source": "MGENERATE\\EMR\\fid_files_maker.py",
+    "target": "src/gem/generate/v0/evaluation_images.py",
+    "sha256_original": "cb49ee125bd487ec6b0b7fa77275f3838f75de628d867d5ad639537b642f852e"
+  },
+  {
+    "source": "MGENERATE\\EMR\\generate.py",
+    "target": "src/gem/generate/v0/inference.py",
+    "sha256_original": "2da627a0910a77546fec8482f701e7b27b5840cd76dc7d67ea9dc528adb57408"
+  },
+  {
+    "source": "MGENERATE\\EMR\\generate_diffussion_cond.py",
+    "target": "src/gem/generate/v0/unavailable_conditioned.py",
+    "sha256_original": "9845cc2c21dde5bca41769fe4afa8efd76b0070f2904407ce93a9c90317a9e97"
+  },
+  {
+    "source": "MGENERATE\\EMR\\helper.py",
+    "target": "src/gem/generate/v0/operations.py",
+    "sha256_original": "2de40c189855f1576588153bd629c6c2c7562da78556e31bd25467d3f31be201"
+  },
+  {
+    "source": "MGENERATE\\EMR\\load_config.py",
+    "target": "src/gem/generate/v0/settings.py",
+    "sha256_original": "d68c7bcaa2b35b97157429875fb9e25458b2229e4423a3cbfab701c5e57d4574"
+  },
+  {
+    "source": "MGENERATE\\EMR\\model_pix.py",
+    "target": "src/gem/generate/v0/synthesis.py",
+    "sha256_original": "a85712ee4cb95c4932af814d27e56e490fe8dc546106ceca8356cc6a9881115b"
+  },
+  {
+    "source": "MGENERATE\\EMR\\TensorDataset.py",
+    "target": "src/gem/generate/v0/patches.py",
+    "sha256_original": "98363c3f1a58e9cabb5a5c61f0500353729894b4e5ba4b5cf7e06adfd7789fc5"
+  },
+  {
+    "source": "MGENERATE\\EMR\\Trainer_pix.py",
+    "target": "src/gem/generate/v0/adversarial.py",
+    "sha256_original": "6cbcc8238f935f8673bf06ca726be23f6fa402748ddbcd536932ee7d3adcef4b"
+  },
+  {
+    "source": "MGENERATE\\EMR\\transfer2tif.py",
+    "target": "src/gem/generate/v0/stacks.py",
+    "sha256_original": "775d3cb2f2f7a300dc59c47a235193ff3e11531c8695e9fa7e43d3e2e27fb50c"
+  },
+  {
+    "source": "MGENERATE\\EMR\\__init__.py",
+    "target": "src/gem/generate/v0/__init__.py",
+    "sha256_original": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "BatteryGan\\config.yaml",
+    "target": "src/gem/batterygan/config.yaml",
+    "sha256_original": "d8a96edd7f41d6ea82260d767ee7edbb802ced976f1266049fa1196deaad57c3",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\generate_electrode.py",
+    "target": "src/gem/batterygan/generate_electrode.py",
+    "sha256_original": "4439361c32f978f362588e488699348fd7733e3efbe50486d2c91c6269cf449f",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\generate_figure.py",
+    "target": "src/gem/batterygan/generate_figure.py",
+    "sha256_original": "28ba97c65fc8cf3237a6de7f12f7c9f66da99ed31884a437af2850481400714a",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\generate_gray.py",
+    "target": "src/gem/batterygan/generate_gray.py",
+    "sha256_original": "4c9fd9870411e1115d9581fec45e2edb5b4fa0944f8a5388ed5bfa4185592649",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\generate_tif.py",
+    "target": "src/gem/batterygan/generate_tif.py",
+    "sha256_original": "6b6535f3646730778e602b534d25896429238ef55147cfa1fc2d167978c83fc9",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\raytrace.py",
+    "target": "src/gem/batterygan/raytrace.py",
+    "sha256_original": "7d7dcc0e6b54996a7c151b80b2003bfbc4b76fdf6a962a1f8f3c799d13bec883",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\run_batterygan.py",
+    "target": "src/gem/batterygan/run_batterygan.py",
+    "sha256_original": "890b14c670a091c35ab5151fb37a7c9e959d15d6523b2caccdbe34cf654f6205",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\model.py",
+    "target": "src/gem/batterygan/src/model.py",
+    "sha256_original": "16bdfbc5ca0585eb7d696936c4b41c69eada650f9d61a1782098a4f46c525b9b",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\networks.py",
+    "target": "src/gem/batterygan/src/networks.py",
+    "sha256_original": "f14af01411ae53a8c15fa219b572ef4263a677b7794d46f3636284c6ad9a8981",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\processing.py",
+    "target": "src/gem/batterygan/src/processing.py",
+    "sha256_original": "4b4f8ce0883097efaaf9a57682270e367b5065b36cacd80cbc79c346e26244fa",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\test.py",
+    "target": "src/gem/batterygan/src/test.py",
+    "sha256_original": "aeff65b48a210aaa5f77f54637234580828d0cd9d0abf5c15bfa13d7070d3f69",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\utils.py",
+    "target": "src/gem/batterygan/src/utils.py",
+    "sha256_original": "966c0815c470e33cf3a8acfdc072637f99d8d976b654cf79c3768c419ab75ff0",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  },
+  {
+    "source": "BatteryGan\\src\\__init__.py",
+    "target": "src/gem/batterygan/src/__init__.py",
+    "sha256_original": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "status": "excluded_by_user_request; original retained under PCG/BatteryGan"
+  }
+]

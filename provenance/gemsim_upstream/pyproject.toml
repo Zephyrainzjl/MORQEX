@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=75", "wheel", "Cython>=3.1", "numpy>=2.1", "pybind11>=2.13", "cmake>=3.24"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gemsim"
+version = "0.1.0"
+description = "Generative electrode microstructures, meshing and simulation"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.1", "scipy>=1.14", "scikit-image>=0.24", "tifffile", "meshio", "matplotlib", "PyYAML", "edt"]
+
+[project.optional-dependencies]
+ai = ["torch>=2.7", "diffusers>=0.35", "pillow", "opencv-python", "scikit-learn"]
+simulation = ["ngsolve>=6.2", "pybamm>=25.1"]
+transport = ["taufactor"]
+view = ["pyvista", "plotly"]
+test = ["pytest", "build"]
+
+[project.scripts]
+gem = "gem.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gem*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"*" = ["*.pyx", "*.pxd", "*.h", "*.H", "*.hpp", "*.cxx", "*.cpp", "*.yaml", "resources/*.inputs", "CMakeLists.txt", "pyproject.toml", "LICENSE", "provenance.json", "inputs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

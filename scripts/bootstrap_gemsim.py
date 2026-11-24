@@ -6,8 +6,9 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "src"))
-from morph.workspace import Workspace
+from morqex.workspace import Workspace
 
 
 def main():
@@ -15,8 +16,11 @@ def main():
     lock = json.loads((ROOT / "upstream.lock.json").read_text())["gemsim"]
     target = workspace.path(lock["source_relative_to_workspace"])
     if target.exists():
-        from morph.gemsim import GEMsim
-        print("Verified existing GEMsim", GEMsim(workspace).commit)
+        commit = subprocess.check_output(["git", "-C", str(target), "rev-parse", "HEAD"], text=True).strip()
+        status = subprocess.check_output(["git", "-C", str(target), "status", "--porcelain"], text=True).strip()
+        if commit != lock["commit"] or status:
+            raise RuntimeError("Preserve and audit changed upstream checkout; refusing reset")
+        print("Verified audit-only upstream GEMsim", commit)
         return
     target.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["git", "clone", "--filter=blob:none", "--no-checkout", lock["url"], str(target)], check=True, timeout=90)

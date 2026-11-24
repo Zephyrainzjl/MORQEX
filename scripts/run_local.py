@@ -14,8 +14,11 @@ import time
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
+# This parent imports the workspace contract before spawning a limited child.
+# Prevent even these launcher imports from leaving bytecode in the source tree.
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "src"))
-from morph.workspace import Workspace
+from morqex.workspace import Workspace
 
 
 def memory_info():
@@ -58,7 +61,7 @@ def main():
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        raise SystemExit("Another MORPH local job is running")
+        raise SystemExit("Another MORQEX local job is running")
     if memory_info()["MemAvailable"] < cfg["minimum_available_memory_mib"] * 2**20:
         raise SystemExit("Insufficient available memory; job not started")
     allowed = sorted(os.sched_getaffinity(0))
@@ -72,7 +75,7 @@ def main():
         env[name] = str(cfg["cpu_threads"])
     env.update(CUDA_VISIBLE_DEVICES="", PYTHONDONTWRITEBYTECODE="1", PYTHONNOUSERSITE="1",
                PYTEST_DISABLE_PLUGIN_AUTOLOAD="1", PYBAMM_DISABLE_TELEMETRY="true",
-               MORPH_WORKSPACE=str(ws.root), GEMSIM_SOURCE=str(ws.path("upstream/GEMsim")),
+               MORQEX_WORKSPACE=str(ws.root),
                PYTHONPATH=str(ROOT / "src"), MPLCONFIGDIR=str(ws.path("cache/matplotlib")),
                XDG_CACHE_HOME=str(ws.path("cache")), HF_HOME=str(ws.path("cache/huggingface")),
                TORCH_HOME=str(ws.path("cache/torch")), TMPDIR=str(run / "tmp"),

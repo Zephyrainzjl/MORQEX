@@ -9,7 +9,7 @@ import platform
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE = Path(os.environ["MORPH_WORKSPACE"])
+WORKSPACE = Path(os.environ["MORQEX_WORKSPACE"])
 ZYN = ROOT.parent / "ZynJoule"
 GEM = WORKSPACE / "upstream/GEMsim"
 
@@ -65,6 +65,7 @@ def main():
               "python": platform.python_version(), "packages": versions,
               "zynjoule_files": inventory(ZYN, relevant), "zynjoule_docs_discovery": inventory(ZYN, docs),
               "gemsim_files": inventory(GEM, tracked_gem)}
+    report["morqex_integrated_source"] = inventory(ROOT, (ROOT / "src").rglob("*"))
     destination = WORKSPACE / "evidence/source_audit.json"
     destination.write_text(json.dumps(report, ensure_ascii=False, indent=2))
     print(json.dumps({"report": str(destination), "zynjoule_files": len(report["zynjoule_files"]),
