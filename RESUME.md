@@ -1,6 +1,6 @@
 # MORQEX恢复入口
 
-更新：2026-11-24。软件0.0.4，分支 `research/energy-certified-adaptivity`。当前是三维线性核心+固定Fick浓度认证+离线测试HTML；**尚未完成论文框架、完整DFN或三项原创性验证**。本轮推导/实测见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)，旧Fick证据见 [CERTIFIED_TRANSPORT](docs/CERTIFIED_TRANSPORT.md)，旧线性证据见 [LINEAR_CORE](docs/LINEAR_CORE.md)。
+更新：2026-11-24。软件0.0.5，分支 `research/sparse-coupled-scaling`。当前包括稀疏二次耦合规模路径、独立在线核/统计/场和离线HTML；**尚未完成论文框架、完整DFN或三项原创性验证**。本轮见 [SPARSE_SCALING](docs/SPARSE_SCALING.md)，旧推导/实测见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)，旧Fick证据见 [CERTIFIED_TRANSPORT](docs/CERTIFIED_TRANSPORT.md)，旧线性证据见 [LINEAR_CORE](docs/LINEAR_CORE.md)。
 
 ## 路径与限制
 
@@ -20,8 +20,18 @@
 6. 同源U/S/H/h/w0、平均应力/模式mu/一致切线、精确分相矩、P99/CVaR离散包络、ROI/全场、机械残差Gram与当前输入富集；算子校验/hash外置缓存。
 7. 二次化学能微结构双向扩散/力学及储库BV：封闭耗散、外部化学/机械功、库存/电流/BE数值耗散。默认在线不恢复体场；表面反应成本仍随表面数增长。
 8. 一维层合压力/厚度约束；checkpoint核对模型指纹/能量/库存，重启轨迹一致。不是完整电芯。
-9. 自身97测试通过，当前外部JUnit逐项记录。原GEMsim历史7通过/9可选依赖跳过，迁移代码未改故未重复，可选后端仍未认证。
-10. 0.0.4 wheel外部构建/安装、清空PYTHONPATH验证几何/FV/Tet/耦合/缓存/重启，并验证新Fick认证与P99树入口，不借源码/外部gem。
+9. 自身111测试通过，当前外部JUnit逐项记录。原GEMsim历史7通过/9可选依赖跳过，迁移代码未改故未重复，可选后端仍未认证。
+10. 0.0.5 wheel外部构建/安装、清空PYTHONPATH验证几何/FV/Tet/耦合/缓存/重启，并验证新Fick认证与P99树入口，不借源码/外部gem。
+
+## 0.0.5规模升级与恢复顺序
+
+新模块 `sparse_coupled.py`/`streamed_rom.py`：稀疏混合块全阶、Schur-GMRES交叉、按模式H作用、质量Riesz/宏观提升、完整耦合有理输入空间、非扩张+局部夹持能量上界、真正独立在线核及外置检查点、精确小矩阵应力统计、按需应力恢复。新路径没有N≤512限制，但仍受稀疏LU填充预算约束；不构造N×N H或identity应力算子。
+
+正式配置sparse_scaling.toml：8³/14³/18³×104/205/306，每例40步，Fick/完整耦合响应×16/32/48初始非恒定模式，共54条候选。Riesz/宏观提升方向另加且计入总阶。原2 mol/m³等价H容限不放宽，按证书选阶，低阶/Fick失败不算合格加速。最大活性N=4082、最大机械自由度及性能以最终JSON为准；不是固定几何网格收敛或真实CT。
+
+18³三种子合并任务在第三结构触发1.5GiB RSS限制；失败保留，不提高限额。当前18³必须--seed分进程（标签sparse_scaling_18_104/_205/_306），旧LU更换前释放；8/14各一个三种子任务。汇总脚本校验五任务源码hash/退出码，不能悄悄使用旧成功。所有数据、核、图、NPZ/轮包均外置。
+
+恢复：先看最新manifest；运行全部测试、五个规模任务和assemble_scaling_report.py，再生成/检查HTML。旧linear_study/controlled_study/energy_adaptivity哈希包含所有根模块，新模块改变后须重跑；参考/后端仅mechanics哈希未变，可沿用已限定范围证据，不重复近内存限额球细化。所有数值任务仍用run_local，单核/GPU禁用，原ZynJoule/训练不动。
 
 ## 0.0.4新增耦合适应与误差动力学
 
@@ -33,7 +43,7 @@
 
 ## 本轮HTML与新证据
 
-- 外部 `reports/MORQEX_test_report.html` 为单文件离线报告；含97项测试、实际场切片、各结构/候选/工况筛选、原始JSON下载、失败门槛和复现。`test_report_manifest.json`保存hash。
+- 外部 `reports/MORQEX_test_report.html` 为单文件离线报告；含111项测试、实际场切片、各结构/候选/工况筛选、原始JSON下载、失败门槛和复现。`test_report_manifest.json`保存hash。
 - `scripts/check_test_report.py`检查DOM/导航/PNG/证据hash，并以QuickJS DOM夹具运行筛选/导出；`reports/test_report_validation.json`留证。没有本地浏览器，未声称完整浏览器渲染验证。QuickJS只装外部venv，不是核心依赖。
 - `boundary_resolvent`构造已知表面通量响应空间；`ControlledDiffusion`预投影输入通道；`DiffusionCertificate`按每分量常数/零均值分解，使用图生成树Poincaré下界和离线QR残差，在线不恢复体场。
 - `CertifiedControlledDiffusion`超误差容限或物理误差包络拒绝步进，不返回不合格状态，旧状态只读/模型绑定。独立反例：平均模式为正、完整FV表面层为负，新增误差包络能拒绝。
@@ -80,3 +90,7 @@ python scripts/run_local.py --label html_validation -- /home/zephyrain/lw/morph_
 继续前必读RESEARCH_PLAN、LINEAR_CORE、THEORY、NOVELTY_MATRIX、RESOURCE_BUDGET；查看Git和最新manifest，不用旧日志替代当前验证。未push或公开发布私有GEMsim。
 
 0.0.4最终交付：97测试、0.0.4外部wheel/清空PYTHONPATH安装探测、45文献/28方法完整性与资源探测均通过。HTML约5.14MB，7图/48耦合候选/96旧通量记录，DOM/证据hash/QuickJS筛选导出通过；仍未做完整浏览器渲染。所有研究失败门槛继续显示，源代码不含运行大文件。
+
+最终冻结规模结果：最大N4082、力学自由度13623–13821、56总浓度模式；三独立种子包含误差证书的在线加速119.6–126.7倍（相对两种复用全阶中最快者），末时刻应力场L2误差0.0216%–0.0255%，末时刻P99误差0.0093%–0.0768%。完整离线库计费后盈亏平衡14.7–18.4条40步轨迹；完整场恢复另测，不混入在线倍率。当前最高成功任务采样组RSS1262.5MiB，GPU未使用；失败合并任务及控制器终止原因仍保留。全套111测试通过，包括周期全各向异性/剪切膨胀、稀疏双参考、独立紧凑核/重启和余项界。数字只适用于此固定离散二次协议，不代表连续体、真实电芯或期刊验收。
+
+0.0.5报告将包含111项测试、54条规模候选、48条旧耦合适应、96条旧通量记录与9张PNG；HTML/数组/检查点/轮包全部外置。读旧0.0.4段落时注意其密集H/80体素限制，不适用于新稀疏路径。

@@ -65,7 +65,7 @@ def pytest_data(path):
     return tests
 
 
-def gates(controlled, reference, tests, adaptive):
+def gates(controlled, reference, tests, adaptive, scaling):
     measured = [r for c in controlled["cases"] for r in c["comparison"] if r["status"] == "measured"]
     old = [r for r in measured if r["method"] != "resolvent-rebuilt-with-hotspot"]
     rebuilt = [r for r in measured if r["method"] == "resolvent-rebuilt-with-hotspot" and r["domain"] == "held-out-surface-hotspot"]
@@ -89,7 +89,11 @@ def gates(controlled, reference, tests, adaptive):
     ]
     selected = [m for c in adaptive["cases"] for result in c["results"] for m in result["methods"] if m["method"] == "adaptive-spectral-certificate"]
     rows.insert(1,("固定二次耦合：自适应全时域接受", "pass" if all(m["steps_completed"] == adaptive["config"]["steps"] and m["qualified_steps"] == adaptive["config"]["steps"] and m["bound_coverage"] == 1 for m in selected) else "fail", "三结构×两工况；全生成元H误差界、质量/能量转移及校验重启；不覆盖非线性BV/DFN/空间误差"))
-    rows.insert(2,("耦合步进整体加速", "fail", "16维误差动力学减少纠正查询，但包含纠正/证书/重建后仍慢于N=80复用LU全阶；不报告近DFN加速"))
+    rows.insert(2,("0.0.4小网格自适应整体加速", "fail", "16维误差动力学减少纠正查询，但包含纠正/证书/重建后仍慢于N=80复用LU全阶；不报告近DFN加速"))
+    selected_scaling = [next((m for m in c["methods"] if m["basis_family"]==c["selected_family"] and m["total_modes"]==c["selected_modes"]),None) for c in scaling["cases"]]
+    qualified = all(m is not None and m["qualified_steps"]==scaling["config"]["steps"] and m["bound_coverage"] for m in selected_scaling)
+    rows.insert(1,("稀疏固定二次耦合：九结构整轨迹资格", "pass" if qualified else "fail", "规模358→4082活性体素；按原H误差容限选阶，未通过的Fick/低阶候选保留；不等于连续体/DFN资格"))
+    rows.insert(2,("稀疏耦合在线加速：最快复用全阶基线", "pass" if qualified and all(m["qualified_speedup"]>1 for m in selected_scaling) else "fail", "同时计入ROM误差证书和守恒/能量输出；离线构建另列盈亏平衡，局部场恢复另测；不称近DFN成本"))
     return rows
 
 
@@ -142,9 +146,10 @@ def main():
     manifest_l, directory_l, linear = latest("linear_study", "linear_study.json")
     manifest_r, directory_r, reference = latest("reference_convergence", "qualification.json")
     manifest_a, directory_a, adaptive = latest("energy_adaptivity", "energy_adaptivity.json")
+    manifest_s, directory_s, scaling = latest("sparse_scaling", "sparse_scaling.json")
     manifest_t, directory_t, _ = latest("final_tests")
     tests = pytest_data(directory_t/"test_results.xml")
-    gate_rows = gates(controlled, reference, tests, adaptive)
+    gate_rows = gates(controlled, reference, tests, adaptive, scaling)
     passed = sum(t["status"] == "passed" for t in tests)
     rows = [r for c in controlled["cases"] for r in c["comparison"] if r["status"] == "measured"]
     coverage = min(r["bound_coverage"] for r in rows)
@@ -152,8 +157,21 @@ def main():
     commit = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     dirty = bool(subprocess.check_output(["git", "-C", str(ROOT), "status", "--porcelain"], text=True).strip())
     sections = []
-    sections.append('<section id="gates"><h2>研究门槛：测试通过与方法达标分开判断</h2><p>本轮推进固定二次能量双向耦合的全生成元认证、状态转移和误差动力学；保留前一版固定 Fick 证据。浓度误差、既定浓度模式内的机械误差、风险采样误差分别处理。</p>'+
+    sections.append('<section id="gates"><h2>研究门槛：测试通过与方法达标分开判断</h2><p>本轮增加稀疏耦合全阶基线、九结构规模验证和紧凑在线核；旧自适应和固定Fick失败门槛继续保留。浓度误差、既定浓度模式内的机械误差、风险采样误差分别处理。</p>'+
         table(["验证门槛", "状态", "证据与适用范围"], [[escape(name), badge(status), escape(detail)] for name,status,detail in gate_rows])+ '</section>')
+    scale_summary, scale_methods, batch_rows = [],[],[]
+    for case in scaling["cases"]:
+        chosen = next((m for m in case["methods"] if m["basis_family"]==case["selected_family"] and m["total_modes"]==case["selected_modes"]),None)
+        fields=case.get("selected_fields",{})
+        resource=next(x["manifest"] for x in scaling["runs"] if any(c["size"]==case["size"] and c["seed"]==case["seed"] for c in json.loads(Path(x["path"]).read_text())["cases"]))
+        scale_summary.append([str(case["size"])+"³ / "+str(case["seed"]),str(case["N"]),str(case["mechanical_dofs"]),str(case["diffusion_components"]),str(case["selected_modes"]),escape(case["selected_family"] or "未合格"),num(chosen["qualified_speedup"])+"×" if chosen else "—",pct(fields["relative_stress_L2"]) if fields else "—",pct(fields["P99_relative_error"]) if fields else "—",num(chosen["setup_s"]) if chosen else "—",num(chosen["offline_break_even_runs"]) if chosen else "—",num(resource["peak_group_rss_bytes_sampled"]/2**20)])
+        for method in case["methods"]:
+            cells=[str(case["size"])+"³ / "+str(case["seed"]),escape(method["basis_family"]),str(method["total_modes"]),str(method["qualified_steps"])+"/"+str(scaling["config"]["steps"]),num(method["maximum_bound"]),pct(method["relative_concentration_trajectory_L2"]),num(method["qualified_speedup"])+"×" if method["qualified_speedup"] else "不合格，不报加速",num(method["online_array_bytes"]/1024),num(method["maximum_energy_balance_J_m3"]),num(method["maximum_component_mass_error_mol"])]
+            scale_methods.append('<tr class="scaling-row" data-family="'+method["basis_family"]+'" data-seed="'+str(case["seed"])+'">'+''.join('<td>'+v+'</td>' for v in cells)+'</tr>')
+        for batch in case.get("macro_batches",[]):
+            batch_rows.append([str(case["size"])+"³ / "+str(case["seed"]),str(batch["macro_points"]),num(batch["median_s"]*1000),str(batch["operator_instances"]),num(batch["input_bytes"]/2**20)])
+    scale_headers=["网格/种子","浓度空间","总阶","合格步","最大H界","浓度轨迹L2","合格在线加速","静态核数组KiB","能量账最大误差","分量质量最大误差"]
+    sections.append('<section id="scaling"><h2>新增规模升级：稀疏耦合与独立在线计算核</h2><p>用稀疏机械—浓度—化学势混合块和Schur-GMRES构造两条全阶基线，均复用分解。选取其中在线更快的一条比较。逐模式应用机械Schur算子，不构造N×N浓度H，也不构造每个体素对应的完整应力响应列。</p><p>在线核与几何、机械求解器、全域浓度基分开保存；宏观输出/能量导数/误差证书仅用小矩阵。分量质量Riesz和宏观化学势提升方向明确计入模式数；完整耦合有理响应空间采用成熟Krylov思路，所有离线分解和60个响应RHS计费。</p><p class="note">范围：固定C、二次化学能、固定几何和已声明通量端口。三个尺寸各用新随机结构，这不是固定几何网格收敛。最大规模三种子合并运行曾触发1.5GiB限制，已保留失败；当前按独立进程重跑，不提高限额。工业规模、真实CT、非线性DFN和核心原创仍未验收。</p>'+table(["网格/种子","活性N","力学自由度","扩散分量数","所选总阶","浓度空间","在线加速","末时刻应力L2","末时刻P99尺度误差","ROM离线s","盈亏平衡轨迹数","任务采样RSS MiB"],scale_summary)+image(directory_s/"sparse_scaling.png","九结构规模实验：含证书的合格在线加速、末时刻应力误差和局部应力算子存储。虚线identity存储仅为公式估算，不是实际分配或实测内存；任务RSS另列表。")+image(directory_s/"sparse_certificate.png","最大规模的Fick/完整耦合响应空间消融：原定误差容限不放宽；右图显示由证书选阶后的真实误差和保守上界，未使用真实误差在线选阶。")+'<h3>完整54条候选记录</h3><div class="table-wrap"><table id="scaling-table"><thead><tr>'+''.join('<th>'+h+'</th>' for h in scale_headers)+'</tr></thead><tbody>'+''.join(scale_methods)+'</tbody></table></div><p class="muted">不合格trial轨迹仅作分析；生产step超容限即拒绝。计时统一包含浓度步进、能量、分量库存及ROM证书；局部场输出和离线构建不混入在线倍率。离线盈亏平衡包含完整有理库费用，共同机械装配/分解在两边抵消。旧小网格自适应慢于全阶的结果继续保留，不能和本轮不同算法/规模混算。静态核字节数不含小型LU缓存、状态和Python对象；最低模式数受独立扩散分量数约束。当前随机相场的分量较少，尚未验证大量独立颗粒。</p><h3>宏观批量查询：共享一个算子</h3>'+table(["网格/种子","宏观点数","中位耗时ms","算子份数","输入MiB"],batch_rows)+'<p>这是独立状态上的宏观应力查询，尚非完整多积分点电芯/DFN演化。精确应力均值、方差和von Mises二次矩另以小矩阵计算；P99及最大主应力仍按需恢复场，未冒充固定二次型。P99误差分母为max(参考P99绝对值,1000Pa)。规模测速采用合成固定参数，强耦合/高对比大N性能仍待验证。局部场计时、统计成本、离线存储与源数据见内嵌JSON。</p></section>')
     adaptive_rows, summary_rows, offline_rows = [],[],[]
     names = {"static-mass-projection":"静态质量投影", "static-energy-projection":"静态能量投影", "adaptive-snapshot":"图界快照富集", "adaptive-resolvent-block":"完整移位响应块", "adaptive-compressed-block":"压缩移位响应块", "adaptive-state-restart":"24维状态重启", "adaptive-dynamics-restart":"24维驱动重启", "adaptive-spectral-certificate":"16维误差动力学+快照"}
     for case in adaptive["cases"]:
@@ -220,25 +238,25 @@ def main():
         "python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_test_report.py"]
     commands.insert(1,"python scripts/run_local.py --label energy_adaptivity -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/benchmarks/study_energy_adaptivity.py --config /home/zephyrain/lw/MORQEX/configs/energy_adaptivity.toml")
     provenance = []
-    for label, manifest, directory, filename in [("energy_adaptivity",manifest_a,directory_a,"energy_adaptivity.json"),("controlled_study",manifest_c,directory_c,"controlled_study.json"),("linear_study",manifest_l,directory_l,"linear_study.json"),("reference_convergence",manifest_r,directory_r,"qualification.json"),("final_tests",manifest_t,directory_t,"test_results.xml")]:
+    for label, manifest, directory, filename in [("sparse_scaling",manifest_s,directory_s,"sparse_scaling.json"),("energy_adaptivity",manifest_a,directory_a,"energy_adaptivity.json"),("controlled_study",manifest_c,directory_c,"controlled_study.json"),("linear_study",manifest_l,directory_l,"linear_study.json"),("reference_convergence",manifest_r,directory_r,"qualification.json"),("final_tests",manifest_t,directory_t,"test_results.xml")]:
         artifact = directory/filename
         provenance.append({"label":label,"path":str(artifact),"sha256":hashlib.sha256(artifact.read_bytes()).hexdigest(),"manifest":manifest})
     sections.append('<section id="reproduce"><h2>复现与来源</h2><p>全部实验默认单 CPU 线程、nice +15、GPU 隐藏；组 RSS 上限 1.5 GiB、虚拟空间 3 GiB、每任务 180 s。源码内不放数据、算子、图像或构建产物。当前研究使用合成参数，不能导出定量材料设计结论。</p>'+
         table(["运行", "UTC", "Wall s", "采样组RSS MiB", "数据 SHA256"], [[p["label"],p["manifest"]["started_utc"],num(p["manifest"]["wall_seconds"]),num(p["manifest"]["peak_group_rss_bytes_sampled"]/2**20),'<code>'+p["sha256"]+'</code>'] for p in provenance])+
         '<h3>运行命令</h3><pre>'+escape('\n\n'.join(commands))+'</pre><details><summary>本轮完整配置</summary><pre>'+escape(json.dumps({"controlled":controlled["config"],"geometry":controlled["geometry_config"],"energy_adaptivity":adaptive["config"]}, ensure_ascii=False, indent=2))+'</pre></details>'+
-        '<h3>方法先例与后续门槛</h3><p>残差认证参照 <a href="https://numdam.org/item/M2AN_2005__39_1_157_0/">Grepl–Patera (2005)</a>；响应空间属于 <a href="https://epubs.siam.org/doi/10.1137/1.9780898718713.ch11">Krylov / moment-matching</a> 已有思想。本实现的树 Poincaré 推导与区间细分需和先进目标降阶方法继续比较，不称原创。下一步仍包括完整 DFN、独立双向参考、有效尾部加速、SVE/CT、先进基线与真实参数设计。</p><button id="download-evidence" type="button">下载内嵌原始证据 JSON</button><p class="muted">报告不依赖 CDN、服务器或网络连接；正文与表格在关闭 JavaScript 时仍可阅读。JS仅用于筛选和导出。</p></section>')
+        '<h3>方法先例与后续门槛</h3><p>残差认证参照 <a href="https://numdam.org/item/M2AN_2005__39_1_157_0/">Grepl–Patera (2005)</a>；响应空间属于 <a href="https://epubs.siam.org/doi/10.1137/1.9780898718713.ch11">Krylov / moment-matching</a> 已有思想。本实现的树 Poincaré 推导与区间细分需和先进目标降阶方法继续比较，不称原创。本轮已有固定二次模型两条独立代数参考；下一步仍包括连续体空间资格、独立非线性三维参考、完整DFN、尾部加速、SVE/CT、先进基线与真实参数设计。</p><button id="download-evidence" type="button">下载内嵌原始证据 JSON</button><p class="muted">报告不依赖 CDN、服务器或网络连接；正文与表格在关闭 JavaScript 时仍可阅读。JS仅用于筛选和导出。</p></section>')
     payload = {"generated_utc":now,"source_commit":commit,"source_dirty":dirty,"provenance":provenance,
         "tests":tests,"research_gates":[{"name":n,"status":s,"detail":d} for n,s,d in gate_rows],
-        "controlled":controlled,"linear":linear,"reference":reference,"energy_adaptivity":adaptive}
+        "controlled":controlled,"linear":linear,"reference":reference,"energy_adaptivity":adaptive,"sparse_scaling":scaling}
     embedded = json.dumps(payload, ensure_ascii=False, allow_nan=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
     failed_gates = sum(s == "fail" for _,s,_ in gate_rows)
-    cards = f'<div class="cards"><div class="card"><strong>{passed}/{len(tests)}</strong><span>实际测试通过</span></div><div class="card"><strong>{len(controlled["cases"])}</strong><span>独立 GEMsim 结构</span></div><div class="card"><strong>{pct(coverage)}</strong><span>本轮离散误差界覆盖</span></div><div class="card"><strong>{failed_gates}</strong><span>研究门槛仍未通过</span></div></div>'
-    links = [('gates','验收门槛'),('adaptive','新增耦合适应'),('controlled','浓度与应力'),('bounds','误差与 P99'),('reference','参考与负结果'),('tests','测试明细'),('reproduce','复现与来源')]
-    document = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; connect-src \'none\'; base-uri \'none\'; object-src \'none\'"><title>MORQEX · 测试与研究验证报告</title><style>'+CSS+'</style></head><body><header><div class="eyebrow">MORQEX / RESEARCH VERIFICATION</div><h1>测试、误差与计算证据</h1><span class="tag">研究原型 · 尚未达到论文验收</span><p>三维微结构 · 双向二次耦合 · 状态保持富集 · 辅助误差动力学 · 应力尾部<br>本次报告展示真实结果，失败项与待完成项保留。</p><div class="muted" style="color:#ccdae6">'+escape(now)+' · commit '+escape(commit[:12])+(' · 含未提交工作树' if dirty else ' · 工作树干净')+'</div></header><div class="layout"><nav aria-label="报告导航">'+''.join(f'<a href="#{ident}">{label}</a>' for ident,label in links)+'</nav><main>'+cards+''.join(sections)+'</main></div><footer>本地可复现实验报告。算法可靠性、模型适用性、材料真实性与发表标准分别验证；数值测试数量不替代方法学贡献。</footer><script type="application/json" id="evidence-json">'+embedded+'</script><script id="report-interactions">'+JS+'</script></body></html>'
+    cards = f'<div class="cards"><div class="card"><strong>{passed}/{len(tests)}</strong><span>实际测试通过</span></div><div class="card"><strong>{len(scaling["cases"])}</strong><span>本轮规模/种子工况</span></div><div class="card"><strong>{pct(coverage)}</strong><span>原通量离散误差界覆盖</span></div><div class="card"><strong>{failed_gates}</strong><span>研究门槛仍未通过</span></div></div>'
+    links = [('gates','验收门槛'),('scaling','新增规模升级'),('adaptive','新增耦合适应'),('controlled','浓度与应力'),('bounds','误差与 P99'),('reference','参考与负结果'),('tests','测试明细'),('reproduce','复现与来源')]
+    document = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; connect-src \'none\'; base-uri \'none\'; object-src \'none\'"><title>MORQEX · 测试与研究验证报告</title><style>'+CSS+'</style></head><body><header><div class="eyebrow">MORQEX / RESEARCH VERIFICATION</div><h1>测试、误差与计算证据</h1><span class="tag">研究原型 · 尚未达到论文验收</span><p>三维微结构 · 稀疏双向耦合 · 独立在线核 · 误差控制 · 分层输出<br>本次报告展示真实结果，失败项与待完成项保留。</p><div class="muted" style="color:#ccdae6">'+escape(now)+' · commit '+escape(commit[:12])+(' · 含未提交工作树' if dirty else ' · 工作树干净')+'</div></header><div class="layout"><nav aria-label="报告导航">'+''.join(f'<a href="#{ident}">{label}</a>' for ident,label in links)+'</nav><main>'+cards+''.join(sections)+'</main></div><footer>本地可复现实验报告。算法可靠性、模型适用性、材料真实性与发表标准分别验证；数值测试数量不替代方法学贡献。</footer><script type="application/json" id="evidence-json">'+embedded+'</script><script id="report-interactions">'+JS+'</script></body></html>'
     destination.parent.mkdir(parents=True, exist_ok=True); destination.write_text(document, encoding="utf-8")
     record = {"html":str(destination),"bytes":destination.stat().st_size,"sha256":hashlib.sha256(destination.read_bytes()).hexdigest(),
         "source_commit":commit,"source_dirty":dirty,"tests":len(tests),"passed":passed,"research_failed_gates":failed_gates,
-        "coupled_candidate_rows":len(adaptive_rows),"self_contained":True,"renderer_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+        "scaling_candidate_rows":len(scale_methods),"coupled_candidate_rows":len(adaptive_rows),"self_contained":True,"renderer_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     (WS/"reports/test_report_manifest.json").write_text(json.dumps(record, ensure_ascii=False, indent=2))
     print(json.dumps(record, ensure_ascii=False, indent=2))
 

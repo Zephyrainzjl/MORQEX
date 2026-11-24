@@ -59,7 +59,9 @@ def main():
     adaptive_rows = [r for r in parser.rows if "adaptive-row" in r["class"]]
     expected_adaptive = sum(len(p["methods"]) for c in evidence["energy_adaptivity"]["cases"] for p in c["results"])
     assert len(adaptive_rows) == expected_adaptive == 48
-    assert len(parser.images) == 7
+    assert len(parser.images) == 9
+    scaling_rows=[r for r in parser.rows if "scaling-row" in r["class"]]
+    assert len(scaling_rows)==sum(len(c["methods"]) for c in evidence["sparse_scaling"]["cases"])==54
     assert any(g["status"] == "fail" for g in evidence["research_gates"]), "Known research failures were omitted"
     for source in evidence["provenance"]:
         assert hashlib.sha256(Path(source["path"]).read_bytes()).hexdigest() == source["sha256"]
@@ -87,7 +89,7 @@ const Blob=function(data,options){this.data=data;};const URL={createObjectURL:()
     assert runtime.eval("rows.tests.filter(r=>!r.hidden).length") == expected_failed
     runtime.eval("elements['download-evidence'].click();")
     result = {"html":str(path),"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),
-        "images_embedded":len(parser.images),"actual_test_rows":len(test_rows),"method_rows":len(method_rows),"coupled_candidate_rows":len(adaptive_rows),
+        "images_embedded":len(parser.images),"actual_test_rows":len(test_rows),"method_rows":len(method_rows),"coupled_candidate_rows":len(adaptive_rows),"scaling_candidate_rows":len(scaling_rows),
         "source_artifact_hashes_verified":True,"offline_assets_only":True,"javascript_parse_and_filter_checks":"passed (QuickJS DOM fixture)",
         "full_browser_rendering":"not performed; no local browser available"}
     (ws/"reports/test_report_validation.json").write_text(json.dumps(result, indent=2))

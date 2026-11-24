@@ -82,3 +82,7 @@ R25：[Antoulas，Krylov方法章节，SIAM343–361，在线2012](https://epubs
 ## 0.0.4：结构保持与误差动力学直接先例
 
 现45篇/28方法×25字段，新增R26–R29。R26的pH Petrov–Galerkin、R27的在线低秩更新、R28的FV演化认证属于成熟先例。R29（2024，Adv Comput Math 50:100，10.1007/s10444-024-10195-8）原文第2–3节已读：辅助线性误差问题和分层界可减少普通残差界的高估，需额外低维求解。因此本轮16维误差动力学不能列为原创。各条primary_url及已读层级在TSV；没有冒称复现作者整套算法。MORQEX的独立受限推导/消融见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)。
+
+## 0.0.5稀疏规模路径
+
+本轮核对SciPy GMRES真实残差/预条件接口及NGSolve的Schur教程，属于软件/代数来源，不冒充新增学术文献。研究登记仍45参考/28方法；R25/R26已有有理输入/pH先例。新规模路径是独立受限实现，未声称复现所有先进算法。 详见 [推导、范围和失败记录](docs/SPARSE_SCALING.md)。

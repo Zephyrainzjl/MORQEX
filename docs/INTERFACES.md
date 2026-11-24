@@ -136,3 +136,7 @@ echemAMR保留独立原生构建入口和原模型/许可证；默认CPU。安�
 ## 0.0.4耦合认证/富集入口
 
 `QuadraticGradientSystem`要求完整活性identity浓度坐标的机械响应，N≤512；不是可扩展黑箱DFN。`PortGradientModel(..., certificate_method="spectral", error_modes=16)`返回只读H误差状态并按容限/物理包络接受；`AdaptiveGradientTransport`在拒绝后执行计费的全阶浓度纠正，保留旧误差和能量/库存，预算失败不提交候选。检查点绑定完整系统、误差空间、实现与数组hash。旧Fick证书仍仅Fick；新证书仅固定二次耦合。详见 [ENERGY_ADAPTIVITY](ENERGY_ADAPTIVITY.md)。
+
+## 0.0.5稀疏规模路径
+
+新增sparse_coupled.SparseChemoelasticSystem、streamed_rom.StreamedEnergyROM/OnlineEnergyKernel/StressLocalization/QuadraticStressStatistics。在线核无N域数据，可独立保存/安装加载；统计以显式选区体积归一；局部应力列显式预算/按需构建。旧接口原样保留。 详见 [推导、范围和失败记录](SPARSE_SCALING.md)。

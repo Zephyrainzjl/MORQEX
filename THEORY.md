@@ -127,3 +127,7 @@ A_{ij}=V^{-1}\int_{Y_a}\nabla\phi_i\cdot L\nabla\phi_j\,dV.
 ## 0.0.4固定二次耦合证书与状态转移
 
 新推导详见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)：H=κM+H_el、A=M⁻¹(K/κ)M⁻¹；pH两空间W与质量Riesz方向H⁻¹Mχ；同能量BE外功/耗散；全生成元残差的核/余项分解及16维带符号误差代理。余项用显式Gershgorin/图下界和跨块耦合范数，不以未验证特征值充当严格常数。嵌套转移原样继承误差；包含当前场的非嵌套重启将浮点缺陷加入旧界。固定N≤512小系统、精确算术推导与FP64覆盖试验分开，不宣称区间浮点证明或完整非线性DFN认证。
+
+## 0.0.5稀疏规模路径
+
+新路径稀疏混合(v,z,p)的完整BE与Schur-GMRES交叉；H_z=D_z−JᵀK_m⁻¹J且I≤H_z≤D_z。逐模式投影、H逆质量Riesz/宏观提升均无需稠密H；非扩张BE给δ_n≤δ_old+‖r_n‖D_z，离线QR后在线仅小矩阵。初态误差和FP64/连续体边界明确，详细公式见链接。 详见 [推导、范围和失败记录](docs/SPARSE_SCALING.md)。

@@ -80,3 +80,28 @@ assert reloaded.time == gradient_state.time and reloaded.error.total_bound == gr
 assert abs(gradient_diag.dynamics.energy_balance) < 1e-7
 print(json.dumps({"installed_coupled_adaptive":"energy metric + signed error dynamics + checkpoint",
     "energy_error_bound":reloaded.error.total_bound,"additional_error_coordinates":restarted.model.error_space.count}))
+
+from morqex.sparse_coupled import SparseChemoelasticSystem
+from morqex.streamed_rom import StreamedEnergyROM,OnlineEnergyKernel,StressLocalization
+sparse_system=SparseChemoelasticSystem(solver,diffusion,np.array([1e-6]*3+[0.]*3),patterns,
+    chemical_curvature=.1,reference_concentration=20000.,maximum_concentration=40000.)
+sparse_rom=StreamedEnergyROM(sparse_system,response_basis)
+sparse_state=sparse_rom.initialize(np.zeros(sparse_system.n),sparse_system,error_tolerance=1.)
+compact=sparse_rom.detach_online();sparse_state,_=compact.step(sparse_state,.5,[1e-5,0.],error_tolerance=1.)
+compact_path=compact.save(ws,str(Path.cwd().relative_to(ws.root)/"installed_compact"),sparse_state)
+loaded,sparse_restarted=OnlineEnergyKernel.load(compact_path)
+assert not hasattr(loaded,'basis') and not hasattr(loaded,'system')
+np.testing.assert_array_equal(loaded.macro_stress(sparse_restarted),compact.macro_stress(sparse_state))
+print(json.dumps({"installed_sparse_coupled":"mixed/Schur energy action + detached online checkpoint",
+    "compact_kernel_bytes":loaded.online_array_bytes(),"energy_error_bound":sparse_restarted.error_bound}))
+# Load a genuinely large source-built checkpoint using only the installed wheel.
+scaling_manifest=json.loads((ws.root/'reports/sparse_scaling_latest.json').read_text())
+scaling_data=json.loads((Path(scaling_manifest['run'])/'sparse_scaling.json').read_text())
+large_case=next(c for c in scaling_data['cases'] if c['size']==18 and c['seed']==306)
+large_kernel,large_state=OnlineEnergyKernel.load(large_case['compact_kernel_path'])
+solid_fraction=large_case['tetrahedra']/(6*large_case['size']**3)
+expected_mean=np.array(large_case['selected_fields']['sample_volume_mean'])*solid_fraction
+np.testing.assert_allclose(large_kernel.macro_stress(large_state),expected_mean,rtol=1e-10,atol=1e-5)
+assert not hasattr(large_kernel,'basis') and not hasattr(large_kernel,'system')
+print(json.dumps({'installed_large_source_checkpoint_N':large_case['N'],'modes':large_kernel.dimension,
+    'source_basis_or_solver_loaded':False,'macro_mean_cross_check':'passed'}))

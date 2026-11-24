@@ -15,5 +15,5 @@ gpu_enabled = false
 [research]
 seed = 20261124
 precision = "float64"
-stage = "certified-fick-and-research-report"
+stage = "sparse-coupled-scaling"
 
