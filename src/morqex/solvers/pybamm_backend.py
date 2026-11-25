@@ -19,7 +19,7 @@ def provenance():
         'solvers/casadi_solver.py','solvers/casadi_algebraic_solver.py']
     files.append('expression_tree/operations/convert_to_casadi.py')
     files.append('models/full_battery_models/lithium_ion/dfn.py')
-    files.extend('input/parameters/lithium_ion/'+name+'.py' for name in ['Ai2020','Marquis2019','OKane2022'])
+    files.extend('input/parameters/lithium_ion/'+name+'.py' for name in ['Ai2020','Marquis2019','OKane2022','Prada2013'])
     files.extend(str(path.relative_to(root)) for path in sorted((root/'input/parameters/lithium_ion/data').glob('*.csv')))
     return {'version':pybamm.__version__,'module':str(root),'patch':getattr(pybamm,'MORQEX_PATCH_LEVEL',None),'implementation':'bundled upstream Python source plus qualified 1D derivative conversion fix; binary dependencies external',
         'source_sha256':{p:hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}}

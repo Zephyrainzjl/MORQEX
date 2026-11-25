@@ -1,5 +1,11 @@
 # MORQEX
 
+当前研究版 **0.0.9**：微结构—DFN退化端口、NMC/LFP/LCO独立母体入口、成分保持的掺杂分区、分相弹性/化学应变映射、有理界面算子压缩及固定状态残差界、退化库存嵌套富集。见[接口与物理范围](docs/CROSSSCALE_CATHODES.md)。下方0.0.8保留历史说明。
+
+本版191测试通过；45个限定数值案例（含独立GEMsim/CBD形貌、匹配面积/输运的原生DFN及精度失败候选）和1个局部饱和适用域拒绝。可离线打开外部`morph_workspace/reports/MORQEX_crossscale_cathodes_report.html`，重放10组工况的浓度、应力、掺杂、SEI、析锂、死锂及损伤场。完整数据/图/HTML/wheel都在源码外；数值通过不等于材料标定或顶刊验收。已配置外部环境与校验CT数据时，用`/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python scripts/run_crossscale_release.py`串行复现。
+
+本版报告入口：外部`morph_workspace/reports/MORQEX_crossscale_cathodes_report.html`，生成物均不放源码。复现：`scripts/run_crossscale_suite.py` → 受限全套测试 → `scripts/build_crossscale_report.py` → `scripts/check_crossscale_report.py`；数值步骤仍须经`run_local.py`。不同母体有各自OCP/扩散/反应参数，保留热力学投影和补充参数审计；LFP有效单相模型不代表两相转变/滞回已解析。示例掺杂物性是声明的合成灵敏度参数，不能作为真实元素性能结论。
+
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
 当前 **0.0.8：可组合的分相CBD、CT与退化跨尺度研究框架**。非均匀DFN保留，新增相材料/拓扑/算子/子模型接口、真实CT来源、变化cohesive界面、SEI与析锂/剥离/死锂库存、热反馈及数值重启。[数学与限制](docs/EXTENSIBLE_DEGRADATION.md)，[自定义API](docs/CUSTOM_COMPONENTS.md)。**不是几乎所有物理组合或顶刊验收已完成**：固定bulk C、单宿主化学、标量界面损伤和集总热等限制仍在。

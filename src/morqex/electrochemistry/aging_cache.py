@@ -35,8 +35,12 @@ def save_aging_operator(path,op,cohesive):
         voxel_ids=op.full.diffusion.voxel_ids,element_cells=op.full._element_cells,element_voxel_ids=cohesive.mesh.voxel_ids,points=cohesive.mesh.points,cells=cohesive.mesh.cells,volumes=cohesive.mesh.volumes,
         area_full=op.full.area,reaction_area=op.reaction_area)
     np.savez_compressed(path/'localization.npz',**arrays)
+    files=['cohesive_online.npz','localization.npz']
+    if hasattr(cohesive,'certificate_arrays'):
+        np.savez_compressed(path/'certificate.npz',**cohesive.certificate_arrays);files.append('certificate.npz')
     metadata={'schema':'morqex-aging-kernel-1','cohesive':cohesive.metadata,'base':op.metadata(),
-        'sha256':{n:hashlib.sha256((path/n).read_bytes()).hexdigest() for n in ['cohesive_online.npz','localization.npz']}}
+        'sha256':{n:hashlib.sha256((path/n).read_bytes()).hexdigest() for n in files}}
+    if hasattr(op,'regional_chemistry'):metadata['regional_chemistry']=op.regional_chemistry.metadata()
     (path/'manifest.json').write_text(json.dumps(metadata,indent=2));return path
 
 def load_aging_kernel(path):
@@ -45,7 +49,12 @@ def load_aging_kernel(path):
     if metadata['schema']!='morqex-aging-kernel-1':raise ValueError('Unknown kernel schema')
     if hashlib.sha256((path/'cohesive_online.npz').read_bytes()).hexdigest()!=metadata['sha256']['cohesive_online.npz']:raise ValueError('Cohesive kernel checksum mismatch')
     with np.load(path/'cohesive_online.npz',allow_pickle=False) as a:coh=CohesiveOnline(a['direct'],a['factors'],a['eigenvalues'],float(a['residual']))
-    return EnergyKernel(OnlineMicrostructureOperator.load(path/'base'),coh)
+    operator=OnlineMicrostructureOperator.load(path/'base')
+    if 'regional_chemistry' in metadata:
+        from ..doping import RegionalChemistry,DopantLaw
+        profile=metadata['regional_chemistry'];operator.regional_chemistry=RegionalChemistry(profile['fraction'],DopantLaw(**profile['law']))
+        if len(operator.regional_chemistry.fraction)!=operator.dimension:raise ValueError('Dopant profile/kernel dimension mismatch')
+    return EnergyKernel(operator,coh)
 
 class AgingLocalization:
     def __init__(self,path):
@@ -58,3 +67,11 @@ class AgingLocalization:
         fields={n:np.einsum('...j,eij->...ei',q,self.arrays[n+'_direct'])+np.einsum('...k,eik->...ei',z,self.arrays[n+'_modes']) for n in ['stress','strain','displacement']}
         pairs=self.arrays['interface_pairs'];fields['opening']=fields['displacement'][...,pairs[:,1],:]-fields['displacement'][...,pairs[:,0],:]
         fields['concentration']=np.asarray(c)@self.arrays['P'].T;return fields
+
+def load_cohesive_certificate(path):
+    """Load small residual coefficients without loading localization fields."""
+    path=Path(path);metadata=json.loads((path/'manifest.json').read_text())
+    expected=metadata['sha256'].get('certificate.npz')
+    if expected is None:raise ValueError('Kernel has no cohesive compression certificate')
+    if hashlib.sha256((path/'certificate.npz').read_bytes()).hexdigest()!=expected:raise ValueError('Certificate checksum mismatch')
+    with np.load(path/'certificate.npz',allow_pickle=False) as data:return {n:data[n] for n in data.files}

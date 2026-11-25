@@ -13,6 +13,7 @@ from pybamm.models.submodels.thermal.lumped import Lumped
 from .microstructure_dfn import (MicrostructureParticle,MicrostructureOCP,MicrostructureKinetics,GeometryActiveMaterial,
     GeometryTransport,MicrostructureStack,PortThermal,key,dot)
 from ..degradation import ReactionContext
+from .linear_port import linear_combination as dot
 
 def age(d,name,k=None):return f'MORQEX aging {d} '+(f'region {k} ' if k is not None else '')+name
 
@@ -60,6 +61,7 @@ class AgingStates(pb.BaseSubModel):
         self.events.append(pb.Event('MORQEX aging electrolyte validity floor',pb.min(v['Electrolyte concentration [mol.m-3]'])-self.config.minimum_electrolyte_mol_m3))
 
 class AgingMechanics(pb.BaseSubModel):
+    modal_variables=False
     def __init__(self,param,options,stack,kernels,config,feedback):super().__init__(param,options=options);self.stack=stack;self.kernels=kernels;self.config=config;self.feedback=feedback
     def get_fundamental_variables(self):
         variables={};self._equations={}
@@ -70,6 +72,9 @@ class AgingMechanics(pb.BaseSubModel):
             for k in range(op.dimension):
                 names[key(d,k,'elastic chemical potential [J.mol-1]')]=1000.
                 names[key(d,k,'elastic chemical potential dT [J.mol-1.K-1]')]=10.
+            for k in range(len(self.kernels[d].parts()[1]) if self.modal_variables else 0):
+                names[age(d,'cohesive amplitude',k)]=100.
+                names[age(d,'cohesive amplitude dT',k)]=1.
             for name,scale in names.items():variables[name]=pb.Variable(name,domain=f'{d} electrode',auxiliary_domains={'secondary':'current collector'},scale=scale)
         self._owned=variables;return variables
     def _equation(self,v,name,target):
@@ -89,21 +94,33 @@ class AgingMechanics(pb.BaseSubModel):
             h0T=float(D[0,-1])-sum((float(row[0]*row[-1])/z for row,z in zip(F,den)),pb.Scalar(0))
             hTT=float(D[-1,-1])-sum((float(row[-1]**2)/z for row,z in zip(F,den)),pb.Scalar(0))
             eps=v[f'MORQEX {d} axial strain'];epsT=v[age(d,'strain-T [K-1]')]
-            self._equation(v,f'MORQEX {d} axial strain',(-dot(D[0,1:-1],dc)-float(D[0,-1])*theta+sum((float(row[0])*bb/z for row,bb,z in zip(F,b,den)),pb.Scalar(0)))/h00)
-            self._equation(v,age(d,'strain-T [K-1]'),-h0T/h00)
             q=[eps,*dc,theta];s=[float(row[0])*eps+bb for row,bb in zip(F,b)]
-            forces=[dot(row,q)-sum((float(f[i])*ss/z for f,ss,z in zip(F,s,den)),pb.Scalar(0)) for i,row in enumerate(D)]
-            W=.5*(sum((qq*dot(row,q) for qq,row in zip(q,D)),pb.Scalar(0))-sum((ss**2/z for ss,z in zip(s,den)),pb.Scalar(0)))
-            self._equation(v,age(d,'energy release [J.m-3]'),-.5*sum((ss**2*p/z**2 for ss,p,z in zip(s,dp,den)),pb.Scalar(0)))
-            self._equation(v,age(d,'elastic damage-T [J.m-3.K-1]'),sum((ss*(float(f[-1])+float(f[0])*epsT)*p/z**2 for f,ss,p,z in zip(F,s,dp,den)),pb.Scalar(0)))
-            self._equation(v,age(d,'elastic TT [J.m-3.K-2]'),hTT+h0T*epsT)
+            amplitudes=[];thermal_amplitudes=[]
+            if self.modal_variables:
+                for k,(f,ss,z) in enumerate(zip(F,s,den)):
+                    a=v[age(d,'cohesive amplitude',k)];at=v[age(d,'cohesive amplitude dT',k)]
+                    self._equation(v,age(d,'cohesive amplitude',k),ss/z)
+                    self._equation(v,age(d,'cohesive amplitude dT',k),(float(f[-1])+float(f[0])*epsT)/z)
+                    amplitudes.append(a);thermal_amplitudes.append(at)
+                self._equation(v,f'MORQEX {d} axial strain',(-dot(D[0,1:-1],dc)-float(D[0,-1])*theta+dot(F[:,0],amplitudes))/float(D[0,0]))
+                self._equation(v,age(d,'strain-T [K-1]'),(-float(D[0,-1])+dot(F[:,0],thermal_amplitudes))/float(D[0,0]))
+            else:
+                amplitudes=[ss/z for ss,z in zip(s,den)]
+                thermal_amplitudes=[(float(f[-1])+float(f[0])*epsT)/z for f,z in zip(F,den)]
+                self._equation(v,f'MORQEX {d} axial strain',(-dot(D[0,1:-1],dc)-float(D[0,-1])*theta+sum((float(f[0])*bb/z for f,bb,z in zip(F,b,den)),pb.Scalar(0)))/h00)
+                self._equation(v,age(d,'strain-T [K-1]'),-h0T/h00)
+            forces=[dot(row,q)-dot(F[:,i],amplitudes) for i,row in enumerate(D)]
+            W=.5*(sum((qq*dot(row,q) for qq,row in zip(q,D)),pb.Scalar(0))-sum((ss*a for ss,a in zip(s,amplitudes)),pb.Scalar(0)))
+            self._equation(v,age(d,'energy release [J.m-3]'),-.5*sum((a**2*p for a,p in zip(amplitudes,dp)),pb.Scalar(0)))
+            self._equation(v,age(d,'elastic damage-T [J.m-3.K-1]'),sum((a*at*p for a,at,p in zip(amplitudes,thermal_amplitudes,dp)),pb.Scalar(0)))
+            self._equation(v,age(d,'elastic TT [J.m-3.K-2]'),float(D[-1,-1])+float(D[-1,0])*epsT-dot(F[:,-1],thermal_amplitudes))
             self._equation(v,f'MORQEX {d} elastic entropy force [J.m-3.K-1]',forces[-1])
             release=v[age(d,'energy release [J.m-3]')];wdT=v[age(d,'elastic damage-T [J.m-3.K-1]')]
             rate=self.config.damage.evaluate(damage,self.feedback*release)
             for k in range(op.dimension):
                 self._equation(v,key(d,k,'elastic chemical potential [J.mol-1]'),forces[k+1]/op.weights[k])
                 self._equation(v,key(d,k,'elastic chemical potential dT [J.mol-1.K-1]'),(float(D[k+1,-1])+float(D[k+1,0])*epsT-
-                    sum((float(f[k+1])*(float(f[-1])+float(f[0])*epsT)/z for f,z in zip(F,den)),pb.Scalar(0)))/op.weights[k])
+                    dot(F[:,k+1],thermal_amplitudes))/op.weights[k])
             v.update({f'MORQEX {d} elastic energy density [J.m-3]':W,age(d,'damage rate [s-1]'):rate,
                 age(d,'damage dissipation [W.m-3]'):self.feedback*release*rate,
                 age(d,'damage entropy heat [W.m-3]'):self.feedback*T*wdT*rate})
@@ -124,14 +141,16 @@ class AgingNetwork(MicrostructureKinetics):
             for law in laws:
                 if hasattr(law,'thickness'):stock['sei_thickness_m']=law.thickness(stock,float(A))
             z=v[age(d,'film current [A.m-2]',k)];c=v[key(d,k,'concentration [mol.m-3]')];U=v[key(d,k,'open circuit potential [V]')]
-            e=delta-film*z-U;j0=self.phase_param.j0(ce,c,T);j=2*j0*pb.sinh(self.param.F*e/(2*self.param.R*T)) if A>0 else 0*c
+            chemistry=getattr(op,'regional_chemistry',None)
+            e=delta-film*z-U;j0=self.phase_param.j0(ce,c,T)*(1. if chemistry is None else float(chemistry.kinetic_factor[k]));j=2*j0*pb.sinh(self.param.F*e/(2*self.param.R*T)) if A>0 else 0*c
             v[key(d,k,'reaction current [A.m-2]')]=j;v[key(d,k,'exchange current [A.m-2]')]=j0;v[key(d,k,'reaction overpotential [V]')]=e
             main.append(h*j);exchange.append(h*j0);eta.append(e);j_side=0*c;rate_sum=0*c
             context=ReactionContext(stock,delta,T,ce,float(A),float(A)*h,self.param.F,self.param.R,z,film)
             for law in laws:
-                contribution=law.evaluate(context);jlaw=contribution.current if A>0 else 0*c;j_side+=jlaw
+                contribution=law.evaluate(context);factor=1. if chemistry is None else float(chemistry.side_factor[k])
+                jlaw=contribution.current*factor if A>0 else 0*c;j_side+=jlaw
                 for r in law.reservoirs():
-                    rate=contribution.rates[r.name] if A>0 else 0*c;v[age(d,r.name+' rate [mol.m-3.s-1]',k)]=rate
+                    rate=contribution.rates[r.name]*factor if A>0 else 0*c;v[age(d,r.name+' rate [mol.m-3.s-1]',k)]=rate
                     reservoir_power+=float(r.chemical_potential_J_mol)*rate;rate_sum+=rate
                 side_D+=float(A)*h*jlaw*(delta-film*z-float(contribution.equilibrium_V))
             v[age(d,'film current residual [A.m-2]',k)]=z-j-j_side
@@ -150,14 +169,28 @@ class AgingNetwork(MicrostructureKinetics):
 class AgingParticle(MicrostructureParticle):
     def get_coupled_variables(self,v):
         d,D=self.domain_Domain;op=self.op;phase=self.phase_param;T=v[f'{D} electrode temperature [K]'];h=1-v[age(d,'damage')]
-        c=[v[key(d,k,'concentration [mol.m-3]')] for k in range(op.dimension)];chemical=[-self.param.F*phase.U(a/phase.c_max,T) for a in c]
+        chemistry=getattr(op,'regional_chemistry',None)
+        c=[v[key(d,k,'concentration [mol.m-3]')] for k in range(op.dimension)]
+        base_chemical=[-self.param.F*phase.U(a/phase.c_max,T) for a in c]
+        chemical=[base if chemistry is None else base-self.param.F*chemistry.ocp_shift(k,a/phase.c_max) for k,(a,base) in enumerate(zip(c,base_chemical))]
         mu=[f+self.feedback*v[key(d,k,'elastic chemical potential [J.mol-1]')] for k,f in enumerate(chemical)]
         j=[v[key(d,k,'reaction current [A.m-2]')] for k in range(op.dimension)];massdot=[-float(A)*h*jj/self.param.F for A,jj in zip(op.reaction_area,j)];diffusion=pb.Scalar(0)
         i,jj=np.nonzero(np.triu(op.stiffness.toarray(),1))
         for a,b in zip(i,jj):
             g=-float(op.stiffness[a,b]);mid=(c[a]+c[b])/2;dc=c[a]-c[b];reg=(1e-7*phase.c_max)**2
-            curvature=-2*self.param.F*phase.U(mid/phase.c_max,T).diff(c[a]);secant=((chemical[a]-chemical[b])*dc+reg*curvature)/(dc**2+reg)
-            flux=g*h*phase.D(mid,T)/secant*(mu[a]-mu[b]);massdot[a]-=flux;massdot[b]+=flux;diffusion+=flux*(mu[a]-mu[b])
+            curvature=-2*self.param.F*phase.U(mid/phase.c_max,T).diff(c[a])
+            # Use the SAME host secant at all compositions: offsets belong in
+            # the driving potential, not in the mobility denominator. This
+            # also guarantees continuity as a nonuniform dopant field -> 0.
+            secant=((base_chemical[a]-base_chemical[b])*dc+reg*curvature)/(dc**2+reg)
+            if chemistry is not None:secant-=self.param.F*float((chemistry.slope_V[a]+chemistry.slope_V[b])/2)/phase.c_max
+            if chemistry is None:factor=1.
+            else:
+                da,db=chemistry.diffusion_factor[a],chemistry.diffusion_factor[b];factor=float(2*da*db/(da+db))
+            # CBD contact loss reduces accessible reaction area and electronic
+            # transport. It does not change intrinsic diffusion inside an
+            # intact active host; changes of D require a constitutive law.
+            flux=g*factor*phase.D(mid,T)/secant*(mu[a]-mu[b]);massdot[a]-=flux;massdot[b]+=flux;diffusion+=flux*(mu[a]-mu[b])
         reaction=sum((float(A)*h*current*v[key(d,k,'reaction overpotential [V]')] for k,(A,current) in enumerate(zip(op.reaction_area,j))),pb.Scalar(0))
         reaction+=v[age(d,'side dissipation [W.m-3]')]+v[age(d,'film dissipation [W.m-3]')]
         main_current=sum((float(A)*h*current for A,current in zip(op.reaction_area,j)),pb.Scalar(0));total=main_current+v[age(d,'side current [A.m-3]')]
@@ -248,22 +281,27 @@ class AgingThermal(PortThermal):
         try:super().set_rhs(v)
         finally:self.stack=original
 
-def build_aging_dfn(stack,kernels,config,*,feedback=1.,factories=None):
+def build_aging_dfn(stack,kernels,config,*,feedback=1.,factories=None,control=None):
     if not np.isfinite(feedback) or not 0<=feedback<=1:raise ValueError('Feedback must lie in [0,1]')
     if stack.constraint!='pressure':raise ValueError('Aging cohesive closure currently requires zero axial pressure; no unverified fixed-thickness extension')
     if set(kernels)!=set(stack.electrodes):raise ValueError('One energy kernel per electrode required')
     for d,op in stack.electrodes.items():
         if kernels[d].operator.metadata()['fingerprint']!=op.metadata()['fingerprint']:raise ValueError('Energy kernel/geometry/concentration basis mismatch')
     if config.damage.name!='none' and any(k.cohesive is None for k in kernels.values()):raise ValueError('Debonding needs actual cohesive operators, not fixed intact stress multipliers')
-    roles={'states':AgingStates,'mechanics':AgingMechanics,'kinetics':AgingNetwork,'particle':AgingParticle,'porosity':AgingPorosity,'transport':AgingTransport,'thermal':AgingThermal}
+    roles={'states':AgingStates,'mechanics':AgingMechanics,'kinetics':AgingNetwork,'particle':AgingParticle,'ocp':MicrostructureOCP,'porosity':AgingPorosity,'transport':AgingTransport,'thermal':AgingThermal}
+    if any(hasattr(op,'regional_chemistry') for op in stack.electrodes.values()):
+        from ..doping import DopedOCP
+        roles['ocp']=DopedOCP
     if factories:
         if not set(factories)<=roles.keys():raise ValueError('Unknown submodel role')
         roles.update(factories)
-    model=pb.lithium_ion.DFN(options={'thermal':'lumped','heat of mixing':'false','stress-induced diffusion':'false'},build=False,name='MORQEX extensible cohesive degradation DFN')
+    native_options={'thermal':'lumped','heat of mixing':'false','stress-induced diffusion':'false'}
+    if control is not None:native_options['operating mode']=control
+    model=pb.lithium_ion.DFN(options=native_options,build=False,name='MORQEX extensible cohesive degradation DFN')
     for d,op in stack.electrodes.items():
         model.submodels[f'{d} primary active material']=GeometryActiveMaterial(model.param,d,model.options,operator=op)
         model.submodels[f'{d} primary particle']=roles['particle'](model.param,d,model.options,operator=op,feedback=feedback)
-        model.submodels[f'{d} primary open-circuit potential']=MicrostructureOCP(model.param,d,'lithium-ion main',model.options,operator=op,feedback=feedback)
+        model.submodels[f'{d} primary open-circuit potential']=roles['ocp'](model.param,d,'lithium-ion main',model.options,operator=op,feedback=feedback)
         model.submodels[f'{d} primary interface']=roles['kinetics'](model.param,d,'lithium-ion main',model.options,operator=op,config=config)
     model.submodels['MORQEX aging states']=roles['states'](model.param,model.options,stack,config)
     from ..degradation import NoDamage

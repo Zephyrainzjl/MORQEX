@@ -234,7 +234,7 @@
       "path": "expression_tree/operations/convert_to_casadi.py",
       "upstream_sha256": "011ba11549bbb6d8004df1b767493a8bb982b862926adbad3c6fff9fa6df5f07",
       "bytes": 19488,
-      "local_sha256": "46332b189f07792ebe30f99331b9b30e86d3a4e6b3edf56cc151f4a487bd750f",
+      "local_sha256": "3aba453c26b12628f5e7894a74ed3db0710f57bddf921a57a8e090a15a9fc47b",
       "locally_modified": true
     },
     {
@@ -2492,5 +2492,6 @@
       "locally_modified": false
     }
   ],
-  "patch": "MORQEX scalar 1D cubic/PCHIP derivative order conversion; marker in __init__; no other source edits"
+  "patch": "MORQEX scalar 1D cubic/PCHIP derivative order conversion; marker in __init__; no other source edits",
+  "morqex_0_0_9_note": "Converter-local exact scalar cubic table/derivative function reuse; avoids duplicate CasADi functions for region and edge inputs. Original data and tolerances unchanged."
 }

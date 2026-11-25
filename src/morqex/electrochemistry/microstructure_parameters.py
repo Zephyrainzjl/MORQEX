@@ -32,8 +32,8 @@ def _maximum_difference(reference,compressed):
     return float(np.max(abs(reference(points)-compressed(points))))
 
 
-def microstructure_parameters(*,value_tolerance_V=2e-5,relative_slope_tolerance=.05):
-    p,audit=convex_parameters();audit['compression']={}
+def microstructure_parameters(*,value_tolerance_V=2e-5,relative_slope_tolerance=.05,source_parameter_set='OKane2022',allow_idealization=False):
+    p,audit=convex_parameters(source_parameter_set,allow_idealization=allow_idealization);audit['compression']={}
     for domain in ['Negative','Positive']:
         original=p[f'{domain} electrode OCP [V]'];x=original.keywords['x'];y=original.keywords['y']
         reference=CubicSpline(x,y);check=np.linspace(x[0],x[-1],40001)

@@ -12,5 +12,7 @@ class BackendCapabilities:
 
 REGIONAL_DFN=BackendCapabilities('regional-DFN/Tet4',frozenset({'voxel','fixed-geometry','fixed-anisotropic-elasticity',
     'linear-anisotropic-eigenstrain','diagonal-diffusion','single-host-chemistry','multiphase','porous-CBD','KUBC',
-    'lumped-thermal','cohesive-scalar-damage','SEI','plating-stripping','dead-lithium','custom-partition','custom-energy-kernel'}),
+    'lumped-thermal','cohesive-scalar-damage','SEI','plating-stripping','dead-lithium','custom-partition','custom-energy-kernel',
+    'common-host-doping','NMC-pack','LFP-effective-pack','LCO-projected-pack','nested-degradation-transfer',
+    'cohesive-fixed-state-certificate','shared-CC-CV-control'}),
     'Small numerical cases only. CT-derived microscopic SVEs; no universal geometry, material or degradation calibration.')

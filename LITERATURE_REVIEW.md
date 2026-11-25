@@ -1,5 +1,7 @@
 # Phase I：文献检索、数学谱系与竞争方法
 
+0.0.9：补充Grepl–Patera2005、Rozza–Huynh–Patera2008的RB/Galerkin/残差与离线—在线先例；界面压缩不宣称首创。LFP参数包依据源内固定Prada2013及CITATIONS记录（DOI10.1149/2.053304jes，实际为aging model论文），OCP还来自该包明确引用的Afshar2017；不把相似题名的2012 fast-charge论文混作同一来源。LCO沿用D02 Ai2020。NMC/LFP/LCO源码包使用与目标微结构/掺杂实验标定分开，原生参数与本框架理想化/凸化修改分开。当前56来源，28方法覆盖表的原范围不变。
+
 2026-11-25 / 0.0.8补充：登记53文献，28方法表保留原审查范围。D05核对官方CT来源及JES2018 DOI10.1149/2.0731814jes，明确作者重构CBD与CT未分辨CBD之别；D06核对Composite Structures 113173（2021），DOI10.1016/j.compstruct.2020.113173，已有化学—力学/混合模cohesive脱粘先例。O’Kane2022耦合退化与原生PyBaMM示例是直接基线。本次为声明的被动SEI/析锂变体与标量cohesive律，没有完整复现原文多裂纹/混合模算法或实验，不能当对方完整基线比较。
 
 2026-11-25增量：登记新增B17/B18，总数51，28方法能力表保持。重新核对[B08原文](https://onlinelibrary.wiley.com/doi/10.1002/nme.70313)，VCH/POD微尺度ODE闭合已有直接先例，示例限电解液离子输运。[B17作者存储库全文](https://eprints.whiterose.ac.uk/id/eprint/224261/1/Tredenick_2025_J._Electrochem._Soc._172_030503.pdf)为JES172(3):030503，2025-03-05，CT解析—DFN桥接已发表。[B18作者机构记录](https://researchportal.bath.ac.uk/en/publications/a-computationally-efficient-reduced-order-electrochemical-model-i/)为Energy366:142781，含应力SPMe、热/厚度及实验验证；卷期日期2026-11-30在检索日之后，按已可访问机构摘要/元数据纳入，未称完整阅读全文或本地复现。本轮方法假设限可观测微结构能量/功率端口、局部反应闭合误差与连续富集。现有投影、凝聚、响应预计算属A/B，D仍空。

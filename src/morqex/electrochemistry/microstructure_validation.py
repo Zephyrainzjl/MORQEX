@@ -39,6 +39,9 @@ def thermodynamic_observables(solution,stack,parameters,*,feedback=1.):
         for k,w in enumerate(op.weights):
             variable=solution[key(d,k,'concentration [mol.m-3]')];c=np.asarray(variable.entries);wx=macro_weights(variable)
             primitive=-F*(ocp_primitive(p,d,c)-ocp_primitive(p,d,op.reference_concentration))
+            if hasattr(op,'regional_chemistry'):
+                chemistry=op.regional_chemistry;cmax=float(p[f'Maximum concentration in {d} electrode [mol.m-3]'])
+                primitive-=F*(chemistry.primitive_shift(k,c,cmax)-chemistry.primitive_shift(k,op.reference_concentration,cmax))
             chemical+=A*stack.lengths[d]*float(w)*(wx@primitive);cs.append(c)
         mean_concentrations[d]=np.einsum('k,kxt->xt',op.weights,np.asarray(cs))/op.active_fraction
     elastic=A*(solution['MORQEX elastic energy per area [J.m-2]'].entries-T*solution['MORQEX elastic entropy force per area [J.m-2.K-1]'].entries)

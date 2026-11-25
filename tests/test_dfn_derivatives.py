@@ -4,6 +4,24 @@ pb=pytest.importorskip('pybamm')
 ca=pytest.importorskip('casadi')
 
 
+def test_exact_cubic_table_cache_reuses_distinct_region_inputs_and_separates_data():
+    grid=np.linspace(.01,.99,137);values=np.exp(grid)
+    converter=pb.CasadiConverter();u=ca.MX.sym('inputs',4)
+    expressions=[]
+    for k in range(4):
+        variable=pb.InputParameter('region'+str(k));symbol=pb.Interpolant(grid,values,variable,interpolator='cubic')
+        expressions.append(converter.convert(symbol,None,None,None,{variable.name:u[k]}))
+        expressions.append(converter.convert(symbol.diff(variable),None,None,None,{variable.name:u[k]}))
+    assert len(converter._morqex_cubic_functions)==2
+    modified=pb.Interpolant(grid,values+.01,pb.InputParameter('other'),interpolator='cubic')
+    converter.convert(modified,None,None,None,{'other':u[0]})
+    assert len(converter._morqex_cubic_functions)==3
+    function=ca.Function('cached',[u],[ca.vertcat(*expressions)])
+    actual=np.asarray(function([.2,.3,.4,.5])).ravel()
+    np.testing.assert_allclose(actual[::2],np.exp([.2,.3,.4,.5]),rtol=1e-10)
+    np.testing.assert_allclose(actual[1::2],np.exp([.2,.3,.4,.5]),rtol=1e-7)
+
+
 @pytest.mark.parametrize('kind',['cubic','pchip'])
 @pytest.mark.parametrize('order',[0,1,2,3])
 def test_bundled_interpolant_derivatives_agree_python_casadi_and_finite_difference(kind,order):

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 
 import casadi
 import numpy as np
@@ -16,8 +17,28 @@ import pybamm
 class CasadiConverter:
     def __init__(self, casadi_symbols=None):
         self._casadi_symbols = casadi_symbols or {}
+        # MORQEX: reuse exactly identical scalar cubic tables across different
+        # region states/edge concentrations. No coarsening or altered tolerance.
+        self._morqex_cubic_functions = {}
 
         pybamm.citations.register("Andersson2019")
+
+    def _morqex_cubic_function(self, symbol, order=0):
+        digest = hashlib.sha256()
+        for array in [symbol.x[0], symbol.y]:
+            array = np.asarray(array, dtype=np.float64)
+            digest.update(str(array.shape).encode())
+            digest.update(array.tobytes())
+        key = (digest.hexdigest(), order)
+        if key not in self._morqex_cubic_functions:
+            spline = interpolate.make_interp_spline(symbol.x[0], symbol.y, k=3)
+            if order:
+                spline = spline.derivative(order)
+            self._morqex_cubic_functions[key] = casadi.Function.bspline(
+                "morqex_cubic_" + key[0][:20] + "_d" + str(order),
+                [spline.t], spline.c.flatten(), [spline.k], 1,
+            )
+        return self._morqex_cubic_functions[key]
 
     def convert(
         self,
@@ -73,11 +94,7 @@ class CasadiConverter:
             if order > 3:
                 return casadi.MX.zeros(*value.shape)
             if symbol.interpolator == "cubic" and order < 3:
-                spline = interpolate.make_interp_spline(symbol.x[0], symbol.y, k=3).derivative(order)
-                function = casadi.Function.bspline(
-                    symbol.name + "_morqex_d" + str(order),
-                    [spline.t], spline.c.flatten(), [spline.k], 1,
-                )
+                function = self._morqex_cubic_function(symbol, order)
                 return function(value)
             if symbol.interpolator == "pchip" or symbol.interpolator == "cubic":
                 # A degree-zero CasADi B-spline evaluates incorrectly at its
@@ -260,6 +277,8 @@ class CasadiConverter:
                             test = test.T
                         return test
                     elif solver == "bspline":
+                        if np.asarray(symbol.y).ndim == 1:
+                            return self._morqex_cubic_function(symbol)(converted_children[0])
                         bspline = interpolate.make_interp_spline(
                             symbol.x[0], symbol.y, k=3
                         )
