@@ -51,6 +51,7 @@ class OnlineMicrostructureOperator:
         represented concentration. It is NOT a trajectory or stress error bound.
         Complexity/storage depend on r, not the fine voxel count.
         """
+        if self.descriptor.get('port_certificate')=='not the piecewise-constant certificate':raise NotImplementedError('POU reaction closure requires its own quadrature certificate')
         q=np.asarray(q);j0=np.asarray(exchange_current);eta=np.asarray(overpotential)
         if q.shape!=(self.dimension+2,) or j0.shape!=(self.dimension,) or eta.shape!=j0.shape or np.any(j0<0) or temperature<=0 or not 0<=feedback<=1:raise ValueError('Invalid reaction-bound inputs')
         RT=8.31446261815324*temperature

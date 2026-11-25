@@ -12,6 +12,14 @@ minimum_available_memory_mib = 4096
 maximum_load_per_cpu = 0.75
 gpu_enabled = false
 
+[gpu]
+device = 0
+maximum_process_memory_mib = 3072
+minimum_free_memory_mib = 4096
+maximum_start_utilization_percent = 40
+duty_cycle = 0.20
+pool_memory_mib = 2560
+
 [research]
 seed = 20261124
 precision = "float64"

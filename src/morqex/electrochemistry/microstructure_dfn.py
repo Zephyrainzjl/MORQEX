@@ -22,13 +22,14 @@ def dot(a,b):return sum((float(x)*y for x,y in zip(a,b)),pb.Scalar(0))
 
 
 class MicrostructureStack:
-    def __init__(self,negative,positive,parameters,*,constraint='pressure',separator_modulus_Pa=1e8):
+    def __init__(self,negative,positive,parameters,*,constraint='pressure',separator_modulus_Pa=1e8,allow_linear_ocp_entropy=False):
         if constraint not in {'pressure','fixed-thickness'}:raise ValueError('Zero pressure or fixed total thickness required')
         if parameters['Thermodynamic factor']!=1 or not isinstance(parameters['Cation transference number'],(float,int)):
             raise ValueError('Ideal electrolyte with constant transference number required for the entropy closure')
         if not np.isfinite(separator_modulus_Pa) or separator_modulus_Pa<=0:raise ValueError('Positive separator stiffness required')
         for d in ['Negative','Positive']:
-            if parameters[f'{d} electrode OCP entropic change [V.K-1]']!=0:raise ValueError('Zero chemical OCP entropy required by this energy primitive')
+            if not allow_linear_ocp_entropy and parameters[f'{d} electrode OCP entropic change [V.K-1]']!=0:raise ValueError('Zero chemical OCP entropy required by this energy primitive')
+        self.linear_ocp_entropy=allow_linear_ocp_entropy
         for material in ['Negative electrode','Positive electrode','Negative current collector','Positive current collector','Separator']:
             for quantity in ['density [kg.m-3]','specific heat capacity [J.kg-1.K-1]']:
                 if not isinstance(parameters[f'{material} {quantity}'],(float,int)):raise ValueError('Constant thermal density/heat capacity required')

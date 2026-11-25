@@ -1,0 +1,2519 @@
+# MORQEX API 与操作说明
+
+源码、配置和测试在 MORQEX；数据、环境、编译、算子、断点、结果、HTML 全部在相邻的 `morph_workspace`。新全体积接口与旧版 SVE 接口分别验证，不共享通过标签。本文末尾为从源码 AST 生成的公开定义索引；研究内部入口仍需遵守各模块 docstring。
+
+## 1. 环境与资源
+
+Python ≥3.11，核心 NumPy/SciPy；`dfn`、`ct`、`gpu`、`test` 是可选依赖。项目提供集成的 `pybamm` 命名空间，建议独立环境，避免被另一个 PyBaMM 发行包覆盖。CPU 核需 g++；CUDA 核由 CuPy NVRTC 编译，不向源码写 `.so`。本地所有数值命令使用：
+
+```bash
+cd /home/zephyrain/lw/MORQEX
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+$PY scripts/run_local.py --label install --dependency-install -- $PY -m pip install -e '/home/zephyrain/lw/MORQEX[dfn,ct,gpu,test]'
+$PY scripts/run_local.py --label tests -- $PY -m pytest /home/zephyrain/lw/MORQEX/tests -q --junitxml=test_results.xml
+```
+
+运行器创建源码外工作目录，设置 CPU affinity、单线程、nice +15、外部缓存与日志，监测进程组 RSS。默认 CPU 120 秒/墙钟 180 秒、RSS 1536 MiB、地址空间 3072 MiB、禁用 GPU。`--gpu` 才开放 GPU：显存预算 3072 MiB、空闲保留 4096 MiB、协作占空比 .2，超限中止。CUDA 不使用低虚拟地址上限，仍限制物理内存。占空比不是硬件配额；不改全局 GPU 设置或其他进程。
+
+数值作业串行。长问题以外部断点续算；未收敛不视为通过。`--dependency-install` 只扩大安装文件预算，不放宽数值资源限制。入口 `Workspace(Path(...)).path(category,...)` 管理 `data/build/operators/runs/results/reports/checkpoints`。
+
+## 2. 单位、相与数据格式
+
+所有输入默认 SI：米、秒、Pa、mol/m³、J/m³、J/mol、K。体素数组 ZYX，网格点/位移分量 XYZ；Kelvin 张量顺序 `xx,yy,zz,yz,xz,xy`，剪切分量含 √2。浓度为活性材料内在浓度，库存以相体积加权；电极体积平均与固相条件平均不能混用。
+
+`MicrostructureData(labels,spacing_zyx_m,origin_zyx_m,phase_kinds,provenance)` 为统一结构。相必须明确指定 pore/active/cbd/inert 等语义；不凭数字猜物理。真实零刚度孔隙、数值弱相、流体压力是不同模型。
+
+## 3. GEMsim 与 CT
+
+```python
+from pathlib import Path
+from morqex import Workspace, MicrostructureData
+from morqex.gemsim import GEMsim
+from morqex.microstructure import Volume, Microstructure
+
+ws=Workspace(Path('/home/zephyrain/lw/morph_workspace'))
+g=GEMsim(ws)
+s=g.random_field(shape=(8,8,8),fractions=(.3,.55,.15),
+    length_scale=(1.,)*3,seed=104,spacing=(1e-6,)*3,
+    phase_kinds={0:'pore',1:'active',2:'cbd'})
+volume=g.to_volume(s)
+same=g.from_volume(volume,phase_kinds=s.phase_kinds)
+mesh=g.mesh(s,cell_type='tetra')
+```
+
+`ct.SegmentedCT` 读取有来源记录的分割影像，`ArrayGeometry` 接收用户数组。GEMsim 全部 274 个源码文件的迁移记录见 `provenance/gemsim_migration.json`；无外部 checkout 运行依赖。AI、NGSolve、AMReX 等可选上游后端不等于已通过全部独立验证。
+
+全体积入口 `microstructure.full_volume.prepare_full_volume(source,destination)` 要求 source 含 `path,sha256,axes_to_zyx,voxel_size_m`。现成 NLR 适配器使用 0 孔隙、1 活性、2 CBD，保存完整体积、周期六面连通区域、距离特征及 SHA manifest。非 NLR 相标号须先显式转换。
+
+```bash
+$PY scripts/run_local.py --label fetch -- $PY /home/zephyrain/lw/MORQEX/scripts/fetch_full_electrodes.py
+$PY scripts/prepare_full_suite.py
+$PY scripts/run_full_transport_suite.py
+```
+
+五个不同数据为 `nmc1uncal,nmc1cal,nmc2uncal,nmc2cal,nmc3uncal`。均是 NMC532 CT 活性相和来源作者重构 CBD；完整提供体积不等于整个制造电极片，不自动保证 RVE 代表性。
+
+## 4. CBD、分相与掺杂
+
+`materials.Phase/PhaseCatalog` 指定弹性 6×6 张量、化学应变/浓度导数、热膨胀、XYZ 扩散倍率、电子效率、离子效率、电解液体积分数。`Phase.isotropic` 是便利构造。CBD 可以同时承载、导电及通过微孔导离子；`topology.PorousCBD` 指定相应通道。微孔占比与有效输运效率是独立参数。全体积示例 CBD 离子效率 .2、液相占比 .47 是明确未标定的研究参数。
+
+旧掺杂入口 `doping.DopantLaw,RegionalChemistry,composition_materials,composition_partition,attach_doping`，支持保留不同掺杂区域及其物性律。OCP/扩散/动力学/退化/弹性/膨胀变化必须来自用户输入或可追溯参数；合成灵敏度不是已知真实元素规律。
+
+开放 POU 若挂接旧 `regional_chemistry` 而缺少空间迁移率投影会主动拒绝。接口可扩展不代表任意物理组合自动正确。
+
+## 5. 开放参数与 OCP
+
+```python
+import numpy as np
+from morqex.electrochemistry.open_materials import OpenMaterialCard,TabulatedOCP
+
+p,audit=OpenMaterialCard.host_card('NMC811').build()
+curve=TabulatedOCP(
+    [.001,.25,.5,.75,.999],[4.3,4.,3.9,3.75,3.3],
+    source='用户实验数据及批次编号',
+    entropy_V_K=[0.,1e-5,2e-5,1e-5,0.],
+    reference_temperature_K=298.15,extrapolate=False)
+p,audit=OpenMaterialCard('custom',parameter_source='Chen2020',
+    overrides={'Positive electrode diffusivity [m2.s-1]':1e-14},
+    ocps={'positive':curve}).build()
+```
+
+宿主入口：NMC532→Mohtat2020，NMC811→Chen2020，LFP→Prada2013，LCO→Ai2020。`parameter_source` 可为包名或完整字典；`overrides` 任意覆盖，`supplements` 只补缺项且须提供 `source_note`。补用其他宿主的力学/热参数不能称为材料标定。在 NMC532 几何上使用其他宿主是虚拟材料替换，不是该宿主的真实影像。
+
+`TabulatedOCP.from_csv(path,source=...,entropy_column=...)`：首行为标题，前两列 sto、V。PCHIP 保留节点和非单调性，不做凸化。Python/CasADi 使用同一分段多项式和导数。`primitive(sto,T)`、`entropy_primitive(sto)` 提供一致积分；`slope_bounds(T)` 求分段二次导数的精确极值。
+
+`tabulate_parameter_ocps(p,knots=513,domain=(.001,.999),sampled_tolerance_V=1e-4)` 对原生函数采样并独立报告中点误差。抽查不是严格全区间界。任意有限表格可表示，不意味着任意 OCP 都对应良定的连续输运模型。浓度/温度有效域必须与表格一致。
+
+## 6. 几何容量与倍率
+
+```python
+from morqex.electrochemistry.cell_design import CellDesign
+design=CellDesign((.05,.9),(.1,.9),policy='balance-negative-thickness',
+    negative_to_positive_ratio=1.1)
+p2,audit=design.apply(p,active_fractions={'positive':.5})
+```
+
+SOC 窗口由用户或明确的电极 SOH 计算给定。`preserve` 保留铭牌容量，报告与几何库存之间的倍率差异；`balance-negative-thickness` 显式调整负极厚度、名义容量，记录前后值。不会擅自修改初始 SOC。库存容量不是高倍率实际可放容量；对照必须共享电流、配平和初始状态，不能只共享“0.1C”标签。
+
+## 7. 力学参考与编译后端
+
+稀疏 FEM：`mechanics.TetMesh,ElasticitySolver,isotropic_stiffness`。`energy.ResponseBuilder(solver,eigenstrain_modes).exact()` 给出固定几何、固定 C 的响应及统一能量 Hessian。宏观应变、本征应变、边界约束、体积归一化都进入同一能量。
+
+```python
+from morqex.acceleration.voxel import NativeStencil
+from morqex.mechanics import isotropic_stiffness
+C=np.stack([np.zeros((6,6)),isotropic_stiffness(100e9,.25),
+            isotropic_stiffness(1e9,.3)])
+beta=np.zeros((3,6));beta[1,:3]=1.25e-6/3
+model=NativeStencil(labels,C,beta,spacing=(3.98e-7,)*3,backend='cpu')
+# CUDA 创建必须在 run_local.py --gpu 子进程中进行。
+# model=NativeStencil(labels,C,beta,backend='cuda',preconditioner='coarse')
+c=np.where(labels==1,5000.,0.)
+u,metrics=model.solve(c,rtol=1e-7,maxiter=1500)
+stress=model.stress(u,c)                  # (6,Z,Y,X), Pa
+mean=model.mean_stress(u,c)              # Kelvin 6-vector, Pa
+```
+
+兼容差分采用前向梯度及其精确伴随，由同一离散能量定义；它不是 Tet4/Hex8，性能比较须分开。`apply(u,out=None)`、`load(c,macro,T)`、`residual(u,c,macro,T)` 均为矩阵自由操作，输入形状/布局与输出缓冲区有检查。
+
+体素求解器的内部位移未知量为 `u/h_min`，`solve` 及其断点中的 `u` 使用这个缩放量；`model.displacement_m(u)` 转成米。应变和应力接口已包含尺度变换。`visualization.voxel_fields.export_reference_fields` 分块输出完整的米制位移、应变、应力、能量密度和 von Mises 场，并记录单位、规范条件及 SHA；不得把内部向量直接标为米。
+
+`preconditioner='fft'|'jacobi'|'coarse'|'phase-coarse'|'geometric'` 是可比较候选。`phase-coarse` 按材料区分 P0 聚合；`geometric` 是对称周期三线性传递与粗层重新离散的实验候选，粗层正则化仅用于预条件，完整 CT 实测未显示优势，不设为默认。coarse 通过 P0 Galerkin 粗网格、对称 Chebyshev 平滑和 CPU AMG V-cycle 预条件；物理 matvec/CG FP64，预条件可 FP32。不给物理孔隙偷偷增加刚度。
+
+`StressControlledStencil(...,stress_Pa=(...))` 实现六分量平均应力 Schur 约束，`macro_strain(u,c,T)` 返回应变。零平均应力与仅轴向自由、横向固定是不同边界。
+
+`solve(...,checkpoint=Path(...))` 未收敛可返回 `converged=False` 并保存外部断点；无断点则未收敛报错。大 CUDA 路线校验物理/算法指纹与真实残差后继续 Krylov 迭代。断点不是合格解；零模态、条件数和边界问题必须单独处理。
+
+## 8. 全体积输运与正浓度基
+
+`acceleration.transport.PeriodicTransport(phase,phase_conductivity,spacing)` 解周期谐均面通量单元问题；`solve(axis_xyz=0,rtol=...,maxiter=...,preconditioner='coarse')` 返回校正势、有效系数列和真实残差。其周期边界与旧 `phase_transport` 的 Dirichlet/绝缘边界不同，不能直接混作同一参考。
+
+`ComponentBasis.allocate(components,features,target=...)` 为每个连通活性区域保留至少一个独立库存节点，再分配形状节点；`evaluate` 为非负分区统一基。节点可行域能包络重构浓度，演化过程仍需有界算法/事件检查。
+
+`concentration_modes.full_volume.project_volume(directory,extra_nodes=8,chunk=32768)` 分块投影完整 CT 质量、表面积、周期 FV 刚度，不常驻 N×m 矩阵。刚度为同一细网格 Galerkin 投影，守恒/对称/半正定有测试。非线性化学能采用声明的 lumped 节点积分，须独立做模式收敛。
+
+`concentration_modes.spatial_ports.build_spatial_ports(directory,bins=5)` 对整个 CT 积分空间质量 W[k,p] 和反应面积 A[k,p]，保存 `spatial_ports_5.npz/json`。返回真实体素分区体积，奇数网格不能假设每段恰为 1/5。当前稠密在线端口原型最多 512 个库存状态；更大连通区域集合须接稀疏/分块后端，不能静默合并库存。
+
+```bash
+$PY scripts/run_local.py --label ports -- $PY /home/zephyrain/lw/MORQEX/scripts/build_full_spatial_ports.py --dataset nmc1cal --bins 5
+```
+
+`electrochemistry.conservative_ports.ConservativePorts(M,T,L,area_weights,macro_volumes,constant_mode,provenance)` 支持一般有符号模式。M 对称正定，Tz=1，L1=1，物理面积与体积权重为正。`site_chemical_potential(g)` 先作 M⁻¹g 的变分投影；`modal_reaction_rate(j)` 与 `macro_current(j)` 使用互为伴随的同一反应端口。`audit(g,delta_phi,j)` 报告质量/功率恒等式和反应耗散；正耗散还需要匹配的被动动力学。
+
+```python
+from morqex.electrochemistry.conservative_ports import nodal_ports
+ports=nodal_ports(weights,area_by_mode_macro,macro_volumes,
+    provenance='用户 CT 批次与分割记录')
+mu_site=ports.site_chemical_potential(energy_gradient)
+a_dot=ports.modal_reaction_rate(site_current)
+source_by_X=ports.macro_current(site_current)
+check=ports.audit(energy_gradient,delta_phi_by_X,site_current)
+```
+
+这是一套**全局共享**微结构库存与空间反应接口。每 X 使用独立代表 RVE 并按 DFN 体积权重积分，也可以守恒；它是另一种局部均匀化闭合，不能仅凭数组复制判断重复计量。将它接入 DFN 必须更换全局状态子模型并使用一致的宏观积分权重；不能把现有每 X 独立的区域模型直接称为该全局闭环。上述构造器本身不完成这一步。
+
+小 FEM 对照 `build_pou_operator(full,target=...,transport_law=...,relax_transverse=True)` 构造正 POU 和同能量力学。横向五个宏观应变可静态消去以满足零平均横向应力；微观波动仍为原 KUBC。此基并非 `RP=I`，旧分区反应证书不得复用。
+
+## 9. DFN、热与双向力学
+
+`MicrostructureElectrode(structure,provider,p,domain,topology=...,materials=...)` 从同一几何建立输运、可达表面和 FEM 能量；`partition/reduce` 构造区域，`detach/save` 分离在线核。微结构浓度**替换** DFN 径向状态，不能重复锂库存。
+
+`MicrostructureStack(negative,positive,p,...)` 绑定电极；`update_parameters(p)` 写入几何分数并检查参考态。`build_microstructure_dfn` 是旧固定几何路线；`build_aging_dfn` 加入退化端口。
+
+```python
+from morqex.electrochemistry.open_particle import TransportLaw,build_open_dfn
+from morqex.electrochemistry.aging_dfn import EnergyKernel
+from morqex.electrochemistry.microstructure_dfn import MicrostructureStack
+from morqex.degradation import DegradationOptions,NoDamage
+stack=MicrostructureStack(negative,positive,p,allow_linear_ocp_entropy=True)
+stack.update_parameters(p)
+kernels={d:EnergyKernel(op) for d,op in stack.electrodes.items()}
+model=build_open_dfn(stack,kernels,DegradationOptions(damage=NoDamage()),parameters=p)
+```
+
+`TransportLaw` 选择 `mobility='lattice'|'constant'`、非负梯度系数 `gradient_coefficient_J_m5_mol2`、正迁移率倍率及浓度有效域。扩散用正 Onsager 迁移率和化学势梯度；D 在此是 tracer/mobility 参考，不自动等于原生 DFN 的 Fick 化学扩散系数。非凸 OCP 要求显式正梯度能及界面分辨率验证。
+
+`open_validation.chemical_primitives/open_observables` 独立审计 OCP 自由能/熵导数、梯度能、弹性能、含副反应库存的总锂、内部能、外部电功、冷却和耗散。当前热为集总模型；电解液审计限定理想热力学因子、常 t+，热容量为常数。非理想自由能、一般温度物性需要对应扩展，不可静默覆盖后冒充原材料模型。
+
+## 10. 退化与插件契约
+
+`DegradationOptions(negative=(...),positive=(...),damage=...,porosity_change=True,initial_damage=...,minimum_electrolyte_mol_m3=...)` 组合 `DiffusionLimitedSEI,PlatingStrippingDeadLi,EnergyDrivenDebonding,NoDamage`。默认参数为数值研究值，不是跨材料寿命标定。
+
+自定义副反应实现 `reservoirs()->tuple[Reservoir,...]`、`resistance(states,area)`、`evaluate(ReactionContext)->SideContribution`。每个 Reservoir 明确库存、参考化学势、体积及初值；电流以氧化为正，返回各库存速率和平衡电位。不得无库存地删除不可逆锂。
+
+`cohesive.build_cohesive`、`cohesive_reduction.compress_cohesive`、`aging_cache.save_aging_operator/load_aging_kernel` 管理真实界面刚度演化的离线/在线算子。CBD bulk 软化与界面脱粘不同；固定 C 静态算子不能代替黏弹性/塑性/损伤的完整历史模型。
+
+`build_aging_dfn(...,factories=...)` 可替换 `states,mechanics,kinetics,particle,ocp,porosity,transport,thermal`。`extensions.Registry/ComponentSpec` 注册几何、材料、基、算子、反应、损伤和求解器，`standard_registry()` 给出内置目录。扩展须声明适用假设并数值验证。
+
+## 11. 协议、恢复、统计与可视化
+
+固定几何运行器 `MicrostructureDFNRuntime`；退化运行器 `runtime.aging.AgingRuntime`。使用 `advance/checkpoint/restore/recover`，恢复检查参数/算子指纹。富集需守恒转移、保持能量和状态连续；降阶有损投影不能称无损恢复。
+
+`protocol.shared_control/solve_protocol` 复用同一符号模型完成 CC/CV/休息；原生 `pybamm.Experiment` 是独立对照。循环逐步检查截止、休息时长及 CV 停止电流；浓度或电解液提前事件是失败/适用域拒绝，不能算完整循环。高倍率物理截止不能为了画满曲线而关闭。
+
+`OnlineMicrostructureOperator` 只保留小矩阵，`LocalizationMap/AgingLocalization` 按需载入局部映射。`moments(q)` 对线性应力分量提供二次矩；P99、主应力极值不是固定二次型。极端风险需说明采样误差、体积权重和网格奇异性，宏观/统计/场恢复分别计时。
+
+从 DFN 恢复微结构依赖演化模式、宏观边界及温度，不是 SOC 的唯一逆映射。在不同 X 显示相同几何代表条件响应单元，不表示整片电极真实颗粒的唯一位置。LOD 仅影响绘图，不得替换全体积计算。
+
+报告 `morph_workspace/reports/MORQEX_full_volume_report.html` 可离线打开。默认“完整 CT 分区”将同一 CT 的五个空间段对应到 DFN 位置，每个 LOD 体素只绘制一次；“代表体积重复”显示五份关联单元。两种视图都明确采用独立原生 DFN 均值着色，不能当作已验证的全 CT 非均匀浓度/应力演化。交互含倍率、循环、时间、CBD、旋转缩放及网格误差表。
+
+`--render` 为隔离的 headless 软件 WebGL 测试取消虚拟地址上限，物理 RSS/CPU 限制不变且 GPU 禁用；不操作用户浏览器。外部 Noto Sans CJK SC Sans2.004 字体由 `fetch_report_font.py` 获取，生成已改名的 OFL 子集内嵌报告。字体原件和缓存均不入源码。
+
+## 12. 复现与验收
+
+```bash
+$PY scripts/run_local.py --label native --gpu -- $PY /home/zephyrain/lw/MORQEX/benchmarks/probe_voxel_backend.py
+$PY scripts/run_local.py --label transport --gpu -- $PY /home/zephyrain/lw/MORQEX/benchmarks/probe_voxel_transport.py
+$PY scripts/run_local.py --label integrity -- $PY /home/zephyrain/lw/MORQEX/scripts/check_integrity.py
+$PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchmarks/study_full_ct_dfn.py --dataset nmc1cal --host NMC532 --rate 0.1
+```
+
+`study_full_ct_dfn.py` 先要求对应全体积输运已收敛，是“完整 CT 等效参数→原生球形 DFN”基线，不能作为完整局部力学双向闭环。`--nx/--nr` 控制网格，`--cycles` 请求循环，记录容量配平、温度、电流及终止原因。
+
+旧版完整复现入口 `scripts/run_crossscale_release.py`，报告全部外置。公平计时须匹配边界、物理精度、容限、硬件、输出，并计入离线和恢复成本。比较应包含复用分解的高效 FEM；残差、经验误差和严格界分别报告。
+
+完整 CT 固定载荷参考场收敛后，用 `benchmarks/plot_full_voxel_fields.py` 生成真实三个正交切片。色标采用明确的 symlog，覆盖全部最大值；界面尖角单点峰值未通过网格收敛，不能作为失效判据。完整 FP64 数组及 SHA 保存在 `results/full_voxel/<dataset>/weak_0e+00/fields`。
+
+`scripts/build_open_wheel.py` 从外部内容寻址源码快照构建 wheel，不向源码创建 build/egg-info。`scripts/probe_open_installation.py` 在独立安装环境检查包含的 CUDA/HTML/JS 资源、C++ 编译、所有宿主入口、端口恒等式及原生 DFN。安装验证与材料级大规模双向耦合验收分开。
+
+`acceleration.residual_space.minimum_residual_weights` 对兼容线性迭代解做成熟的仿射最小残差组合；必须重新计算物理 FP64 残差接受，不能只看 Gram 预测。`benchmarks/smooth_voxel_reference.py` 校验载荷/几何/源指纹后应用，并清除失效的 Krylov 递推状态。此项是数值候选，不作为方法原创性。
+
+## 13. 模块索引
+
+<!-- GENERATED_API_INDEX -->
+### [morqex.acceleration.budget](src/morqex/acceleration/budget.py)
+
+- `GpuBudget(self)`
+- `GpuBudget.batch(self)`
+- `GpuBudget.metadata(self)`
+- `GpuBudget.dot(self, a, b)`
+
+### [morqex.acceleration.coarse_elasticity](src/morqex/acceleration/coarse_elasticity.py)
+
+- `coarse_matrix(phase, C, spacing, block=8)`
+- `CoarseElasticity(self, model, *, block=None, smoothing_steps=4)`
+- `CoarseElasticity.apply(self, r, out)`
+
+### [morqex.acceleration.coarse_transport](src/morqex/acceleration/coarse_transport.py)
+
+- `coarse_matrix(phase, coefficient, spacing, block=8)`
+- `CoarseTransport(self, model, scaling, *, block=None, smoothing_steps=4)`
+- `CoarseTransport.matvec(self, x)`
+- `CoarseTransport.apply(self, r, out)`
+
+### [morqex.acceleration.diagonal](src/morqex/acceleration/diagonal.py)
+
+- `Diagonal(self, model)`
+- `Diagonal.apply(self, r, out)`
+- `Diagonal.direction(self, p, z, beta)`
+
+### [morqex.acceleration.geometric](src/morqex/acceleration/geometric.py)
+
+- `coarsen(a)`
+- `GeometricMultigrid(self, model)`
+- `GeometricMultigrid.applied(self, k, x)`
+- `GeometricMultigrid.cycle(self, k, rhs, out)`
+- `GeometricMultigrid.apply(self, r, out)`
+
+### [morqex.acceleration.macro_control](src/morqex/acceleration/macro_control.py)
+
+- `StressControlledStencil(self, *args, stress_Pa=(0.0,) * 6, **kwargs)`
+- `StressControlledStencil.macro_strain(self, u, c, T=0.0)`
+- `StressControlledStencil.apply(self, u, out=None)`
+- `StressControlledStencil.load(self, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+- `StressControlledStencil.residual(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+- `StressControlledStencil.stress(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+
+### [morqex.acceleration.pcg](src/morqex/acceleration/pcg.py)
+
+- `solve_pcg(model, c, macro, T, *, rtol, maxiter, checkpoint)`
+
+### [morqex.acceleration.phase_coarse](src/morqex/acceleration/phase_coarse.py)
+
+- `assemble(phase, C, spacing, block, counts=None)`
+- `PhaseCoarse(self, model, *, block=None)`
+
+### [morqex.acceleration.poisson](src/morqex/acceleration/poisson.py)
+
+- `FastPoisson(self, model)`
+- `FastPoisson.transfer(self, array, target, transpose=False)`
+- `FastPoisson.apply(self, r, out)`
+- `FastPoisson.direction(self, p, z, beta)`
+
+### [morqex.acceleration.refinement](src/morqex/acceleration/refinement.py)
+
+- `solve_refined(model, c, macro, T, *, rtol, maxiter, checkpoint)`
+
+### [morqex.acceleration.residual_space](src/morqex/acceleration/residual_space.py)
+
+- `minimum_residual_weights(residuals, *, chunk=131072)`
+- `archive_iterate(checkpoint, destination)` — Hard-link immutable u plus its physical fingerprint, without a data copy.
+
+### [morqex.acceleration.transport](src/morqex/acceleration/transport.py)
+
+- `ScalarPoisson(self, model, scaling)`
+- `ScalarPoisson.apply(self, r, out)`
+- `PeriodicTransport(self, phase, conductivity, spacing=(1.0, 1.0, 1.0), *, budget=None)`
+- `PeriodicTransport.call(self, name, args)`
+- `PeriodicTransport.apply(self, u, out)`
+- `PeriodicTransport.solve(self, axis_xyz=0, *, rtol=1e-08, maxiter=2000, preconditioner='coarse')`
+
+### [morqex.acceleration.verification](src/morqex/acceleration/verification.py)
+
+- `manufactured_periodic(n)`
+
+### [morqex.acceleration.voxel](src/morqex/acceleration/voxel.py)
+
+- `NativeStencil(self, phase, C, beta=None, alpha=None, spacing=(1.0, 1.0, 1.0), *, backend='cpu', budget=None, preconditioner='fft')`
+- `NativeStencil.dims(self)`
+- `NativeStencil.displacement_m(self, u)` — Convert u/h_min to the physical periodic displacement fluctuation (m).
+- `NativeStencil.apply(self, u, out=None)`
+- `NativeStencil.load(self, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+- `NativeStencil.stress(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+- `NativeStencil.residual(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
+- `NativeStencil.mean_stress(self, u=None, concentration=None, macro=(0.0,) * 6, temperature=0.0)`
+- `NativeStencil.solve(self, concentration, macro=(0.0,) * 6, temperature=0.0, *, rtol=1e-07, maxiter=1500, mixed_preconditioner=True, checkpoint=None, low_memory=None)`
+
+### [morqex.adaptive_transport](src/morqex/adaptive_transport.py)
+
+- `AdaptiveBudgetError()`
+- `AdaptiveGradientDiagnostics()`
+- `AdaptiveGradientTransport(self, system, initial_basis, *, maximum_modes, maximum_enrichments_per_step=3, allow_full_fallback=False, enrichment_strategy='snapshot', resolvent_shifts=(0.025, 0.1, 0.5, 2.0), block_rank=2, channel_scales=None, macro_strain_scale=0.001, restart_dimension=None, retain_forcing_directions=False, certificate_method='graph', error_modes=16)`
+- `AdaptiveGradientTransport.initialize(self, initial_deviation, *, error_tolerance, macro_strain=None)`
+- `AdaptiveGradientTransport.step(self, previous, dt, channel_flux, *, error_tolerance, macro_strain=None)`
+- `AdaptiveGradientTransport.save_checkpoint(self, state, workspace, name)`
+- `AdaptiveGradientTransport.load_checkpoint(cls, system, path)`
+
+### [morqex.adaptivity](src/morqex/adaptivity.py)
+
+- `AdaptiveResponseResult()`
+- `AdaptiveResponse(self, builder, basis)`
+- `AdaptiveResponse.evaluate(self, q, *, absolute_energy_tolerance)`
+
+### [morqex.bases](src/morqex/bases.py)
+
+- `GeometricBasis()`
+- `GeometricBasis.build(self, electrode, target)`
+- `ExactBasis()`
+- `ExactBasis.build(self, electrode, target)`
+- `VariationalOperator()`
+- `VariationalOperator.build(self, electrode, partition)`
+- `PortBasis()` — Connected greedy partition from mechanical chemical-potential rows.
+- `PortBasis.build(self, electrode, target)`
+
+### [morqex.capabilities](src/morqex/capabilities.py)
+
+- `BackendCapabilities()`
+- `BackendCapabilities.require(self, features)`
+
+### [morqex.certification](src/morqex/certification.py)
+
+- `tree_poincare_lower_bound(diffusion)` — Positive lower bound on nonzero generalized graph eigenvalues.
+- `DiffusionErrorBound()`
+- `DiffusionCertificate(self, diffusion, basis, flux_patterns)`
+- `DiffusionCertificate.initialize(self, initial_field, coefficients)`
+- `DiffusionCertificate.step(self, previous, a_old, a_new, dt, channel_flux)`
+- `StressErrorTransfer()`
+- `StressErrorTransfer.build(cls, full_response, concentration_weights)`
+- `StressErrorTransfer.stress_l2_bound(self, concentration_bound)`
+- `StressErrorTransfer.quantile_bound(self, concentration_bound)` — Discrete fixed-mesh principal-stress quantile difference; not a continuum peak bound.
+- `ConcentrationAccuracyError(self, actual_bound, tolerance)`
+- `CertifiedDiffusionState()`
+- `CertifiedControlledDiffusion(self, diffusion, basis, patterns, *, reference_concentration, maximum_concentration)` — Transactional Fick stepping: no over-tolerance state is returned.
+- `CertifiedControlledDiffusion.initialize(self, initial_deviation, *, error_tolerance)`
+- `CertifiedControlledDiffusion.step(self, state, dt, channel_flux, *, error_tolerance)`
+
+### [morqex.cohesive](src/morqex/cohesive.py)
+
+- `CohesiveResponse()`
+- `CohesiveResponse.retention(self, d)`
+- `CohesiveResponse.hessian(self, d)`
+- `CohesiveResponse.derivative(self, d)`
+- `CohesiveResponse.recover(self, q, d)`
+- `build_cohesive(electrode, P, *, normal_stiffness=1000000000000000.0, tangent_stiffness=500000000000000.0, residual=0.001)`
+
+### [morqex.cohesive_reduction](src/morqex/cohesive_reduction.py)
+
+- `compress_cohesive(response, *, tolerance=1e-06, maximum_damage=0.85, maximum_modes=80, training_points=17)` — Return a variational response, plus an independent residual certificate.
+- `cohesive_certificate(cohesive, arrays, q, damage)` — Residual bounds in exact arithmetic, with a declared roundoff allowance.
+
+### [morqex.concentration](src/morqex/concentration.py)
+
+- `component_constants(diffusion)`
+- `ConcentrationBasis()`
+- `ConcentrationBasis.mass(self)`
+- `ConcentrationBasis.encode(self, concentration)`
+- `ConcentrationBasis.decode(self, coefficients)`
+- `ConcentrationBasis.spectral(cls, diffusion, count)`
+- `ConcentrationBasis.geometric(cls, diffusion, count)`
+- `ConcentrationBasis.pod(cls, diffusion, snapshots, count, *, concentration_scale=1.0, target_action=None)`
+- `ConcentrationBasis.boundary_resolvent(cls, diffusion, count, flux_patterns, *, shifts=(0.01, 0.1, 1.0, 10.0), moments=2)` — Established rational-resolvent response space, with exact mass modes.
+- `ReducedDiffusion(self, diffusion, basis)`
+- `ReducedDiffusion.step(self, coefficients, dt, *, flux=None, baseline=0.0, maximum=None)`
+- `ControlledDiffusion(self, diffusion, basis, flux_patterns, *, reference_concentration, maximum_concentration)` — Low-dimensional stepping for a declared face-flux channel library.
+- `ControlledDiffusion.step(self, coefficients, dt, channel_flux)`
+
+### [morqex.concentration_modes.full_volume](src/morqex/concentration_modes/full_volume.py)
+
+- `project_volume(directory, *, extra_nodes=8, chunk=32768)`
+
+### [morqex.concentration_modes.positive](src/morqex/concentration_modes/positive.py)
+
+- `ComponentBasis()`
+- `ComponentBasis.dimension(self)`
+- `ComponentBasis.allocate(cls, components, features, *, target)`
+- `ComponentBasis.evaluate(self, components, features, *, xp=np)`
+- `ComponentBasis.metadata(self)`
+- `ComponentBasis.from_metadata(cls, data)`
+- `full_features(arrays)`
+
+### [morqex.concentration_modes.pou_operator](src/morqex/concentration_modes/pou_operator.py)
+
+- `POUOperator()`
+- `POUOperator.metadata(self)`
+- `POUOperator.detach(self)`
+- `build_pou_operator(full, *, target, transport_law, relax_transverse=False)`
+
+### [morqex.concentration_modes.spatial_ports](src/morqex/concentration_modes/spatial_ports.py)
+
+- `build_spatial_ports(directory, *, bins=5, chunk=32768)`
+
+### [morqex.concentration_modes.tail](src/morqex/concentration_modes/tail.py)
+
+- `TailBasis()` — Geometry-only offline loads select stress-sensitive observables.
+- `TailBasis.build(self, electrode, target)`
+
+### [morqex.coupling](src/morqex/coupling.py)
+
+- `bind_chemical_modes(solver, diffusion, basis, expansion)`
+- `CoupledState()`
+- `CoupledDiagnostics()`
+- `CoupledTransport(self, response, reduced_diffusion, *, chemical_curvature, reference_concentration, maximum_concentration, temperature=298.15, bounds_policy='sufficient')`
+- `CoupledTransport.energy(self, a, macro_strain)`
+- `CoupledTransport.initialize(self, coefficients, *, macro_strain=None)`
+- `CoupledTransport.step(self, state, dt, *, macro_strain=None, flux=None, exchange_flux=None, reservoir_potential=None, tolerance=1e-11, maximum_iterations=40)`
+- `CoupledTransport.concentration(self, state)` — Explicit bulk recovery: O(Nm); not called by sufficient-bound time stepping.
+- `CoupledTransport.save_state(self, state, workspace, name)`
+- `CoupledTransport.load_state(self, path)`
+
+### [morqex.ct](src/morqex/ct.py)
+
+- `SegmentedCT()`
+- `SegmentedCT.build(self, workspace=None)`
+- `ArrayGeometry()`
+- `ArrayGeometry.build(self, workspace=None)`
+
+### [morqex.degradation](src/morqex/degradation.py)
+
+- `Reservoir()`
+- `SideContribution()`
+- `ReactionContext()`
+- `SideLaw()`
+- `SideLaw.reservoirs(self)`
+- `SideLaw.resistance(self, states, area)`
+- `SideLaw.evaluate(self, context: ReactionContext)`
+- `DiffusionLimitedSEI()` — Cathodic solvent-diffusion limit, with passive-potential cutoff.
+- `DiffusionLimitedSEI.reservoirs(self)`
+- `DiffusionLimitedSEI.thickness(self, states, area)`
+- `DiffusionLimitedSEI.resistance(self, states, area)`
+- `DiffusionLimitedSEI.evaluate(self, c)`
+- `PlatingStrippingDeadLi()` — Passive linear plating/stripping branches with finite stripping stock.
+- `PlatingStrippingDeadLi.reservoirs(self)`
+- `PlatingStrippingDeadLi.resistance(self, states, area)`
+- `PlatingStrippingDeadLi.evaluate(self, c)`
+- `EnergyDrivenDebonding()`
+- `EnergyDrivenDebonding.evaluate(self, damage, release_rate)`
+- `NoDamage()`
+- `NoDamage.evaluate(self, damage, release_rate)`
+- `DegradationOptions()`
+- `standard_registry()`
+
+### [morqex.doping](src/morqex/doping.py)
+
+- `DopantLaw()`
+- `RegionalChemistry()`
+- `RegionalChemistry.ocp_shift(self, k, sto)`
+- `RegionalChemistry.primitive_shift(self, k, c, cmax)`
+- `RegionalChemistry.metadata(self)`
+- `RegionalChemistry.fingerprint(self)`
+- `composition_partition(electrode, base_partition, fractions)` — Split regions at composition boundaries without losing inventories.
+- `DopedOCP()`
+- `DopedOCP.get_coupled_variables(self, v)`
+- `attach_doping(stack, profiles)`
+- `CompositionBasis()`
+- `CompositionBasis.build(self, electrode, target)`
+- `DopedOperator()`
+- `DopedOperator.build(self, electrode, partition)`
+- `composition_materials(structure, active_fractions, law, base_catalog)` — Refine active phase labels and their fixed mechanical properties.
+
+### [morqex.electrochemistry.aging_cache](src/morqex/electrochemistry/aging_cache.py)
+
+- `CohesiveOnline()`
+- `CohesiveOnline.hessian(self, d)`
+- `save_aging_operator(path, op, cohesive)`
+- `load_aging_kernel(path)`
+- `AgingLocalization(self, path)`
+- `AgingLocalization.recover(self, c, E, theta, d)`
+- `load_cohesive_certificate(path)` — Load small residual coefficients without loading localization fields.
+
+### [morqex.electrochemistry.aging_dfn](src/morqex/electrochemistry/aging_dfn.py)
+
+- `age(d, name, k=None)`
+- `EnergyKernel()`
+- `EnergyKernel.parts(self)`
+- `EnergyKernel.hessian(self, d)`
+- `AgingStates(self, param, options, stack, config)`
+- `AgingStates.get_fundamental_variables(self)`
+- `AgingStates.set_rhs(self, v)`
+- `AgingStates.set_algebraic(self, v)`
+- `AgingStates.set_initial_conditions(self, v)`
+- `AgingStates.add_events_from(self, v)`
+- `AgingMechanics(self, param, options, stack, kernels, config, feedback)`
+- `AgingMechanics.get_fundamental_variables(self)`
+- `AgingMechanics.set_algebraic(self, v)`
+- `AgingMechanics.set_initial_conditions(self, v)`
+- `AgingMechanics.get_coupled_variables(self, v)`
+- `AgingNetwork(self, *args, config, **kwargs)`
+- `AgingNetwork.get_coupled_variables(self, v)`
+- `AgingParticle()`
+- `AgingParticle.get_coupled_variables(self, v)`
+- `AgingTotalCurrent()`
+- `AgingTotalCurrent.get_coupled_variables(self, v)`
+- `AgingPorosity(self, param, options, stack, config)`
+- `AgingPorosity.get_coupled_variables(self, v)`
+- `AgingPorosity.add_events_from(self, v)`
+- `AgingPorosityRates()`
+- `AgingPorosityRates.get_coupled_variables(self, v)`
+- `AgingPorosityRates.add_events_from(self, v)`
+- `AgingTransport()`
+- `AgingTransport.get_coupled_variables(self, v)`
+- `AgingThermal()`
+- `AgingThermal.get_coupled_variables(self, v)`
+- `AgingThermal.set_rhs(self, v)`
+- `build_aging_dfn(stack, kernels, config, *, feedback=1.0, factories=None, control=None)`
+
+### [morqex.electrochemistry.cathodes](src/morqex/electrochemistry/cathodes.py)
+
+- `cathode_parameters(family)`
+
+### [morqex.electrochemistry.cell_design](src/morqex/electrochemistry/cell_design.py)
+
+- `CellDesign()`
+- `CellDesign.apply(self, parameters, *, active_fractions=None)`
+
+### [morqex.electrochemistry.conservative_ports](src/morqex/electrochemistry/conservative_ports.py)
+
+- `ConservativePorts()`
+- `ConservativePorts.site_chemical_potential(self, energy_gradient)` — g=dW/da is not a pointwise chemical potential; first solve M mu=g.
+- `ConservativePorts.site_macro_potential(self, macro_potential)`
+- `ConservativePorts.modal_reaction_rate(self, site_current, faraday=96485.33212)`
+- `ConservativePorts.macro_current(self, site_current)`
+- `ConservativePorts.lithium_inventory(self, coefficients)`
+- `ConservativePorts.audit(self, energy_gradient, macro_potential, site_current, faraday=96485.33212)`
+- `nodal_ports(weights, area_by_mode_macro, macro_volumes, *, provenance)`
+
+### [morqex.electrochemistry.dfn](src/morqex/electrochemistry/dfn.py)
+
+- `RVEParticleMechanics(self, param, options, stack, feedback=1.0)`
+- `RVEParticleMechanics.get_coupled_variables(self, variables)`
+- `RVEParticleMechanics.add_events_from(self, variables)`
+- `EnergeticDiffusion(self, *args, curvature, feedback=1.0, **kwargs)`
+- `EnergeticOCP(self, *args, feedback=1.0, **kwargs)`
+- `EnergeticOCP.get_coupled_variables(self, variables)`
+- `EnergeticThermal(self, *args, stack, feedback=1.0, **kwargs)`
+- `EnergeticThermal.get_fundamental_variables(self)`
+- `EnergeticThermal.set_rhs(self, variables)`
+- `EnergeticThermal.set_initial_conditions(self, variables)`
+- `EnergeticThermal.add_events_from(self, variables)`
+- `build_model(stack, *, feedback=1.0, thermal=True)`
+
+### [morqex.electrochemistry.linear_port](src/morqex/electrochemistry/linear_port.py)
+
+- `LinearPort(self, weights, *children)`
+- `LinearPort.create_copy(self, new_children=None, perform_simplifications=True)`
+- `linear_combination(weights, values)`
+
+### [morqex.electrochemistry.mechanical_closure](src/morqex/electrochemistry/mechanical_closure.py)
+
+- `ElectrodeClosure()`
+- `ElectrodeClosure.dfn_H(self)`
+- `ElectrodeClosure.sphere_curvature(self)`
+- `ElectrodeClosure.from_gemsim(cls, workspace, parameters, domain, *, shape=(5, 5, 5), seed=104, thermal_expansion=1e-05, cbd_young=1000000000.0)`
+- `ElectrodeClosure.save(self, workspace, name)`
+- `AxialStackClosure(self, negative, positive, parameters, *, constraint='pressure', pressure_Pa=0.0, thickness_change_m=0.0, separator_modulus_Pa=100000000.0)` — Plane-strain electrode/separator stack, common axial traction.
+- `AxialStackClosure.traction(self, mean_deviations, temperature_deviation)`
+
+### [morqex.electrochemistry.microstructure_cache](src/morqex/electrochemistry/microstructure_cache.py)
+
+- `OnlineMicrostructureOperator()` — No mesh, fine diffusion graph, basis or mechanical solver retained.
+- `OnlineMicrostructureOperator.dimension(self)`
+- `OnlineMicrostructureOperator.active_fraction(self)`
+- `OnlineMicrostructureOperator.area_density(self)`
+- `OnlineMicrostructureOperator.reference_concentration(self)`
+- `OnlineMicrostructureOperator.transport(self)`
+- `OnlineMicrostructureOperator.porosity(self)`
+- `OnlineMicrostructureOperator.metadata(self)`
+- `OnlineMicrostructureOperator.moments(self, q)`
+- `OnlineMicrostructureOperator.reaction_port_bound(self, q, exchange_current, overpotential, temperature, *, feedback=1.0)` — MVT/Cauchy upper bound for fine-vs-coarse BV current at P a.
+- `OnlineMicrostructureOperator.save(self, path)`
+- `OnlineMicrostructureOperator.load(cls, path)`
+- `save_operator(operator, workspace, name)`
+- `LocalizationMap(self, path)`
+- `LocalizationMap.recover(self, concentration, axial_strain, temperature_deviation, *, selection=None)`
+
+### [morqex.electrochemistry.microstructure_dfn](src/morqex/electrochemistry/microstructure_dfn.py)
+
+- `key(domain, region, quantity)`
+- `dot(a, b)`
+- `MicrostructureStack(self, negative, positive, parameters, *, constraint='pressure', separator_modulus_Pa=100000000.0, allow_linear_ocp_entropy=False)`
+- `MicrostructureStack.update_parameters(self, parameters)`
+- `GeometryActiveMaterial(self, *args, operator, **kwargs)`
+- `GeometryActiveMaterial.get_fundamental_variables(self)`
+- `GeometryTransport(self, *args, stack, **kwargs)`
+- `GeometryTransport.get_coupled_variables(self, variables)`
+- `MicrostructureMechanics(self, param, options, stack)`
+- `MicrostructureMechanics.get_coupled_variables(self, variables)`
+- `MicrostructureParticle(self, *args, operator, feedback=1.0, **kwargs)`
+- `MicrostructureParticle.get_fundamental_variables(self)`
+- `MicrostructureParticle.get_coupled_variables(self, variables)`
+- `MicrostructureParticle.set_rhs(self, variables)`
+- `MicrostructureParticle.set_initial_conditions(self, variables)`
+- `MicrostructureParticle.add_events_from(self, variables)`
+- `MicrostructureOCP(self, *args, operator, feedback=1.0, **kwargs)`
+- `MicrostructureOCP.get_coupled_variables(self, variables)`
+- `MicrostructureKinetics(self, *args, operator, **kwargs)`
+- `MicrostructureKinetics.get_coupled_variables(self, variables)`
+- `PortThermal(self, *args, stack, feedback=1.0, **kwargs)`
+- `PortThermal.get_fundamental_variables(self)`
+- `PortThermal.get_coupled_variables(self, variables)`
+- `PortThermal.set_rhs(self, variables)`
+- `PortThermal.set_initial_conditions(self, variables)`
+- `PortThermal.add_events_from(self, variables)`
+- `build_microstructure_dfn(stack, *, feedback=1.0, thermal=True)`
+
+### [morqex.electrochemistry.microstructure_operator](src/morqex/electrochemistry/microstructure_operator.py)
+
+- `phase_transport(volume, phases, axis_xyz=0, phase_factors=None)` — Unit-conductivity TPFA cell problem, Dirichlet x ends/insulated sides.
+- `MicrostructureOperator()`
+- `MicrostructureOperator.dimension(self)`
+- `MicrostructureOperator.active_fraction(self)`
+- `MicrostructureOperator.area_density(self)`
+- `MicrostructureOperator.reference_concentration(self)`
+- `MicrostructureOperator.transport(self)`
+- `MicrostructureOperator.porosity(self)`
+- `MicrostructureOperator.restrict(self, values)`
+- `MicrostructureOperator.lift(self, values)`
+- `MicrostructureOperator.chemical_potential(self, concentration, axial_strain, temperature_deviation)`
+- `MicrostructureOperator.recover(self, concentration, axial_strain, temperature_deviation)`
+- `MicrostructureOperator.metadata(self)`
+- `MicrostructureOperator.transfer(self, new_operator, values)`
+- `MicrostructureOperator.detach(self)`
+- `MicrostructureOperator.save(self, workspace, name)`
+- `MicrostructureElectrode(self, structure, provider, parameters, domain, *, thermal_expansion=1e-05, cbd_young=1000000000.0, topology=None, materials=None)` — Full active-voxel diffusion and fixed-C FEM energy on the SAME geometry.
+- `MicrostructureElectrode.response(self)`
+- `MicrostructureElectrode.H(self)`
+- `MicrostructureElectrode.partition(self, target, strategy='geometry')`
+- `MicrostructureElectrode.reduce(self, partition=None, strategy='full')`
+
+### [morqex.electrochemistry.microstructure_parameters](src/morqex/electrochemistry/microstructure_parameters.py)
+
+- `microstructure_parameters(*, value_tolerance_V=2e-05, relative_slope_tolerance=0.05, source_parameter_set='OKane2022', allow_idealization=False)`
+
+### [morqex.electrochemistry.microstructure_runtime](src/morqex/electrochemistry/microstructure_runtime.py)
+
+- `MicrostructureDFNRuntime(self, operator_paths, parameters, *, nx=4, feedback=1.0, constraint='pressure')` — Warm online stepping retains compact operators, never a fine FEM solver.
+- `MicrostructureDFNRuntime.solution(self)`
+- `MicrostructureDFNRuntime.advance(self, dt, current_A)`
+- `MicrostructureDFNRuntime.recover(self, domain, *, x_index=0, selection=None)`
+- `MicrostructureDFNRuntime.checkpoint(self, path)`
+- `MicrostructureDFNRuntime.estimate_defect(self, domain, *, x_index=0, lookahead_s=10.0)` — Fine FV residual at the represented state, without a new FEM solve.
+- `MicrostructureDFNRuntime.reaction_bound(self, domain, *, x_index=0)`
+- `MicrostructureDFNRuntime.enrich_if_needed(self, new_paths, *, relative_port_tolerance=0.01, concentration_defect_tolerance=None, lookahead_s=30.0)`
+- `MicrostructureDFNRuntime.restore(self, path)`
+- `MicrostructureDFNRuntime.enrich(self, new_paths)`
+
+### [morqex.electrochemistry.microstructure_validation](src/morqex/electrochemistry/microstructure_validation.py)
+
+- `ocp_primitive(parameters, domain, concentration)` — Primitive of pinned phase.U, including its endpoint asymptote terms.
+- `macro_weights(processed_variable)`
+- `thermodynamic_observables(solution, stack, parameters, *, feedback=1.0)`
+
+### [morqex.electrochemistry.open_materials](src/morqex/electrochemistry/open_materials.py)
+
+- `PchipFunction(self, curve, child, *, entropy=False, order=0)`
+- `PchipFunction.create_copy(self, new_children=None, perform_simplifications=True)`
+- `TabulatedOCP()`
+- `TabulatedOCP.fingerprint(self)`
+- `TabulatedOCP.entropy(self, sto)`
+- `TabulatedOCP.primitive(self, sto, temperature_K=None)`
+- `TabulatedOCP.entropy_primitive(self, sto)`
+- `TabulatedOCP.slope_bounds(self, temperature_K=None)`
+- `TabulatedOCP.metadata(self)`
+- `TabulatedOCP.from_csv(cls, path, *, source, entropy_column=None, **kwargs)`
+- `OpenMaterialCard()`
+- `OpenMaterialCard.build(self)`
+- `OpenMaterialCard.host_card(cls, host, **kwargs)`
+- `tabulate_parameter_ocps(parameters, *, knots=513, domain=(0.001, 0.999), sampled_tolerance_V=0.0001)` — Sample native/callable curves with a separate midpoint error audit.
+
+### [morqex.electrochemistry.open_particle](src/morqex/electrochemistry/open_particle.py)
+
+- `TransportLaw()`
+- `law_for(op)`
+- `gradient_potential(op, c)`
+- `OpenOCP()`
+- `OpenOCP.get_coupled_variables(self, v)`
+- `OpenParticle(self, *args, **kwargs)`
+- `OpenParticle.add_events_from(self, v)`
+- `OpenParticle.get_coupled_variables(self, v)`
+- `build_open_dfn(stack, kernels, config, *, parameters, feedback=1.0, factories=None, control=None, temperature_interval_K=(273.15, 333.15))` — Compose raw OCP/positive mobility particles with the degradation ports.
+
+### [morqex.electrochemistry.open_validation](src/morqex/electrochemistry/open_validation.py)
+
+- `chemical_primitives(parameters, domain, concentration, temperature_K)`
+- `open_observables(solution, stack, parameters, config, *, feedback=1.0)`
+
+### [morqex.electrochemistry.parameters](src/morqex/electrochemistry/parameters.py)
+
+- `convex_parameters(name='OKane2022', *, slope_floor_V=0.01, points=4001, allow_idealization=False)`
+
+### [morqex.electrochemistry.protocol](src/morqex/electrochemistry/protocol.py)
+
+- `shared_control(v)`
+- `add_protocol_event(model)`
+- `solve_protocol(simulation, *, kind, cycles=1, current_A=1.0, lower_V=3.5, upper_V=4.0, duration_s=120.0, period_s=30.0, rest_s=300.0, cv_stop_A=0.25, pulse_discharge_A=0.5)`
+
+### [morqex.electrochemistry.validation](src/morqex/electrochemistry/validation.py)
+
+- `check_protocol(solution, *, cycles, steps_per_cycle, lower_V, upper_V, current_A, rest_s=600.0)`
+
+### [morqex.energy](src/morqex/energy.py)
+
+- `EnergyResponse()`
+- `EnergyResponse.dimension(self)`
+- `EnergyResponse.energy_density(self, q)`
+- `EnergyResponse.gradient(self, q)`
+- `EnergyResponse.macro_stress(self, q)`
+- `EnergyResponse.generalized_chemical_force(self, q)`
+- `EnergyResponse.projected_chemical_potential(self, q, concentration_mass)`
+- `EnergyResponse.macro_strain_at_stress(self, coefficients, target_stress)`
+- `EnergyResponse.stress(self, q, selection=None)`
+- `EnergyResponse.strain(self, q, selection=None)`
+- `EnergyResponse.displacement(self, q, selection=None)`
+- `EnergyResponse.save(self, workspace, name)`
+- `EnergyResponse.load(cls, path, *, expected_fingerprint=None)`
+- `ResponseBuilder(self, solver, eigenstrain_modes, *, reference_eigenstrain=0.0, reference_displacement=None)`
+- `ResponseBuilder.exact(self)`
+- `ResponseBuilder.galerkin(self, basis)`
+- `ResponseBuilder.displacement_basis(self, rank, *, energy_weighted=False)`
+- `ResidualCertificate()`
+- `ResidualCertificate.energy_norm_squared_density(self, q)`
+- `ResidualCertificate.potential_error_density(self, q)`
+
+### [morqex.error_dynamics](src/morqex/error_dynamics.py)
+
+- `SpectralErrorSpace(self, system, retained_modes)`
+- `SpectralErrorSpace.configure_bounds(self, system)`
+- `SpectralErrorSpace.decompose(self, error, null_basis)`
+- `SpectralErrorSpace.advance(self, previous, slow_residual, tail_residual_norm, dt, padding)`
+
+### [morqex.error_estimation.aging_port](src/morqex/error_estimation/aging_port.py)
+
+- `compile_reaction_certificate(kernel_path, destination=None)` — Offline only: integrate conjugate stress and QR regional area norms.
+- `AgingReactionCertificate(self, path, kernel_path)`
+- `AgingReactionCertificate.bound(self, q, damage, j0, eta, temperature, *, feedback=1.0, mechanical_residual=None, film_residual=None, film_resistance=None)`
+
+### [morqex.extensions](src/morqex/extensions.py)
+
+- `GeometryProvider()`
+- `GeometryProvider.build(self, workspace)`
+- `BasisBuilder()`
+- `BasisBuilder.build(self, electrode, target: int)`
+- `OperatorBuilder()`
+- `OperatorBuilder.build(self, electrode, partition: np.ndarray)`
+- `Mechanism()` — A symbolic law called during assembly; must not mutate its context.
+- `Mechanism.evaluate(self, context)`
+- `ComponentSpec()`
+- `ComponentSpec.fingerprint(self)`
+- `Registry(self)` — Separate registries can be passed by the caller; no mutable global singleton.
+- `Registry.register(self, kind, spec)`
+- `Registry.create(self, kind, name, **configuration)`
+- `Registry.manifest(self)`
+- `validate_partition(electrode, labels)`
+- `build_operator(electrode, basis: BasisBuilder, operator: OperatorBuilder, target)`
+
+### [morqex.gemsim](src/morqex/gemsim.py)
+
+- `GEMsim(self, workspace: Workspace)`
+- `GEMsim.from_volume(self, volume, *, phase_kinds: dict[int, str])`
+- `GEMsim.to_volume(self, structure: MicrostructureData)`
+- `GEMsim.load(self, path: Path, *, phase_kinds: dict[int, str])`
+- `GEMsim.random_field(self, *, phase_kinds, **kwargs)` — GEMsim's CPU random-field baseline, not a trained CT reconstruction.
+- `GEMsim.mesh(self, structure: MicrostructureData, *, cell_type='tetra', phases=None)`
+
+### [morqex.geometry](src/morqex/geometry.py)
+
+- `MicrostructureData()`
+- `MicrostructureData.fingerprint(self)`
+
+### [morqex.gradient_transport](src/morqex/gradient_transport.py)
+
+- `immutable(value)`
+- `EnergyAccuracyError(self, error_bound, tolerance)`
+- `EnergyErrorBound()`
+- `GradientState()`
+- `GradientDiagnostics()`
+- `QuadraticGradientSystem(self, response, diffusion, coordinate_basis, patterns, *, chemical_curvature, reference_concentration, maximum_concentration)`
+- `QuadraticGradientSystem.error_space(self, count)`
+- `QuadraticGradientSystem.full_step(self, concentration_deviation, dt, channel_flux, *, macro_strain=None)`
+- `QuadraticGradientSystem.energy(self, c, macro_strain)`
+- `QuadraticGradientSystem.norm(self, c)`
+- `QuadraticGradientSystem.conservative_basis(self, basis)`
+- `PortGradientModel(self, system, basis, *, projection='energy', certificate_method='graph', error_modes=16)`
+- `PortGradientModel.dimension(self)`
+- `PortGradientModel.energy(self, a, e)`
+- `PortGradientModel.initialize(self, initial_deviation, *, macro_strain=None, error_tolerance)`
+- `PortGradientModel.accept(self, state, tolerance)`
+- `PortGradientModel.trial(self, previous, dt, channel_flux, *, macro_strain=None)` — Unaccepted candidate for analysis/adaptivity; use step for a qualified state.
+- `PortGradientModel.error_after(self, previous_error, old, a, dt, u, e)` — Full-generator residual bound; also applicable to other approximations in this V.
+- `PortGradientModel.step(self, previous, dt, channel_flux, *, error_tolerance, macro_strain=None)`
+- `PortGradientModel.transfer_to(self, previous, new_model)`
+- `PortGradientModel.transfer_preserving_state(self, previous, new_model)` — Non-nested restart only when its space contains the current field.
+
+### [morqex.macroscale](src/morqex/macroscale.py)
+
+- `StackState()`
+- `LayerStack(self, responses, thicknesses)`
+- `LayerStack.solve(self, coefficients, *, lateral_strain=(0.0, 0.0, 0.0), pressure=None, thickness_change=None)`
+
+### [morqex.materials](src/morqex/materials.py)
+
+- `Phase()`
+- `Phase.isotropic(cls, name, kind, young, poisson, **kwargs)`
+- `Phase.metadata(self)`
+- `PhaseCatalog()`
+- `PhaseCatalog.validate(self, structure)`
+- `PhaseCatalog.ionic_phases(self, structure)`
+- `PhaseCatalog.ionic_efficiencies(self, structure)`
+- `PhaseCatalog.electronic_phases(self, structure)`
+- `PhaseCatalog.electronic_efficiencies(self, structure)`
+- `PhaseCatalog.porosity(self, structure)`
+- `PhaseCatalog.metadata(self)`
+
+### [morqex.mechanics.constraints](src/morqex/mechanics/constraints.py)
+
+- `ConstraintMap()`
+- `constraints(mesh, boundary)`
+
+### [morqex.mechanics.matrix_free](src/morqex/mechanics/matrix_free.py)
+
+- `MatrixFreeElasticitySolver(self, mesh, stiffness, *, boundary='kubc', relative_tolerance=1e-11, maximum_iterations=3000)`
+- `MatrixFreeElasticitySolver.solve_reduced(self, rhs)`
+
+### [morqex.mechanics.mesh](src/morqex/mechanics/mesh.py)
+
+- `TetMesh()`
+- `TetMesh.from_volume(cls, volume, solid_phases=None)`
+- `TetMesh.fingerprint(self)`
+- `TetMesh.boundary(self)`
+- `TetMesh.outer_nodes(self)`
+- `TetMesh.traction_load(self, traction, face_mask=None)`
+- `TetMesh.pressure_load(self, pressure, face_mask=None)`
+- `TetMesh.body_load(self, body_force)`
+
+### [morqex.mechanics.reference](src/morqex/mechanics/reference.py)
+
+- `MechanicalSolveError()`
+- `ElasticState()`
+- `ElasticitySolver(self, mesh, stiffness, *, boundary='kubc', pivot_tolerance=1e-13)`
+- `ElasticitySolver.solve_reduced(self, rhs)`
+- `ElasticitySolver.eigenstrain_load(self, eigenstrain)`
+- `ElasticitySolver.solve(self, eigenstrain=0.0, *, macro_strain=None, prescribed_displacement=None, force=None, tolerance=1e-09)`
+
+### [morqex.mechanics.tensors](src/morqex/mechanics/tensors.py)
+
+- `to_mandel(tensor)`
+- `from_mandel(vector)`
+- `isotropic_stiffness(young, poisson)`
+- `validate_stiffness(stiffness)`
+- `rotate_stiffness(stiffness, rotation)`
+- `elastic_energy_and_mu(strain, concentration, stiffness, expansion, *, stiffness_derivative=None, eigenstrain_reference=None, reference_concentration=0.0)` — Local fixed-strain energy and mechanical mu, c in mol/m^3, beta in m^3/mol.
+
+### [morqex.microstructure.analysis](src/morqex/microstructure/analysis.py)
+
+- `describe(volume)`
+- `two_point(volume, phase=1, axis=0)` — Nonperiodic directional S2 with unbiased overlap normalization.
+- `compare(reference, generated)`
+
+### [morqex.microstructure.cli](src/morqex/microstructure/cli.py)
+
+- `main()`
+
+### [morqex.microstructure.core.distributions](src/morqex/microstructure/core/distributions.py)
+
+- `DiscreteDnsFunc()` — 离散分布
+- `smooth(self, p=[])` — 数据平滑分布
+- `smooth.fit(cls, x_tab)` — 类方法,从距离统计拟合分布, 返回值为自身初始化参数
+- `smooth.from_itv(cls, x1=-np.inf, x2=np.inf)` — 从指定区间内的均匀分布初始化
+- `smooth.from_dist(cls, dist)` — 从scipy连续分布初始化
+- `smooth.from_data(cls, data)` — 从采样数据初始化
+- `smooth.x(cls)` — 预定义采样点
+- `smooth.pad_x(cls)`
+- `smooth.args(self)` — 初始化参数
+- `smooth.dist(self)` — 分布类型
+- `smooth.rvs(self, n: int=1)` — 采样,输入样本数目
+- `smooth.pdf(self, kx)` — 概率密度函数 通过数组查找实现连续采样 无上边界
+- `smooth.cdf(self, kx)` — 概率分布函数
+- `same()` — 和数据保持完全相同的分布
+
+### [morqex.microstructure.core.graph_codec](src/morqex/microstructure/core/graph_codec.py)
+
+- `dfs(node, graph, visited, stack)`
+- `transpose(graph)`
+- `get_sccs(graph)`
+
+### [morqex.microstructure.core.particle_graph](src/morqex/microstructure/core/particle_graph.py)
+
+- `auto_check(func)` — 函数修饰器 在调用函数前检查依赖是否改变
+- `auto_memo(func)` — 自动缓存函数调用结果, 根据key函数返回的值标识状态
+- `hex_id(obj)`
+- `OrderSet(self, *args, **kwargs)`
+- `OrderSet.check(self)`
+- `OrderSet.add(self, item)`
+- `OrderSet.update(self, item_set)`
+- `OrderSet.intersection(self, item_set)`
+- `OrderSet.difference(self, item_set)`
+- `OrderSet.union(self, item_set)`
+- `Node(self, *in_args, **in_kwargs)`
+- `Node.dec_key(self)` — 节点标识数据 自身数据域 依赖的数据域
+- `Node.run_key(self)`
+- `Node.modified(self)`
+- `Node.update(self)` — 强制更新自身状态 source子类不重载
+- `Node.check_update(self)` — 检查依赖状态 判断自身是否发生参数更新
+- `Node.load_instance(self, instance)` — 从对象加载状态 保持自身地址
+- `Node.cls_id_str(self)`
+- `Node.cls_str(self)`
+- `Node.id_str(self)`
+- `Link(self, *args, **kwargs)` — 链接节点自身无参数 其状态由依赖节点的状态决定 其依赖的对象由key描述 其依赖对象的状态由dep_key描述
+- `Link.dec_key(self)` — 标识自身当前依赖对象(自身参数) 返回值必须为tuple
+- `Link.run_key(self)` — 在声明节点未改变前提下 查询自身运行状态 自身参数+依赖配置参数
+- `Link.update(self)` — 更新自身状态 维持自身与输入节点的关系 Link子类重载
+- `Link.modified(self)`
+- `Link.check_update(self)` — 检查依赖状态 判断自身是否发生参数更新
+- `ProcessBar(self)` — 进度条
+- `ProcessBar.print_process(self, end='')`
+- `ProcessBar.start(self, n_bat: int)`
+- `ProcessBar.inc(self)`
+- `ProcessBar.end(self)`
+- `ProcessBar.print(self, *args, **kwargs)`
+- `FeatureFunc()` — 从物体点计算最近邻特征场, 包括距离变换,取向变换,相对坐标变换
+- `FeatureFunc.ftr_shape(self, obj_vol: ObjVol)`
+- `FeatureFunc.transform(self, obj_pnt: ObjectPnt)` — 约定: 最内部维度包含不同特征, 默认返回四维数组
+- `FeatureFunc.tgt_transform(self, obj_pnt: SeedsPnt=None)` — 计算采样点
+- `FeatureFunc.sur_dist(self, obj_pnt: SeedsPnt=None)` — 目标表面距离(体素)
+- `FeatureFunc.copy(self)`
+- `NNFeatureFunc(self, measure=cdt)` — 最近邻特征提取
+- `NNFeatureFunc.dec_key(self)`
+- `NNFeatureFunc.copy(self)`
+- `NNDst()` — 最近邻距离变换
+- `NNDst.transform(self, obj_pnt: ObjectPnt)` — 约定: 最内部维度包含不同特征, 默认返回四维数组
+- `NNDst.tgt_transform(self, obj_pnt: SeedsPnt)` — 计算采样点 取种子中心点
+- `NNLoc()` — 最近邻相对位置变换
+- `NNLoc.transform(self, obj_pnt: ObjVol)` — 约定: 最内部维度包含不同特征, 默认返回四维数组
+- `SymLoc()` — 对称相对位置, 小于0部分取绝对值
+- `SymLoc.transform(self, obj_pnt: ObjVol)`
+- `Std2PntCor(self)` — 标准两点相关函数距离变换(同一相随机点距离,不归一化)
+- `Std2PntCor.transform(self, obj_pnt1: ObjectPnt, obj_pnt2: ObjectPnt=None)` — 空间中所有点到随机物体点的距离
+- `Std2PntCor.tgt_transform(self, obj_pnt: SeedsPnt=None)` — 计算采样点 取obj_obt占据体素
+- `Std2PntCor.sur_dist(self, obj_pnt: SeedsPnt=None)` — 目标表面距离 和特征变换类型有关
+- `DistFunc(self, *params)` — 分布函数 其特征相对域定义
+- `DistFunc.reset_data(self)`
+- `DistFunc.dec_key(self)`
+- `DistFunc.run_key(self)`
+- `DistFunc.update(self)`
+- `DistFunc.update_params(self, params)`
+- `DistFunc.invld_data_mask(cls, data, tol=0.0)`
+- `DistFunc.from_pcdt(cls, dists: DistVol, ndim=1)`
+- `DistFunc.from_pcpnt(cls, pnt1: ObjectPnt, pnt2: ObjectPnt=None, ftr_func=stdpcf)`
+- `DistFunc.from_dist(cls, dist)`
+- `DistFunc.from_data(cls, data)`
+- `DistFunc.fit(self, data: np.ndarray)` — 仅保存数据,data的id随之改变,在update内更新
+- `DistFunc.sample(self, n_sample=1)` — 采样 返回特征值 不缓存结果
+- `DistFunc.density(self, x: np.ndarray)` — 返回某个特征出现的概率密度
+- `DistFunc.cumdensity(self, x: np.ndarray)` — 返回某个特征出现的分部函数
+- `DistFunc.nndensity(self, x: np.ndarray)` — 根据变量最小值运算得到最近邻距离
+- `DistFunc.glbdensity(self, x: np.ndarray)` — 迭代计算全局距离分布
+- `DistFunc.density_map_r(self, R_range=(0.0, 1.0))` — Wicksell's problem 修正2维概率密度
+- `DistFunc.density_map_d(self)`
+- `DistFunc.copy(self)`
+- `dist_error(dist1: DistFunc, dist2: DistFunc)` — 两个distfunc间的误差
+- `data_error(data1: np.ndarray, data2: np.ndarray)`
+- `MulNormDist(self, mean=np.zeros(3), cov=np.eye(3))`
+- `MulNormDist.dec_key(self)`
+- `MulNormDist.run_key(self)`
+- `NormDist(self, loc=0.0, scale=1.0)`
+- `NormDist.dec_key(self)`
+- `NormDist.run_key(self)`
+- `UniformDist(self, loc=0.0, scale=1.0)`
+- `UniformDist.dec_key(self)`
+- `UniformDist.run_key(self)`
+- `IndependDist(self, loc=-1.0, scale=2.0)` — 独立分布
+- `ExponDist(self, loc=0.0, scale=1.0)`
+- `ExponDist.dec_key(self)`
+- `ExponDist.run_key(self)`
+- `BetaDist(self, a=2.0, b=8.0, loc=0.0, scale=1.0)`
+- `BetaDist.dec_key(self)`
+- `BetaDist.run_key(self)`
+- `DiscreteDist()`
+- `DiscreteDist.density_map_r(self, R_range=(0.0, 1.0))` — Wicksell's problem 修正2维概率密度
+- `DiscreteDist.density_map_d(self)`
+- `DiscreteDist.rescale(self, scale)` — 分布按照尺度缩放
+- `SmoothDist()`
+- `CompDist(self, dfs=[UniformDist(-1.0, 2.0)] * 3)` — 三向复合分布, 支持假设沿x,y,z正方向的各向异性
+- `CompDist.update(self)`
+- `CompDist.dec_key(self)`
+- `CompDist.run_key(self)`
+- `CompDist.params(self)`
+- `CompDist.params(self, value)`
+- `CompDist.update_params(self, params)`
+- `CompDist.from_dist(cls, dist)`
+- `CompDist.from_data(cls, data)`
+- `CompDist.from_pcdt(cls, dists: DistVol, ndim=1)`
+- `CompDist.from_pcpnt(cls, pnt1: ObjectPnt, pnt2: ObjectPnt=None, ftr_func=stdpcf)`
+- `CompDist.fit(self, data: np.ndarray)` — 仅保存数据,data的id随之改变,在update内更新
+- `CompDist.sample(self, n_sample=1)` — 采样 返回特征值 不缓存结果
+- `CompDist.density(self, x: np.ndarray)` — 返回某个特征出现的概率密度
+- `CompDist.cumdensity(self, x: np.ndarray)` — 返回某个特征出现的分部函数
+- `CompDist.xmin(self)`
+- `CompDist.xmax(self)`
+- `CompDist.xmin(self, value)`
+- `CompDist.xmax(self, value)`
+- `Region(self, res: float=1.0, size: list[float]=[80.0, 80.0, 80.0], periods: list[bool]=[False, False, False])` — 材料域 允许周期性边界
+- `Region.dec_key(self)`
+- `Region.update(self)`
+- `Region.ndim(self)`
+- `Region.len(self)`
+- `Region.volume(self)`
+- `Region.vxl_len(self)`
+- `Region.vxl_unit(self)` — 体素单位长度
+- `Region.shape(self)`
+- `Region.limits(self)`
+- `Region.rescale(self, fac: float)`
+- `Region.adapt(self, rad)` — 自适应域分辨率 同一个SCC内共用reg 需要所有源可随reg变化
+- `Region.copy(self)`
+- `MSPRegion()`
+- `MSPRegion.ndim(self)`
+- `Region2D(self, res: float=1.0, size_2d: list[float]=[80.0, 80.0], periods_2d: list[bool]=[False, False])`
+- `Region2D.ndim(self)`
+- `Region2D.size(self)`
+- `Region2D.size(self, value)`
+- `Region2D.periods(self)`
+- `Region2D.periods(self, value)`
+- `Region2D.copy(self)`
+- `Splitor(self, *args)`
+- `rths_mod(get_rths)`
+- `RadSplitor(self, *args)`
+- `RadSplitor.get_rths(self, seeds, n_batch, ndim=3)` — 均匀切分半径阈值,得到n_batch个批量,给出n_batch-1个阈值
+- `MulOtsuRadSplitor(self, n_rad_bin=200)` — MultiOTSU半径批量分配器
+- `MulOtsuRadSplitor.dec_key(self)`
+- `MulOtsuRadSplitor.hist_split(self, hist: np.ndarray, n_batch: int)` — 按照直方图给出划分 时间复杂度随批量数量增加很快 当批量数目大于4时将会在子区间上递归调用该算法进行划分
+- `MulOtsuRadSplitor.get_rths(self, seeds: Seeds, nbat: int, reg=Region(1, [120, 120, 120], [False, False, False]))` — 在半径的体积加权后,按照多阈值OTSU算法给出当前种子半径阈值
+- `UniRadSplitor(self)` — 均匀分割种子数目,并且按照半径排序. 最后一个批量将补齐.
+- `UniRadSplitor.get_rths(self, seeds: Seeds, n_batch: int, ndim=3)` — 均匀分割种子数目
+- `RndSplitor(self, prop0=0.2, propn=0.04, prop_ini=0.0)`
+- `RndSplitor.dec_key(self)`
+- `RndSplitor.get_prop(self, seeds: Seeds, n_it: int, cur_it: int)` — 获取分割后的种子
+- `ExpSplitor(self, prop0=0.32, propn=0.04, prop_ini=0.0, fac=2.0)`
+- `ExpSplitor.get_prop(self, seeds: Seeds, n_it: int, cur_it: int)` — 获取分割后的种子
+- `PropSplitor(self, prop0=0.2, prop_ini=0.0)`
+- `PropSplitor.get_prop(self, seeds: Seeds, n_it: int, cur_it: int)` — 获取分割后的种子
+- `Object(self, mark=1)` — 物体采样点, 点相关图顶点基类
+- `Object.dec_key(self)`
+- `Object.discrete(self, reg: Region)`
+- `Object.ndim(self)`
+- `Object.ndim(self, value)`
+- `Object.r(self)`
+- `Object.r(self, value)`
+- `Object.copy(self)`
+- `Object.subs(self)` — 基本物体 保持顺序
+- `Object.cnt(self)`
+- `Seeds(self, bdata: np.ndarray=np.array([[]]), idx: np.ndarray=np.array([]))` — 种子集合模型,提供半径采样函数
+- `Seeds.from_info(cls, loc: np.ndarray, r=0.0, mark=1, ort=np.zeros(3), b=0.0, a=0.0)`
+- `Seeds.from_msp_seeds(cls, msp_seeds)`
+- `Seeds.from_seeds(cls, value: Seeds)`
+- `Seeds.update(self)`
+- `Seeds.mod_time(self)`
+- `Seeds.dec_key(self)`
+- `Seeds.run_key(self)`
+- `Seeds.copy(self)` — 返回单纯的种子复制 不包括引用关系
+- `Seeds.mark_map(self, map)` — 属性映射
+- `Seeds.void(self)`
+- `Seeds.void_seeds(self)`
+- `Seeds.data(self)`
+- `Seeds.loc(self)`
+- `Seeds.x(self)`
+- `Seeds.y(self)`
+- `Seeds.z(self)`
+- `Seeds.r(self)` — 返回球形种子的半径, 椭球种子较短的轴
+- `Seeds.r_median(self)`
+- `Seeds.mark(self)`
+- `Seeds.ort(self)`
+- `Seeds.vx(self)`
+- `Seeds.vy(self)`
+- `Seeds.vz(self)`
+- `Seeds.b(self)`
+- `Seeds.a(self)`
+- `Seeds.aabb(self)` — 边界盒子坐标:(种子,维度,最大最小坐标)
+- `Seeds.cnt(self)`
+- `Seeds.mask(self)`
+- `Seeds.loc(self, value: np.ndarray)`
+- `Seeds.x(self, value: np.ndarray)`
+- `Seeds.y(self, value: np.ndarray)`
+- `Seeds.z(self, value: np.ndarray)`
+- `Seeds.r(self, value)`
+- `Seeds.mark(self, value)`
+- `Seeds.data(self, value)` — 注意seeds.data[:] = value将不会进行赋值
+- `Seeds.ort(self, value: np.ndarray)`
+- `Seeds.vx(self, value: np.ndarray)`
+- `Seeds.vy(self, value: np.ndarray)`
+- `Seeds.vz(self, value: np.ndarray)`
+- `Seeds.b(self, value: np.ndarray)`
+- `Seeds.a(self, value: np.ndarray)`
+- `Seeds.move(self, objpnt: ObjectPnt, delta=1.2, natp=1000)` — 位置移动 返回不重叠的种子坐标
+- `Seeds.mask_ref(self, mask: np.ndarray)` — 在当前索引基础上 创建索引引用种子(子集)
+- `Seeds.idx_ref(self, idx: np.ndarray)`
+- `Seeds.cut_ref(self, axis: int, rpos: float)`
+- `Seeds.mask_hide(self, mask)` — 隐藏种子 坐标更新前不再作为源渲染
+- `Seeds.remove_hide(self)` — 移除隐藏种子,返回种子引用
+- `Seeds.data_mask_ref(self, data_mask: np.ndarray)` — 创建引用 重新设置底层数据掩膜
+- `Seeds.data_idx_ref(self, data_idx: np.ndarray)` — 创建索引引用种子(子集) 重新设置索引
+- `Seeds.rad_ref(self, r_th: float)`
+- `Seeds.get_rths(self, n_rad: int, rad_splitor: RadSplitor)`
+- `Seeds.itv_ref(self, r_itv: list[float])`
+- `Seeds.rad_bat_ref(self, n_rad: int, cur_rad: int, rad_splitor: RadSplitor)` — ref_seeds未改变时 在多个半径引用间切换实现(切换前检查ref_seeds)
+- `Seeds.cum_bat_ref(self, n_rad: int, cur_rad: int, rad_splitor: RadSplitor)` — ref_seeds未改变时 在多个半径引用间切换实现(切换前检查ref_seeds)
+- `Seeds.mark_ref(self, mark: int)`
+- `Seeds.phase_ref(self, phase: Phase)`
+- `Seeds.rand_ref(self, prop: float=0)` — 随机批量引用
+- `Seeds.rnd_bat_ref(self, n_it: int, cur_it: int, rnd_splitor: RndSplitor)`
+- `Seeds.queue_ref(self, prop: float=0, mode='solid')` — 循环队列引用 不重复引用,直到所有种子完成一次引用
+- `Seeds.sort(self)` — 属性从大到小 半径从大到小排序 对idx操作
+- `Seeds.que_bat_ref(self, n_it: int, cur_it: int, rnd_splitor: PropSplitor)`
+- `Seeds.discrete(self, reg: Region, rpos=1.0)`
+- `Seeds.discrete_counts(self, reg: Region, rpos=1.0)` — 计算域内部种子体素数目 域内部设置周期性边界
+- `Seeds.discrete_dmn(self, reg: Region, ashp: AlphaShape)`
+- `Seeds.discrete_dmn_hrc(self, reg: Region, ashp: AlphaShape, n_hrc=4)` — 计算种子占据域 允许层级alphashape修正
+- `Seeds.search_seeds_vf(self, reg: Region, vol_frac: float)` — 二分查找确定种子数目 优先保留靠前的种子
+- `Seeds.mark_map(self, map)`
+- `closest_axes(orientations)` — 计算多个方向向量与 x, y, z 轴方向最接近的坐标轴索引。
+- `ellipsoids_to_circles(centers, orientations, radiis, heights, marks, num_circles, limits)` — 将多个圆柱体种子分解为多个二维圆形种子，使用向量化操作。
+- `oblate_ellipsoids_to_ellipsoids(obla, num_elli=4)` — 扁椭球转化为椭球集合
+- `Phase(self, r_dist=DistFunc(), v_frac: float=1.0, mark: int=1, name='')` — 相: 同一相种子的宏观描述
+- `Phase.dec_key(self)`
+- `Phase.run_key(self)`
+- `Phase.copy(self)`
+- `Phase.subs(self)`
+- `Phase.reset_data(self)` — 清空缓存的拟合种子
+- `Phase.sample(self, reg: Region)` — 采样,获得种子集合实例. 相对region的len定义半径
+- `Phase.fit(self, seeds: Seeds, reg: Region)` — 从种子集合计算distfunc参数
+- `Phase.update(self)`
+- `Phase.sub_marks(self)`
+- `Phase.sub_marks(self, value: int)`
+- `Phase.sub_marks_str(self)`
+- `AnisoPhase(self, r_dist=DistFunc(), ab_dist=UniformDist(1.0, 0.0), ort_dist=CompDist(), v_frac: float=1.0, mark: int=1, name='')` — 各向异性相
+- `AnisoPhase.dec_key(self)`
+- `AnisoPhase.run_key(self)`
+- `AnisoPhase.copy(self)`
+- `AnisoPhase.sample(self, reg: Region)` — 采样,获得种子集合实例. 相对region的len定义半径
+- `AnisoPhase.update(self)`
+- `ConstPhase()`
+- `ConstPhase.fit(self, seeds: Seeds, reg: Region)`
+- `ConstAnisoPhase()`
+- `ConstAnisoPhase.fit(self, seeds: Seeds, reg: Region)`
+- `CompPhase(self, phss: list[Phase]=[], name='')`
+- `CompPhase.dec_key(self)`
+- `CompPhase.run_key(self)`
+- `CompPhase.copy(self)`
+- `CompPhase.subs(self)` — 依赖的子相
+- `CompPhase.sample(self, reg: Region)`
+- `CompPhase.fit(self, seeds: Seeds, reg: Region)`
+- `CompPhase.get_dict(self)`
+- `PCNodeOperation(self, phs: Phase, reg: Region, *args)` — 顶点操作
+- `PCNodeOperation.dec_key(self)`
+- `PCNodeOperation.run_key(self)`
+- `PCNodeSample(self, phs: Phase, reg: Region)`
+- `PCNodeSample.update(self)`
+- `PCNodeFit(self, phs: Phase, seeds: Seeds, reg: Region)`
+- `PCNodeFit.dec_key(self)`
+- `PCNodeFit.run_key(self)`
+- `PCNodeFit.update(self)`
+- `PhaseSeeds(self, phs: Phase, reg: Region)`
+- `PhaseSeeds.run_key(self)`
+- `PhaseSeeds.update(self)`
+- `RefSeeds(self, ref_seeds: RefSeeds, func: Callable, *args)` — 按照一定规则自动同步更改的种子集合 避免外部管理分配
+- `RefSeeds.mod_time(self)` — 底层数据更新 反向传播的时间更新
+- `RefSeeds.dec_key(self)`
+- `RefSeeds.run_key(self)`
+- `RefSeeds.update(self)`
+- `RefSeeds.copy(self)` — 返回单纯的种子复制 不包括引用关系
+- `RefSeeds.base_ref(self)`
+- `SelfRef(self, ref_seeds: Seeds)` — 创建种子集合的自身引用
+- `SelfRef.dec_key(self)`
+- `SelfRef.run_key(self)` — 依赖自身引用参数和源种子数据
+- `SelfRef.update(self)`
+- `PhaseRef(self, ref_seeds: RefSeeds, phs: Phase)` — 特定相的引用 支持复合相
+- `PhaseRef.dec_key(self)`
+- `PhaseRef.run_key(self)`
+- `PhaseRef.update(self)`
+- `RadItvRef(self, ref_seeds: RefSeeds, r1: float, r2: float)` — 半径区间引用
+- `RadItvRef.dec_key(self)`
+- `RadItvRef.run_key(self)`
+- `RadItvRef.update(self)`
+- `RadThRef(self, ref_seeds: RefSeeds, rth: float)` — 半径阈值引用
+- `RadThRef.dec_key(self)`
+- `RadThRef.run_key(self)`
+- `RadThRef.update(self)`
+- `RandRef(self, ref_seeds: RefSeeds, prop: float)` — 随机批量引用
+- `RandRef.dec_key(self)`
+- `RandRef.run_key(self)`
+- `RandRef.update(self)`
+- `BatRef(self, ref_seeds: RefSeeds, func: Callable, n_bat: int=1, cur_bat: int=0, splitor=Splitor())` — 批量引用基类 自动创建bat和curbat参数 在第一次使用时调用set_bat 更新状态
+- `BatRef.dec_key(self)`
+- `BatRef.run_key(self)`
+- `BatRef.update(self)`
+- `RadBatRef(self, ref_seeds: RefSeeds, n_bat: int=1, cur_bat: int=0, splitor=MulOtsuRadSplitor())` — 半径批量引用关系
+- `RadBatRef.mod_time(self)` — 底层数据更新 不进行引用更新传播 而是利用cur_bat在外部管理更新(半径批量间独立)
+- `MulRadBatRef(self, ref_seeds: RefSeeds, n_bat: int=1, cur_bat: int=0, splitor=MulOtsuRadSplitor())` — 多半径批量引用 跨批量重建
+- `RndBatRef(self, ref_seeds: RefSeeds, n_bat: int=1, cur_bat: int=0, splitor=RndSplitor())` — 随机批量引用关系
+- `QueBatRef(self, ref_seeds: RefSeeds, n_bat: int=1, cur_bat: int=0, splitor=PropSplitor())`
+- `RefOperator(self, seeds1: RefSeeds, seeds2: RefSeeds, func: Callable)` — 引用操作符
+- `RefOperator.dec_key(self)`
+- `RefOperator.run_key(self)`
+- `RefOperator.update(self)`
+- `RefOperator.mod_time(self)` — 反向传播的时间更新
+- `AndRef(self, seeds1: RefSeeds, seeds2: RefSeeds)` — 交集引用
+- `AndRef.mod_time(self)` — 反向传播的时间更新
+- `OrRef(self, seeds1: RefSeeds, seeds2: RefSeeds)` — 并集引用
+- `SubRef(self, seeds1: RefSeeds, seeds2: RefSeeds)`
+- `SubRef.mod_time(self)` — 反向传播的时间更新
+- `Bound(self, axis: int=0, rpos=0.0, mark=1)` — 边界物体,一般对应方向不设置周期性
+- `Bound.dec_key(self)`
+- `Bound.discrete(self, reg: Region)`
+- `FillBound(self, axis: int=0, rpos: tuple[float]=(0.0, 0.5), mark=1)` — 填充边界场
+- `FillBound.dec_key(self)`
+- `FillBound.discrete(self, reg: Region)`
+- `FillBound.r(self)`
+- `FillBound.r(self, value)`
+- `FillBound.copy(self)`
+- `Cylinder(self, axis: int=0, rpos: tuple[float]=(0.5, 0.5), r: float=0.0, h: tuple[float]=(0.0, 1.0), mark=1)`
+- `Cylinder.dec_key(self)`
+- `Cylinder.discrete(self, reg: Region)`
+- `Cylinder.copy(self)`
+- `Cube(self, axis: int=0, rpos: tuple[float]=(0.5, 0.5, 0.5), h: tuple[float]=(0.1, 0.1, 0.1), mark=1)`
+- `Cube.dec_key(self)`
+- `Cube.discrete(self, reg: Region)`
+- `Cube.copy(self)`
+- `Cube.r(self)`
+- `Cube.r(self, value)`
+- `ImgObject(self, img=PhaseVol())` — 从三维数组建立的图像物体对象 用图像的voronoi覆盖剖分网格
+- `ImgObject.dec_key(self)`
+- `ImgObject.run_key(self)`
+- `ImgObject.discrete(self, reg: Region)`
+- `ImgObject.vol(self)`
+- `ImgObject.vol(self, value)`
+- `ImgObject.inv(self)`
+- `ImgObject.size(self)`
+- `ImgObject.r(self)`
+- `ImgObject.mark(self)`
+- `ImgObject.mark(self, value)`
+- `FileImg(self, fname='data/img.png', ths=[], n_smth=0, cuts=(slice(None), slice(None), slice(None)), process_func=lambda img: img)` — 从文件加载的图像对象
+- `FileImg.dec_key(self)`
+- `FileImg.run_key(self)`
+- `FileImg.img(self)`
+- `CompObject(self, objs: list[Object]=[])`
+- `CompObject.dec_key(self)`
+- `CompObject.run_key(self)`
+- `CompObject.discrete(self, reg: Region)`
+- `CompObject.ndim(self)`
+- `CompObject.r(self)`
+- `CompObject.r(self, value)`
+- `CompObject.mark(self)`
+- `CompObject.mark(self, value)` — 设置mark, obj可以是复合物体
+- `CompObject.subs(self)`
+- `CompObject.copy(self)`
+- `CompImg(self, vol: PhaseVol, res=0.0)`
+- `ObjectPnt(self, obj: Object, reg: Region, *args)`
+- `ObjectPnt.dec_key(self)`
+- `ObjectPnt.run_key(self)`
+- `ObjectPnt.ndim(self)`
+- `ObjectPnt.pnt_r(self)`
+- `ObjectPnt.nvxl(self)`
+- `ObjectPnt.ftr_trans(self, ftr_func: FeatureFunc)` — 缓存不同ftr的变换结果 srs变化时清空
+- `ObjectPnt.sur_ftr_vol(self, tgt: SeedsPnt=None, ftr_func: FeatureFunc=surdt)` — 到目标的表面距离场 tgt变化时需要重新计算sur_dist
+- `ObjectPnt.cen_ftr_vol(self, srs: SeedsPnt=None, ftr_func: FeatureFunc=surdt)` — 起点到目标中心距离场
+- `ObjectPnt.vol(self)`
+- `ObjectPnt.seeds(self)`
+- `ObjectPnt.obj_cnt(self)`
+- `AlphaShape(self, rpos=1.0, rfix=0.6)` — 种子占据域的形状 alpha-shape计算修正
+- `AlphaShape.dec_key(self)`
+- `AlphaShape.a_shape(self, vol, r, reg)`
+- `InvAShape()`
+- `InvAShape.a_shape(self, vol, r, reg)`
+- `PolyShape(self, rpos=1.0, rfix=0.1)` — 晶体间隙形状修正
+- `PolyShape.a_shape(self, vol, r, reg)`
+- `VoroShape(self, phs=Phase(UniformDist(), 0.0, 10000))` — 晶体形态修正
+- `VoroShape.dec_key(self)`
+- `VoroShape.a_shape(self, vol, r, reg)`
+- `SeedsShape(self, rpos=1.0)` — 种子外围形状 不进行修正
+- `SeedsShape.dec_key(self)`
+- `SeedsShape.a_shape(self, vol, r, reg)`
+- `AnisoShape()` — 各向异性形状,有边界限制
+- `SeedsPnt(self, seeds: Seeds, ashp: AlphaShape, reg: Region)`
+- `SeedsPnt.dec_key(self)`
+- `SeedsPnt.run_key(self)`
+- `SeedsPnt.mark(self)`
+- `SeedsPnt.sub_marks(self)`
+- `SeedsPnt.pnt_r(self)`
+- `SeedsPnt.vol(self)`
+- `SeedsPnt.from_phs_obj(cls, phs_obj: PhaseObject, seeds: Seeds, reg: Region)`
+- `SeedsPnt.obj_cnt(self)`
+- `SeedsPnt.seeds(self)`
+- `ConstSeedsPnt()` — 固定的种子点
+- `CumSeedsPnt(self, seeds: RefSeeds, rad_bat: RadBatRef, ashp: AlphaShape, reg: Region)` — 累积种子采样点 缓存层级渲染结果
+- `CumSeedsPnt.dec_key(self)`
+- `CumSeedsPnt.run_key(self)`
+- `CumSeedsPnt.get_bat_vol(self, cur_bat)` — 调用此函数时 对应seeds的cur_bat之上累积批量已不再改变
+- `CumSeedsPnt.get_bat_seeds(self, cur_bat)`
+- `CumSeedsPnt.get_cum_vol(self, cur_bat)` — 按照输入cur_bat缓存/读取数据 本身不起作用
+- `CumSeedsPnt.vol(self)` — 根据缓存的种子渲染结果 实时计算当前cur_bat时的数组 因为pnt本身不随cur_bat改变,此为vol的行为
+- `CumSeedsPnt.seeds(self)`
+- `HrcSeedsPnt(self, seeds: RefSeeds, ashp: AlphaShape, reg: Region, n_hrc: int=1)` — 固定的层级渲染种子
+- `HrcSeedsPnt.dec_key(self)`
+- `HrcSeedsPnt.run_key(self)`
+- `HrcSeedsPnt.vol(self)`
+- `SeedsPntOperator(self, pnt1: ObjectPnt, pnt2: ObjectPnt, func: Callable)` — 采样点操作 两个采样点为相同类型的Pnt
+- `SeedsPntOperator.dec_key(self)`
+- `SeedsPntOperator.run_key(self)`
+- `SeedsPntOperator.obj(self)`
+- `SeedsPntOperator.vol(self)`
+- `SeedsPntOperator.ndim(self)` — 返回两个采样点更大的维度
+- `SeedsPntOperator.pnt_r(self)`
+- `SeedsPntOperator.seeds(self)`
+- `SeedsPntOperator.obj_cnt(self)`
+- `AddSeedsPnt(self, pnt1: ObjectPnt, pnt2: ObjectPnt)`
+- `AddSeedsPnt.vol(self)`
+- `AddSeedsPnt.pnt_r(self)`
+- `AddSeedsPnt.obj_cnt(self)`
+- `PhaseObject(self, phs=Phase(), ashp=AlphaShape())` — 相的采样点 为相种子添加alphashape描述 用于点相关图定义声明顶点
+- `PhaseObject.dec_key(self)`
+- `PhaseObject.run_key(self)`
+- `PhaseObject.discrete(self, reg: Region)` — 非实体,仅用于可视化
+- `ConstPhaseObject()` — 固定的相物体 不在迭代中更新坐标
+- `ObjectRelation(self, srs=Object(), tgt=PhaseObject(), ftr_func=FeatureFunc(), dns_func=DistFunc())` — 相的采样点 为相种子添加alphashape描述 用于点相关图定义声明顶点(只与连通关系有关)
+- `ObjectRelation.dec_key(self)`
+- `ObjectRelation.run_key(self)`
+- `ObjectRelation.tgt_itsc(self, phss: set[Phase])` — 目标相的交集
+- `ObjectRelation.srs_itsc(self, phss: set[Phase])` — 源相的交集
+- `ObjectRelation.copy(self)`
+- `PhaseRelation(self, srs=Object(), tgt=PhaseObject(), ftr_func=FeatureFunc(), dns_func=DistFunc())` — 相的采样点 为相种子添加alphashape描述 用于点相关图定义声明顶点(只与连通关系有关)
+- `PhaseRelation.inv(self)`
+- `SeedsPntCor(self, srs: ObjectPnt, tgt: SeedsPnt, ftr_func: FeatureFunc, dns_func: DistFunc)` — 种子间的点相关关系 输入seedspnt
+- `SeedsPntCor.dec_key(self)`
+- `PCEdgeOperation(self, pcfs: set[SeedsPntCor], *args)` — 单次点相关操作
+- `PCEdgeOperation.dec_key(self)`
+- `PCEdgeOperation.run_key(self)`
+- `PCEdgeSample(self, pcfs: set[SeedsPntCor])`
+- `PCEdgeSample.update(self)`
+- `PCEdgeSampleInit(self, pcfs: set[SeedsPntCor])`
+- `PCEdgeSampleInit.update(self)`
+- `PCEdgeFit(self, pcfs: set[SeedsPntCor])` — 边的拟合 采样的对称过程
+- `PCEdgeFit.update(self)`
+- `PCEdgeCheck(self, pcfs: set[SeedsPntCor])` — 边的检查 移除不合要求的种子
+- `PCEdgeCheck.update(self)`
+- `PCFuncFit(self, pcfs: set[SeedsPntCor])`
+- `PCFuncFit.update(self)`
+- `PCEdgeMove(self, pcfs: set[SeedsPntCor], T: float=1.0, cur_error=None)` — 点相关图边的移动和接受检验
+- `PCEdgeMove.update(self)`
+- `PCGAssumption(self, n_hrc, n_it, rnd_splitor=ExpSplitor(), rad_splitor=MulOtsuRadSplitor())` — 点相关采样重建假设
+- `PCGAssumption.dec_key(self)`
+- `PCGAssumption.get_n_hrc(self, seeds)`
+- `PCGAssumption.get_n_it(self, seeds)`
+- `AnnealAssumption(self, n_hrc, r_it, rnd_splitor=ExpSplitor(), rad_splitor=MulOtsuRadSplitor(), T=ExpSplitor())` — 模拟退火重建假设
+- `AnnealAssumption.dec_key(self)`
+- `AnnealAssumption.get_n_it(self, seeds)`
+- `PhsRltSCC(self, phss: list[Phase]=[], rlts: list[ObjectRelation]=[])` — 强连通分量重建 内部种子部分顺序
+- `PhsRltSCC.dec_key(self)`
+- `PhsRltSCC.run_key(self)`
+- `PhsRltSCC.update(self)`
+- `PhsRltSCC.parse_phs_rlts(self, seeds: RefSeeds, reg: Region, assp: PCGAssumption, tgt_sub=True)` — 将相和物体间关系转化为 种子和物体采样点之间的关系
+- `PhsRltSCC.sample(self, seeds: Seeds, reg: Region, assp=sample_assp, rnd=None, on=True)`
+- `PhsRltSCC.fit(self, seeds: Seeds, reg: Region, assp=fit_assp, rnd=None, on=True)`
+- `PhsRltSCC.ann_fit(self, seeds: Seeds, reg: Region, assp=nonit_assp, rnd=None, on=True)`
+- `PhsRltSCC.fill(self, seeds: Seeds, reg: Region, assp=fill_assp, rnd=None, on=True)`
+- `PhsRltSCC.check(self, seeds: Seeds, reg: Region, assp=check_assp, rnd=None, on=True)`
+- `PhsRltSCC.anneal(self, seeds: Seeds, reg: Region, assp=anneal_assp, rnd=None, on=True)`
+- `PhsRltSCC.sub_rlts(self)` — 按照目标相分解关系, 获得重建相间关系
+- `PhsRltSCC.is_cycle(self)`
+- `PhsRltSCC.pcg(self)` — 相之间构成的点相关图 参数化物体不参与 所有节点为待重建节点 复合相转化为基本相
+- `PhsRltSCC.sccs_dict(self)`
+- `PhsRltSCC.sccs_nodes(self)`
+- `PhsRltSCC.copy(self)`
+- `PhsRltSCC.get_rlt(self, *mark)`
+- `PhsRltSCC.get_phs(self, mark)`
+- `PhsRltGraph(self, phss: list[Phase]=[], rlts: list[ObjectRelation]=[])` — 相间关系图 解析连通分量 转化相关系定义
+- `PhsRltGraph.dec_key(self)`
+- `PhsRltGraph.run_key(self)`
+- `PhsRltGraph.update(self)`
+- `PhsRltGraph.sample(self, reg: Region, assp=sample_assp, seeds=None, rnd=None, on=True)` — 采样重建 所有种子将被保留
+- `PhsRltGraph.fit(self, seeds: Seeds, reg: Region, assp=fit_assp, rnd=None, on=True)` — 声明连通分量 输入先验相间关系 拟合
+- `PhsRltGraph.ann_fit(self, seeds: Seeds, reg: Region, assp=nonit_assp, rnd=None, on=True)`
+- `PhsRltGraph.fill(self, reg: Region, assp=fill_assp, seeds=None, rnd=None, on=True)` — 声明连通分量 输入先验相间关系 拟合
+- `PhsRltGraph.check(self, seeds: Seeds, reg: Region, assp=check_assp, rnd=None, on=True)` — 声明连通分量 输入先验相间关系 拟合
+- `PhsRltGraph.anneal(self, reg: Region, assp: AnnealAssumption=anneal_assp, seeds=None, rnd=None, on=True)` — 声明连通分量 模拟退火重建
+- `tgt_itsc(phss: set[Phase], rlts: set[ObjectRelation])`
+- `idp_decomp(rlts: set[ObjectRelation])`
+- `srs_itsc(phss: set[Phase], rlts: set[ObjectRelation])`
+- `sub_phss(phss: set[Phase])` — 分解复合相
+- `sub_comp_rlts(rlts: set[ObjectRelation], sub_srs=False)` — 分解复合物体参与的关系, 分解复合相作为目标参与的关系  当计算依赖关系时启用sub_srs, 当计算重建关系时关闭.
+- `get_pcg(rlts: set[ObjectRelation])` — 获取点相关图 在基本相间关系定义基础上
+- `get_sccs(pcg, sub_rlts)` — 强连通分量字典 返回字典: 分量相元组->相互作用 此时包含物体关系
+- `get_sccs_nodes(pcg)`
+- `Voronoi(self, seeds=Seeds(), id=-1)`
+- `Voronoi.dec_key(self)`
+- `Voronoi.discrete(self, reg: Region)` — 离散到域
+- `Voronoi.attr_map(self, map)`
+- `Voronoi.r(self)`
+- `Voronoi.r(self, value)`
+- `Voronoi.mark(self)`
+- `Voronoi.mark(self, value)`
+- `LaguerreVoro()`
+- `LaguerreVoro.from_vol(cls, vol, ndim=None, min_vxl=3)` — 求Voronoi覆盖 转化为种子表示 对属性不为0的部分生效
+- `LaguerreVoro.resample(self, reg)` — 种子Voro离散后重新计算Voronoi覆盖
+- `LaguerreVoro.voro_reg(self, reg: Region)`
+- `filter_region(vol, itv_th, ndim=None, nvxl=3)` — 按照局部域大小过滤体素网格
+- `PolyVoro()`
+- `PolyVoro.discrete(self, reg: Region, rnd_mark=True)` — 离散到域
+- `Generator(self, objs)` — 物体生成器
+
+### [morqex.microstructure.core.rasterization](src/morqex/microstructure/core/rasterization.py)
+
+- `shperef_mask(d)` — 获取一定直径球表面的体素掩膜
+- `shperef_rcoord(d)` — 获取一定直径球表面的相对中心坐标
+- `circlef_mask(d)` — 获取一定直径圆表面的体素掩膜
+- `circlef_rcoord(d)` — 获取一定直径圆表面的相对中心坐标
+- `period_clip(bound_size, coords)`
+- `bound_clip(bound_size, coords)`
+- `Voxelizer(self, max_r=20, ndim=3)` — 体素化器,为体素坐标种子进行体素化
+- `Voxelizer.set_ndim(self, ndim)`
+- `Voxelizer.max_r(self)`
+- `Voxelizer.set_rcod_tab(self, max_r, ndim=3)` — 设置当前半径相对坐标表
+- `Voxelizer.check_rads(self, rads, cnt)` — 检查并处理即将渲染的半径
+- `Voxelizer.check_centers(self, centers)`
+- `Voxelizer.check_marks(self, marks, cnt)`
+- `Voxelizer.discrete_check(self, centers, rads, marks)` — 统一体素化函数,按照self.bound_funcs进行周期性边界处理
+- `Voxelizer.discrete_surface(self, vol, centers, rads, marks, periods)` — 球表面离散,输入均为体素坐标
+- `Voxelizer.discrete_volume(self, vol, centers, rads, marks, periods)` — 球体积离散,输入均为体素坐标
+- `Voxelizer.discrete_check_axis(self, centers, rads, axis, marks)` — 统一体素化函数,按照self.bound_funcs进行周期性边界处理
+- `Voxelizer.discrete_volume_axis(self, vol, centers, rads, marks, axis, periods)`
+
+### [morqex.microstructure.core.voxel_fields](src/morqex/microstructure/core/voxel_fields.py)
+
+- `dist_trans(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, measure_func=distance_transform_edt)`
+- `fedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
+- `invfedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
+- `edt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True)`
+- `cdt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True)`
+- `ndt(obj_vol, *args, **kwargs)`
+- `invdt(obj_vol, *args, **kwargs)`
+- `hex_id(obj)`
+- `auto_vol(func)`
+- `DataVol(self, vol: np.ndarray=np.array([]))` — 数据数组基类
+- `DataVol.ones(cls, shape)`
+- `DataVol.zeros(cls, shape)`
+- `DataVol.copy(self)`
+- `DataVol.equals(self, value)`
+- `DataVol.nequals(self, value)`
+- `DataVol.ndim(self)`
+- `DataVol.query(self, loc: np.ndarray)` — 相对坐标->体素坐标 超出索引范围,值置为-1
+- `DataVol.itp_query(self, loc: np.ndarray)` — 插值查询 坐标0.5表示体素中心
+- `DataVol.count_vol(self, delta=1.0)`
+- `DataVol.concatenate(self, vol: DataVol, axis: int)`
+- `DataVol.max(self)`
+- `DataVol.min(self)`
+- `DataVol.sum(self)`
+- `DataVol.is_uni(self)`
+- `DataVol.is_zero(self)`
+- `DataVol.is_pos(self)`
+- `DataVol.is_norm(self)`
+- `DataVol.shape(self)`
+- `DataVol.vxl_len(self)`
+- `DataVol.vol_len(self)`
+- `DataVol.cls_id_str(self)`
+- `DataVol.cls_str(self)`
+- `DataVol.id_str(self)`
+- `DataVol.reshape(self, *args)`
+- `DataVol.rescale(self, scale)` — 保持自身类型 缩放指定倍数
+- `DataVol.resize(self, shape)` — 插值重新采样进行放缩
+- `DataVol.trans_resize(self, shape)`
+- `DataVol.swapaxes(self, axis0: int, axis1: int)`
+- `DataVol.smooth(self, sigma=1.2)`
+- `DataVol.median_smooth(self)` — 中值平滑 保持自身类型
+- `DataVol.modal_smooth(self, depth=1)` — 众数平滑 uint8类型
+- `DataVol.open_smooth(self, depth=1)` — 开运算+众数平滑 uint8类型
+- `DataVol.residual(self, sigma=1.0)`
+- `DataVol.scaled_residual(self, scale, sigma=1.0)` — 层级残差
+- `DataVol.scaled_smooth(self, scale, sigma=1.0)` — 层级平滑
+- `DataVol.scaled_median(self, scale)`
+- `DataVol.n_level(self)`
+- `DataVol.multi_residual(self, sigma=1.0, n_level=5)` — 多级残差 返回有相同尺度的列表 更大层级应视作均匀背景
+- `DataVol.multi_smooth(self, sigma=1.0, n_level=5)` — 多级残差 返回有相同尺度的列表 更大层级应视作均匀背景
+- `DataVol.from_img(cls, fname, cuts=(slice(None), slice(None), slice(None)), process_func=lambda img: img)`
+- `DataVol.threshold(self, ths)` — 阈值化与处理
+- `ObjVol()` — 单相数组 0视作没有物体
+- `ObjVol.a_shape(self, n_voxel=1.0, measure=fedt, pad=True)` — 获取rolling_ball算法计算的外边界
+- `ObjVol.inv_a_shape(self, n_voxel=1.0, measure=fedt, pad=True)`
+- `ObjVol.inv(self)` — 属性取反 不维持之前的属性
+- `ObjVol.attrs(self)` — 属性表 0表示空位
+- `ObjVol.attr_map(self, map_arr: np.ndarray)`
+- `ObjVol.is_uni(self)`
+- `ObjVol.is_zero(self)`
+- `ObjVol.open(self, depth=1.0, measure=cdt)` — 开运算 先腐蚀后膨胀 移除桥
+- `ObjVol.close(self, depth=1.0, measure=cdt)` — 闭运算 先膨胀后腐蚀 移除孔
+- `ObjVol.erosion(self, depth=1.0, measure=cdt, connect=1)`
+- `ObjVol.dilation(self, depth=1.0, measure=cdt, connect=1)`
+- `ObjVol.rescale(self, scale: float)` — 均匀插值放缩
+- `ObjVol.resize(self, shape)` — 插值重新采样进行放缩
+- `ObjVol.vol_frac(self)`
+- `ObjVol.surface(self)` — 外表面提取
+- `ObjVol.out_surface(self)` — 外表面提取
+- `ObjVol.spec_surf_area(self, voxel_len=1.0)` — 比表面积 voxel_len给出网格边长
+- `ObjVol.surf_area(self, voxel_len=1.0)` — 比表面积 voxel_len给出网格边长
+- `ObjVol.fractal_ndim(self)` — 分型维数计算
+- `ObjVol.tortuosity(self, start_vol: ObjVol, weight_vol=DataVol(np.array([])), mode='avg', max_prg=1000)` — 计算带有局部距离权重的空间曲折度分布,输入物体数组,指定传播轴和起始位置.
+- `ObjVol.label_vol(self, connect=1)` — 按照4邻接标记域 对角相连不视作相连. color_vol则默认按照8邻接计算邻接关系图, 避免对角相连相视作不相连.
+- `ObjVol.segment(self, min_dist=3)` — 有属性部分从1开始的分割
+- `ObjVol.seg_center(self, min_dist=3)`
+- `ObjVol.seg_erosion(self, depth=1.0, measure=fedt)`
+- `ObjVol.seeds_shape(self, depth=1.0, measure=fedt)`
+- `PhaseVol()` — 多相数组 加法不叠加(覆盖) 0视作没有相
+- `PhaseVol.open(self, depth=1.0, measure=cdt)` — 开运算 先腐蚀后膨胀 移除桥
+- `PhaseVol.close(self, depth=1.0, measure=cdt)` — 闭运算 先膨胀后腐蚀 移除孔 多属性运算累积
+- `PhaseVol.surface(self)`
+- `PhaseVol.surf_area(self)`
+- `PhaseVol.spec_surf_area(self)`
+- `PhaseVol.intf_area(self, a0, a1)`
+- `PhaseVol.spec_intf_area(self, a0, a1)`
+- `PhaseVol.segment(self, min_dist=1)` — 分水岭分割 LaggureVoro覆盖 未分割区域标记0 分割区域序号1~n
+- `PhaseVol.seg_center(self, min_dist=1)` — 分水岭分割 LaggureVoro覆盖的中心点 顺序与segment对应
+- `PhaseVol.seg_erosion(self, depth=1.0, measure=cdt)`
+- `PhaseVol.rad_dist(self)`
+- `PhaseVol.a_shape(self, nvxls=1.0, measure=fedt, pad=True)` — 为属性体素网格计算外边界 n_vxls输入除0位置之外的修正体素
+- `PhaseVol.inv_a_shape(self, nvxls=1.0, measure=fedt, pad=True)`
+- `PhaseVol.is_uni(self)`
+- `PhaseVol.is_zero(self)`
+- `PhaseVol.vol_frac(self)`
+- `PhaseVol.residual(self, sigma=1.0)` — 对属性0进行同样的计算
+- `PhaseVol.multi_residual(self, sigma=1.0, n_level=5)` — 不在自身的rescale上计算层级残差 而是在自身obj上计算层级残差后求和
+- `PhaseVol.rescale(self, scale: float)` — 均匀插值放缩
+- `PhaseVol.erosion(self, depth=1, measure=cdt, connect=1)`
+- `PhaseVol.dilation(self, depth=1, measure=cdt, connect=1)` — 多相膨胀 存在冲突时 属性值大的覆盖属性值小的
+- `PhaseVol.resize(self, shape)`
+- `PhaseVol.watershed(self)` — 体素voronoi变换
+- `PhaseVol.query_attr(self, loc, sigma=1.2, smooth=True)` — 点的属性插值,选取多相内最权重大属性作为点属性
+- `PhaseVol.connect_graph(self, connect=2)` — 不同属性间的连通关系
+- `PhaseVol.color_vol(self)` — 图着色
+- `PhaseVol.from_hsdat(self, shape, head_rows=1)` — shape对应 HsDat(x,y,z) -> PhaseVol(z,y,x)
+- `remove_dul_points(vertices)` — 移除重复点,输入整数点坐标
+- `color_nodes(graph)` — 图着色贪婪算法
+- `DistVol()`
+- `ProbVol()` — 概率场,不允许小于0
+- `ProbVol.normalize(self)` — 归一化,检查是否为0概率场,尽量少调用
+- `ProbVol.sample(self, cnt: int)` — 对概率场采样,返回点在域中的坐标
+- `vol_pos(list_pos, vol_shape)` — 将列表坐标转化为体素坐标
+- `list_pos(vol_pos, vol_shape)` — 将体素坐标转化为列表坐标
+- `move_axes(arr)` — 向量维度轮换 最外维度轮换到最内部
+- `s2_point_correlation(pnt1_vol: ObjVol, pnt2_vol: ObjVol, ndim, n_sample=100000, periods=[False, False, False], nbin=400)`
+- `s2_pntcor_data(pnt1_vol: ObjVol, pnt2_vol: ObjVol, n_sample=100000, periods=[False, False, False])`
+- `c2_point_correlation(pnt1_vol: ObjVol, pnt2_vol: ObjVol, n_sample=100000, nbin=100)`
+- `calculate_3d_correlation_lengths(voxel_grid)` — 计算三维体素网格在x、y、z三个方向上的相关长度
+- `calculate_3d_autocorrelation(voxel_grid)` — 计算三维体素网格的自相关函数和相关长度
+- `find_correlation_length(acf_1d, center_index)` — 从一维自相关函数中找到相关长度
+
+### [morqex.microstructure.design](src/morqex/microstructure/design.py)
+
+- `random_field(shape=(64, 64, 64), fractions=(0.3, 0.7), length_scale=(3.0, 3.0, 3.0), seed=0, spacing=(1.0, 1.0, 1.0))`
+
+### [morqex.microstructure.full_volume](src/morqex/microstructure/full_volume.py)
+
+- `periodic_components(mask)`
+- `periodic_distance(mask, *, halo=32, slab=24)` — Exact EDT when the returned interior distances stay below halo.
+- `prepare_full_volume(source, destination, *, halo=32)`
+- `positive_basis(features, *, orders=(2, 2, 2), xp=np)` — Tensor Bernstein partition of unity; eight nodes for (2,2,2).
+
+### [morqex.microstructure.generate.conditioning](src/morqex/microstructure/generate/conditioning.py)
+
+- `composition_potential(scores, fractions, temperature=0.1, iterations=18, max_points=65536)` — Return biased scores and auditable soft/hard composition diagnostics.
+
+### [morqex.microstructure.generate.config](src/morqex/microstructure/generate/config.py)
+
+- `GANConfig()`
+- `GANConfig.legacy_dict(self)`
+- `train_gan(config)`
+- `sample_gan(config, checkpoint=True, return_raw=False, spacing=(1.0, 1.0, 1.0))`
+
+### [morqex.microstructure.generate.constraints](src/morqex/microstructure/generate/constraints.py)
+
+- `surface_coating(volume, substrate, coating, matrix, coating_fraction, seed=0, roughness=0.15)` — Project a binder phase onto the exterior of an active-material skeleton.
+
+### [morqex.microstructure.generate.hybrid](src/morqex/microstructure/generate/hybrid.py)
+
+- `Generator(self, phases, noise_channels=16, width=64, residual=False, tri_reference=False, normalize_reference=False, zero_reference=False)`
+- `Generator.forward(self, z, reference, fractions)`
+- `Discriminator(self, phases)`
+- `Discriminator.forward(self, x, fractions, axis)`
+- `HybridConfig()`
+- `distill(teacher_checkpoint, paths, run_dir, config=None)`
+- `sample_student(checkpoint, fractions=None, seed=42, device='cuda', size=None, exact_fractions=False, paths=None, composition_guidance=False, composition_temperature=0.05)`
+
+### [morqex.microstructure.generate.reconstruction](src/morqex/microstructure/generate/reconstruction.py)
+
+- `Reconstructor()`
+- `Reconstructor.load(cls, manifest, workspace=None)`
+- `Reconstructor.generate(self, fractions=None, size=64, seed=42, device='cuda', spacing=(1.0, 1.0, 1.0), **overrides)`
+
+### [morqex.microstructure.generate.selection](src/morqex/microstructure/generate/selection.py)
+
+- `Candidate()`
+- `rve_references(ct, size=64, partition='validation', count=4, seed=42, observation_planes=None)` — Disjoint z halves for validation/test; same-size statistical comparison.
+- `descriptors(volume)`
+- `error(reference, generated)`
+- `benchmark(candidates, ct, output, seeds=(0, 1, 2), partition='validation', size=64, baseline=None, observation_planes=None)` — Preset score weights; reports each metric and avoids hiding failures in score.
+
+### [morqex.microstructure.generate.spatial](src/morqex/microstructure/generate/spatial.py)
+
+- `VoxelDiffusionConfig()`
+- `Residual(self, cin, cout, padding_mode='circular')`
+- `Residual.forward(self, x, embedding)`
+- `Denoiser(self, cfg)`
+- `Denoiser.forward(self, x, t, z, temperature=1.0)`
+- `AxialAttention(self, channels)` — Global information exchange along three axes at the coarse grid only.
+- `AxialAttention.forward(self, x)`
+- `SliceCritic(self, cfg)`
+- `SliceCritic.forward(self, current, previous, t, axis)`
+- `Chain(self, steps, device)`
+- `Chain.real_pair(self, clean, t)`
+- `Chain.reverse(self, clean, previous, t)`
+- `fit_volume(images, run_dir, config=None, resume=None)` — Train a new 3D diffusion model from one/three 2D phase-label images.
+- `draw_volume(checkpoint, size=256, seed=42, device='cuda', spacing=(1.0, 1.0, 1.0))` — Native-size 3D diffusion chain; no numerical property input/postprojection.
+
+### [morqex.microstructure.generate.v0.adversarial](src/morqex/microstructure/generate/v0/adversarial.py)
+
+- `Trainer(config_path)`
+
+### [morqex.microstructure.generate.v0.evaluation_images](src/morqex/microstructure/generate/v0/evaluation_images.py)
+
+- `batch_crop_two_slice_folders(input_dir1: str, input_dir2: str, output_dir1: str, output_dir2: str, crop_size: Optional[Tuple[int, int]]=None, use_smaller_common_size: bool=True, max_slices: Optional[int]=None, crop_mode: str='center', allowed_exts: Optional[Tuple[str, ...]]=None, sort_key=None, keep_original_names: bool=True, output_format: Optional[str]=None, tif_compression: Optional[str]=None, verbose: bool=True)` — 对两个文件夹中的切片图像进行批量裁剪，并输出到两个新文件夹。
+
+### [morqex.microstructure.generate.v0.fields](src/morqex/microstructure/generate/v0/fields.py)
+
+- `dist_trans(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, measure_func=distance_transform_edt)`
+- `fedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
+- `invfedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
+- `edt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True)`
+- `cdt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True)`
+- `ndt(obj_vol, *args, **kwargs)`
+- `invdt(obj_vol, *args, **kwargs)`
+- `hex_id(obj)`
+- `auto_vol(func)`
+- `DataVol(self, vol: np.ndarray=np.array([]))` — 数据数组基类
+- `DataVol.ones(cls, shape)`
+- `DataVol.zeros(cls, shape)`
+- `DataVol.copy(self)`
+- `DataVol.equals(self, value)`
+- `DataVol.nequals(self, value)`
+- `DataVol.ndim(self)`
+- `DataVol.query(self, loc: np.ndarray)` — 相对坐标->体素坐标 超出索引范围,值置为-1
+- `DataVol.itp_query(self, loc: np.ndarray)` — 插值查询 坐标0.5表示体素中心
+- `DataVol.count_vol(self, delta=1.0)`
+- `DataVol.concatenate(self, vol: DataVol, axis: int)`
+- `DataVol.max(self)`
+- `DataVol.min(self)`
+- `DataVol.sum(self)`
+- `DataVol.is_uni(self)`
+- `DataVol.is_zero(self)`
+- `DataVol.is_pos(self)`
+- `DataVol.is_norm(self)`
+- `DataVol.shape(self)`
+- `DataVol.vxl_len(self)`
+- `DataVol.vol_len(self)`
+- `DataVol.cls_id_str(self)`
+- `DataVol.cls_str(self)`
+- `DataVol.id_str(self)`
+- `DataVol.reshape(self, *args)`
+- `DataVol.rescale(self, scale)` — 保持自身类型 缩放指定倍数
+- `DataVol.resize(self, shape)` — 插值重新采样进行放缩
+- `DataVol.trans_resize(self, shape)`
+- `DataVol.swapaxes(self, axis0: int, axis1: int)`
+- `DataVol.smooth(self, sigma=1.2)`
+- `DataVol.median_smooth(self)` — 中值平滑 保持自身类型
+- `DataVol.modal_smooth(self, depth=1)` — 众数平滑 uint8类型
+- `DataVol.open_smooth(self, depth=1)` — 开运算+众数平滑 uint8类型
+- `DataVol.residual(self, sigma=1.0)`
+- `DataVol.scaled_residual(self, scale, sigma=1.0)` — 层级残差
+- `DataVol.scaled_smooth(self, scale, sigma=1.0)` — 层级平滑
+- `DataVol.scaled_median(self, scale)`
+- `DataVol.n_level(self)`
+- `DataVol.multi_residual(self, sigma=1.0, n_level=5)` — 多级残差 返回有相同尺度的列表 更大层级应视作均匀背景
+- `DataVol.multi_smooth(self, sigma=1.0, n_level=5)` — 多级残差 返回有相同尺度的列表 更大层级应视作均匀背景
+- `DataVol.from_img(cls, fname, cuts=(slice(None), slice(None), slice(None)), process_func=lambda img: img)`
+- `DataVol.threshold(self, ths)` — 阈值化与处理
+- `ObjVol()` — 单相数组 0视作没有物体
+- `ObjVol.a_shape(self, n_voxel=1.0, measure=fedt, pad=True)` — 获取rolling_ball算法计算的外边界
+- `ObjVol.inv_a_shape(self, n_voxel=1.0, measure=fedt, pad=True)`
+- `ObjVol.inv(self)` — 属性取反 不维持之前的属性
+- `ObjVol.attrs(self)` — 属性表 0表示空位
+- `ObjVol.attr_map(self, map_arr: np.ndarray)`
+- `ObjVol.is_uni(self)`
+- `ObjVol.is_zero(self)`
+- `ObjVol.open(self, depth=1.0, measure=cdt)` — 开运算 先腐蚀后膨胀 移除桥
+- `ObjVol.close(self, depth=1.0, measure=cdt)` — 闭运算 先膨胀后腐蚀 移除孔
+- `ObjVol.erosion(self, depth=1.0, measure=cdt, connect=1)`
+- `ObjVol.dilation(self, depth=1.0, measure=cdt, connect=1)`
+- `ObjVol.rescale(self, scale: float)` — 均匀插值放缩
+- `ObjVol.resize(self, shape)` — 插值重新采样进行放缩
+- `ObjVol.vol_frac(self)`
+- `ObjVol.surface(self)` — 外表面提取
+- `ObjVol.out_surface(self)` — 外表面提取
+- `ObjVol.spec_surf_area(self, voxel_len=1.0)` — 比表面积 voxel_len给出网格边长
+- `ObjVol.surf_area(self, voxel_len=1.0)` — 比表面积 voxel_len给出网格边长
+- `ObjVol.fractal_ndim(self)` — 分型维数计算
+- `ObjVol.tortuosity(self, start_vol: ObjVol, weight_vol=DataVol(np.array([])), mode='avg', max_prg=1000)` — 计算带有局部距离权重的空间曲折度分布,输入物体数组,指定传播轴和起始位置.
+- `ObjVol.label_vol(self, connect=1)` — 按照4邻接标记域 对角相连不视作相连. color_vol则默认按照8邻接计算邻接关系图, 避免对角相连相视作不相连.
+- `ObjVol.segment(self, min_dist=3)` — 有属性部分从1开始的分割
+- `ObjVol.seg_center(self, min_dist=3)`
+- `ObjVol.seg_erosion(self, depth=1.0, measure=fedt)`
+- `ObjVol.seeds_shape(self, depth=1.0, measure=fedt)`
+- `PhaseVol()` — 多相数组 加法不叠加(覆盖) 0视作没有相
+- `PhaseVol.open(self, depth=1.0, measure=cdt)` — 开运算 先腐蚀后膨胀 移除桥
+- `PhaseVol.close(self, depth=1.0, measure=cdt)` — 闭运算 先膨胀后腐蚀 移除孔 多属性运算累积
+- `PhaseVol.surface(self)`
+- `PhaseVol.surf_area(self)`
+- `PhaseVol.spec_surf_area(self)`
+- `PhaseVol.intf_area(self, a0, a1)`
+- `PhaseVol.spec_intf_area(self, a0, a1)`
+- `PhaseVol.segment(self, min_dist=1)` — 分水岭分割 LaggureVoro覆盖 未分割区域标记0 分割区域序号1~n
+- `PhaseVol.seg_center(self, min_dist=1)` — 分水岭分割 LaggureVoro覆盖的中心点 顺序与segment对应
+- `PhaseVol.seg_erosion(self, depth=1.0, measure=cdt)`
+- `PhaseVol.rad_dist(self)`
+- `PhaseVol.a_shape(self, nvxls=1.0, measure=fedt, pad=True)` — 为属性体素网格计算外边界 n_vxls输入除0位置之外的修正体素
+- `PhaseVol.inv_a_shape(self, nvxls=1.0, measure=fedt, pad=True)`
+- `PhaseVol.is_uni(self)`
+- `PhaseVol.is_zero(self)`
+- `PhaseVol.vol_frac(self)`
+- `PhaseVol.residual(self, sigma=1.0)` — 对属性0进行同样的计算
+- `PhaseVol.multi_residual(self, sigma=1.0, n_level=5)` — 不在自身的rescale上计算层级残差 而是在自身obj上计算层级残差后求和
+- `PhaseVol.rescale(self, scale: float)` — 均匀插值放缩
+- `PhaseVol.erosion(self, depth=1, measure=cdt, connect=1)`
+- `PhaseVol.dilation(self, depth=1, measure=cdt, connect=1)` — 多相膨胀 存在冲突时 属性值大的覆盖属性值小的
+- `PhaseVol.resize(self, shape)`
+- `PhaseVol.watershed(self)` — 体素voronoi变换
+- `PhaseVol.query_attr(self, loc, sigma=1.2, smooth=True)` — 点的属性插值,选取多相内最权重大属性作为点属性
+- `PhaseVol.connect_graph(self, connect=2)` — 不同属性间的连通关系
+- `PhaseVol.color_vol(self)` — 图着色
+- `PhaseVol.from_hsdat(self, shape, head_rows=1)` — shape对应 HsDat(x,y,z) -> PhaseVol(z,y,x)
+- `remove_dul_points(vertices)` — 移除重复点,输入整数点坐标
+- `color_nodes(graph)` — 图着色贪婪算法
+- `DistVol()`
+- `ProbVol()` — 概率场,不允许小于0
+- `ProbVol.normalize(self)` — 归一化,检查是否为0概率场,尽量少调用
+- `ProbVol.sample(self, cnt: int)` — 对概率场采样,返回点在域中的坐标
+- `vol_pos(list_pos, vol_shape)` — 将列表坐标转化为体素坐标
+- `list_pos(vol_pos, vol_shape)` — 将体素坐标转化为列表坐标
+- `move_axes(arr)` — 向量维度轮换 最外维度轮换到最内部
+- `s2_point_correlation(pnt1_vol: ObjVol, pnt2_vol: ObjVol, ndim, n_sample=100000, periods=[False, False, False], nbin=400)`
+- `s2_pntcor_data(pnt1_vol: ObjVol, pnt2_vol: ObjVol, n_sample=100000, periods=[False, False, False])`
+- `c2_point_correlation(pnt1_vol: ObjVol, pnt2_vol: ObjVol, n_sample=100000, nbin=100)`
+- `calculate_3d_correlation_lengths(voxel_grid)` — 计算三维体素网格在x、y、z三个方向上的相关长度
+- `calculate_3d_autocorrelation(voxel_grid)` — 计算三维体素网格的自相关函数和相关长度
+- `find_correlation_length(acf_1d, center_index)` — 从一维自相关函数中找到相关长度
+
+### [morqex.microstructure.generate.v0.inference](src/morqex/microstructure/generate/v0/inference.py)
+
+- `generator(config_path)`
+- `generator_checkpoint(config_path)`
+- `save_3d_tif_to_2d_slices(input_tif_path: str, output_folder: str, slice_prefix: str='slice', axis: str='x', check_dim_order: bool=False, enforce_same_size: bool=False, size_mode: str='crop', pad_value: int=0)` — 将三维TIF文件沿指定方向分割为二维切片并保存为 int8 tif（保证直观看效果一致）
+- `save_3d_tif_to_2d_slices_denoise(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+- `denoise_3D_tif(input_tif_path: str, output_folder: 'output_2', slice_prefix: str='slice', check_dim_order: bool=False, save=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+- `smooth_voxel_domains_iterative(input_data, kernel_size=3, iterations=5, save_path=None)` — 对三维体素进行迭代式区域平滑。
+- `remove_small_islands(data, min_size=27)` — 强力模式：直接移除小于 min_size (例如27个像素) 的所有连通域。
+
+### [morqex.microstructure.generate.v0.operations](src/morqex/microstructure/generate/v0/operations.py)
+
+- `load_config(config_path)` — 读取 YAML 配置文件并返回参数 dict，
+- `mkdr(proj, proj_dir, Training)` — When training, creates a new project directory or overwrites an existing directory according to user input. When testing, returns the full project path
+- `weights_init(m)` — 初始化训练权重
+- `calc_gradient_penalty(netD, real_data, fake_data, batch_size, l, device, gp_lambda, nc)` — 计算一批真实数据和生成数据的梯度惩罚
+- `show_training_time(steps, time, start, i, epoch_num, num_epochs)` — 根据已用时间和训练轮数估算剩余时间
+- `plot_transfer(img, img_type)` — 将一张热成像图像转换回灰度图
+- `training_plotter(img, num_axis, img_type, img_pth)` — 创建一个包含 3*num_axis 子图的图，显示训练过程中沿三个轴的切片
+- `dinamic_plot(data, labels, pth, name)` — 适用于各种不同图表的简单作图工具，进行训练过程的动态绘图
+- `generate_img(pth, img_type, netG, nz=64, lf=4, periodic=False)` — 为已训练或正在训练的生成器保存测试卷
+- `generate_img_checkpoint(pth, img_type, netG, nz=64, lf=4, periodic=False, device='cuda')` — 为已训练或正在训练的生成器保存测试卷
+- `generate_img_cond(pth, img_type, netG, phi, nz=64, lf=4, periodic=False)` — 为已训练或正在训练的生成器保存测试卷（条件：孔隙率 phi）
+
+### [morqex.microstructure.generate.v0.patches](src/morqex/microstructure/generate/v0/patches.py)
+
+- `CreateTensorDataset(data_path, data_type, image_size, scale)` — 从训练微观结构中随机生成张量数据集
+
+### [morqex.microstructure.generate.v0.restoration](src/morqex/microstructure/generate/v0/restoration.py)
+
+- `advanced_denoising_pipeline(img)`
+- `sota_detail_preserving_pipeline(img)`
+- `remove_small_regions_strict(img_labels, min_size=4)` — 严格的拓扑过滤器：
+- `final_advanced_pipeline(img)`
+- `snap_to_closest(arr)` — 输入: 任意维度的 numpy 数组或列表
+
+### [morqex.microstructure.generate.v0.settings](src/morqex/microstructure/generate/v0/settings.py)
+
+- `ConfigDict(self, *args, **kwargs)` — 一个辅助类，让字典可以通过点符号访问属性 (config.project.name)
+- `ConfigProcessor(self, config_path)`
+- `ConfigProcessor.reload(self)` — 重新加载配置文件（用于在运行时修改yaml后刷新）
+- `ConfigProcessor.show_all(self)` — 格式化输出所有当前变量
+- `ConfigProcessor.check_consistency(self)` — 根据 YAML 中的注释逻辑检查参数一致性
+
+### [morqex.microstructure.generate.v0.stacks](src/morqex/microstructure/generate/v0/stacks.py)
+
+- `save_3d_tif_to_2d_slices(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+
+### [morqex.microstructure.generate.v0.synthesis](src/morqex/microstructure/generate/v0/synthesis.py)
+
+- `AdaptiveUpsample3D(self, in_channels, out_channels, upscale_factor, kernel_size=3)` — 3D自适应上采样模块（基于光流/特征预测的思想）
+- `AdaptiveUpsample3D.forward(self, x)`
+- `PixelShuffle3D(self, upscale_factor)` — 3D 版 Pixel Shuffle (Voxel Shuffle)。
+- `PixelShuffle3D.forward(self, x)`
+- `SELayer3D(self, channel, reduction=16)`
+- `SELayer3D.forward(self, x)`
+- `upsample_net(pth, Training, imtype, d_kernel, d_stride, d_feature_channels, d_padding, g_scale, g_feature_channels)`
+- `upsample_net_conv(pth, Training, imtype, d_kernel, d_stride, d_feature_channels, d_padding, g_scale, g_feature_channels)` — complex_net
+
+### [morqex.microstructure.generate.v0.unavailable_conditioned](src/morqex/microstructure/generate/v0/unavailable_conditioned.py)
+
+- `generator(config_path, phi)`
+- `save_3d_tif_to_2d_slices(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+- `save_3d_tif_to_2d_slices_denoise(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+- `denoise_3D_tif(input_tif_path: str, output_folder: 'output_2', slice_prefix: str='slice', check_dim_order: bool=False, save=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
+- `smooth_voxel_domains_iterative(input_data, kernel_size=3, iterations=5, save_path=None)` — 对三维体素进行迭代式区域平滑。
+- `remove_small_islands(data, min_size=27)` — 强力模式：直接移除小于 min_size (例如27个像素) 的所有连通域。
+
+### [morqex.microstructure.generate.v1](src/morqex/microstructure/generate/v1.py)
+
+- `DiffusionConfig()`
+- `train(paths, run_dir, config=None, resume=None)` — Crops on device, BF16 AMP, EMA, deadline, full optimizer/RNG resumption.
+- `sample(checkpoint, paths=None, fractions=None, size=None, steps=50, guidance=1.5, seed=42, device='cuda', slice_batch=16, spacing=(1.0, 1.0, 1.0), exact_fractions=False, prior=None, strength=1.0, overlap=16, composition_guidance=False, composition_temperature=0.05, composition_start=0.35)` — One/three 2D conditions -> 3D labels. Optional GAN volume as diffusion prior.
+- `tune_batch_size(config, target_fraction=0.88, maximum=512)` — Measure actual forward/backward peak; leave headroom for optimizer/EMA.
+
+### [morqex.microstructure.helper.desktop](src/morqex/microstructure/helper/desktop.py)
+
+- `float_repr(x)`
+- `custom_display_hook(value)`
+- `custom_format(obj)`
+- `TKUI()`
+- `RedirectText(self, text_widget)`
+- `RedirectText.write(self, output)`
+- `RedirectText.flush(self)`
+- `RedirectBox(self, master, title='massage')`
+- `RedirectBox.write(self, output)`
+- `RedirectBox.flush(self)`
+- `set_scaling(scale)` — 动态调整 UI 缩放 + 窗口大小
+- `exec_in_main_thread(func, *args, **kwargs)` — 在 Tk 主线程执行（适用于 UI 更新）
+- `Context(self, env=None)`
+- `Context.init_state(self)`
+- `Context.get_name(self, obj)`
+- `Context.capture_obj(self)` — 捕获当前对话中的UI对象
+- `Context.relist_obj(self, event='<Enter>')`
+- `Context.sort_obj(self)`
+- `Context.capture_file(self)` — 捕获当前的外部文件
+- `Context.relist_file(self, event='<Enter>')`
+- `Context.view_select(self, event='<Enter>')`
+- `Context.del_select(self, event='<Enter>')`
+- `Context.copy_select(self, event='<Enter>')`
+- `Context.rename_select(self, event='<Enter>')`
+- `Context.save_select(self, event='<Enter')`
+- `Context.load_select(self, event='<Enter')`
+- `Context.get_select_obj_names(self)`
+- `Context.get_select_file_names(self)`
+- `Context.view_obj(self, names)` — 显示对象控件
+- `Context.exec_scr_cmd(self, event='<Enter>')` — 执行脚本框
+- `Context.save_scr(self, event='<Enter>')` — 保存脚本
+- `Context.load_scr(self, event='<Enter>')` — 导入脚本
+- `Context.exec_cmd(self, event='<Enter>', cmd='')` — 外层接口：在新线程中执行命令，避免阻塞 UI
+- `Context.new_proj(self)`
+- `Context.save_proj_path(self, out_path)`
+- `Context.save_as_proj(self)`
+- `Context.save_proj(self)`
+- `Context.load_proj(self)`
+- `tkinit_dec(initfunc, vars={}, pltfuncs=[], pltsize=(3, 3), *args, **kwargs)` — TKinter面板
+- `tkregister(self, master)`
+- `tklayout(self, event='<Enter>', side=tk.TOP)`
+- `tklayout_left(self, event='<Enter>')`
+- `tkrepr_dec(reprfunc)`
+- `tkunrepr(self)`
+- `tkstr_dec(strfunc)` — 声明复合变量
+- `tkredraw(self, event='<Enter>')`
+- `tkprocess(self, end='')`
+- `tkstart(self, n_bat)`
+- `tkinc(self)`
+- `tkend(self)`
+- `plt_vol(ax, vol, cb=False, legend={})` — 绘制分布密度 支持多维分布
+- `plt_legend(ax, vol, legend: dict={})`
+- `plt_view_vol(obj, ax, reg)` — 绘制相 采用缓存
+- `plt_dist(dist, ax, reg=None, nbin=1000, smth=1)` — 绘制分布密度 支持多维分布
+- `plt_compdist(compdist, ax, reg=None, nbin=600, smth=1)`
+- `TKUI()` — UI封装基类
+- `TKUI.precs(self)`
+- `TKUI.succs(self)`
+- `TKUI.update(self)`
+- `TKUI.check_update(self)`
+- `TKUI.modified(self)`
+- `exec_str_ret(vstr, env=None)` — 执行字符串 返回结果
+- `dist_init(self, *params)`
+- `dist_str(self)`
+- `TKDistFunc()`
+- `TKDistFunc.dec_key(self)`
+- `TKDistFunc.run_key(self)`
+- `TKDistFunc.stat_model(self)`
+- `TKDistFunc.stat_model(self, value)`
+- `TKDistFunc.model(self)`
+- `init_compdist(self, dfs=[TKDistFunc(-1.0, 2.0), TKDistFunc(-1.0, 2.0), TKDistFunc(-1.0, 2.0)])`
+- `TKCompDist()`
+- `TKCompDist.precs(self)`
+- `TKCompDist.df0(self)`
+- `TKCompDist.df0(self, value)`
+- `TKCompDist.df1(self)`
+- `TKCompDist.df1(self, value)`
+- `TKCompDist.df2(self)`
+- `TKCompDist.df2(self, value)`
+- `TKCompDist.dfs(self)`
+- `TKCompDist.dfs(self, value)`
+- `TKRegion()`
+- `TKRegion2D()`
+- `phs_init(self, r_dist=TKDistFunc(), v_frac: float=1.0, mark: int=1, name='')`
+- `TKPhase()`
+- `TKPhase.r_dist(self)`
+- `TKPhase.r_dist(self, value)`
+- `TKPhase.view_vol(self, reg)`
+- `TKPhase.precs(self)`
+- `aniphs_init(self, r_dist=TKDistFunc(), ab_dist=TKDistFunc(1.0, 0.0), ort_dist=TKCompDist([TKDistFunc(-1.0, 2.0), TKDistFunc(-1.0, 2.0), TKDistFunc(-1.0, 2.0)]), v_frac: float=1.0, mark: int=1, name='')`
+- `TKAniPhase()`
+- `TKAniPhase.r_dist(self)`
+- `TKAniPhase.r_dist(self, value)`
+- `TKAniPhase.ab_dist(self)`
+- `TKAniPhase.ab_dist(self, value)`
+- `TKAniPhase.ort_dist(self)`
+- `TKAniPhase.ort_dist(self, value)`
+- `TKAniPhase.view_vol(self, reg)`
+- `TKAniPhase.precs(self)`
+- `TKCompPhase()`
+- `TKCompPhase.phss(self)`
+- `TKCompPhase.phss(self, value)`
+- `TKCompPhase.view_vol(self, reg)`
+- `TKAlphaShape()`
+- `TKAlphaShape.a_shape(self, *args, **kwargs)`
+- `TKAlphaShape.shape_model(self)`
+- `TKAlphaShape.shape_model(self, value)`
+- `view_vol(self, reg)`
+- `pobj_init(self, phs=None, ashp=None)`
+- `TKPhasePnt()`
+- `TKPhasePnt.precs(self)`
+- `TKPhasePnt.phs(self)`
+- `TKPhasePnt.phs(self, value)`
+- `TKPhasePnt.ashp(self)`
+- `TKPhasePnt.ashp(self, value)`
+- `TKFillBound()`
+- `TKCylinder()`
+- `TKFileImg()`
+- `TKFileImg.regist(self, master)`
+- `TKFileImg.layout(self)`
+- `TKFileImg.redraw(self, event='<Enter>')`
+- `TKFileImg.fname(self)`
+- `TKFileImg.fname(self, value)`
+- `TKFileImg.recording(self)`
+- `TKFileImg.view_vol(self, reg)`
+- `imgobj_init(self, img=PhaseVol.zeros([10, 10, 10]))` — 图像物体(单相物体)初始化
+- `TKImage()`
+- `TKImage.regist(self, master)`
+- `TKImage.layout(self)`
+- `TKImage.redraw(self, event='<Enter>')`
+- `TKImage.precs(self)`
+- `TKImage.view_vol(self, reg)`
+- `TKImage.img(self)`
+- `TKImage.img(self, value)`
+- `compobj_init(self, objs=[])`
+- `TKCompObject()`
+- `TKCompObject.regist(self, master)`
+- `TKCompObject.layout(self)`
+- `TKCompObject.redraw(self, event='<Enter>')`
+- `TKCompObject.discreting(self)`
+- `TKCompObject.dec_key(self)`
+- `TKCompObject.run_key(self)`
+- `TKCompObject.precs(self)`
+- `TKCompObject.view_vol(self, reg)`
+- `TKCompObject.objs(self)`
+- `TKCompObject.objs(self, value)`
+- `TKCompObject.reg(self)`
+- `TKCompObject.reg(self, value)`
+- `tetmesh_init(self, *args, **kwargs)`
+- `TKTetMesh()` — 四面体网格
+- `TKTetMesh.regist(self, master)`
+- `TKTetMesh.layout(self)`
+- `TKTetMesh.redraw(self, event='<Enter>')`
+- `TKTetMesh.from_mesh(cls, value)`
+- `TKTetMesh.writing(self)`
+- `TKTetMesh.askdir(self)`
+- `TKTetMesh.update(self)`
+- `phsvol_init(self, *args, **kwargs)`
+- `TKPhaseVol()` — 体素网格
+- `TKPhaseVol.view_vol(self, reg)`
+- `TKPhaseVol.from_vol(cls, value)`
+- `TKPhaseVol.regist(self, master)`
+- `TKPhaseVol.layout(self)`
+- `TKPhaseVol.redraw(self, event='<Enter>')`
+- `TKPhaseVol.meshing(self)`
+- `rlt_init(self, srs=None, tgt=None, ftr_func=surdt, dns_func=None)`
+- `TKRelation()`
+- `TKRelation.precs(self)`
+- `TKRelation.srs(self)`
+- `TKRelation.srs(self, value)`
+- `TKRelation.tgt(self)`
+- `TKRelation.tgt(self, value)`
+- `TKRelation.ftr_func(self)`
+- `TKRelation.ftr_func(self, value)`
+- `TKRelation.dns_func(self)`
+- `TKRelation.dns_func(self, value)`
+- `init_pcg(self, phss: list[TKPhase]=[], rlts: list[TKRelation]=[])`
+- `TKPCG()`
+- `TKPCG.dec_key(self)`
+- `TKPCG.run_key(self)`
+- `TKPCG.regist(self, master)`
+- `TKPCG.layout(self)`
+- `TKPCG.redraw(self, event='<Enter>')`
+- `TKPCG.view_vol(self, reg)`
+- `TKPCG.phss(self)`
+- `TKPCG.phss(self, value)`
+- `TKPCG.rlts(self)`
+- `TKPCG.rlts(self, value)`
+- `TKPCG.precs(self)`
+- `TKPCG.reg(self)`
+- `TKPCG.reg(self, value)`
+- `TKPCG.sample_seeds(self)`
+- `TKPCG.fit_seeds(self)`
+- `TKPCG.fill_seeds(self)`
+- `TKSeeds()`
+- `TKSeeds.view_vol(self, reg)`
+- `voro_init(self, seeds=None)`
+- `TKVoro()`
+- `TKVoro.view_vol(self, reg)`
+- `TKVoro.reg(self)`
+- `TKVoro.seeds(self)`
+- `TKVoro.seeds(self, value)`
+- `view_str(self)`
+- `view_cfg_init(self, rpos=0.5, axis=2)`
+- `ViewConfig()`
+- `save_str(self)`
+- `save_cfg_init(self, dir='proj', fmt='json')`
+- `SaveConfig()`
+- `SaveConfig.regist(self, master)`
+- `SaveConfig.layout(self)`
+- `SaveConfig.redraw(self, event='<Enter>')`
+- `SaveConfig.askdir(self)`
+- `view_reg_init(self, res=1.0, size=[64.0, 64.0, 64.0], periods=[False, False, False])`
+- `ViewRegion()`
+- `aload(cls, path_str)` — 根据id字符串加载,返回实例
+- `asave(self, path_str='')` — 默认保存为类名+id字符串
+- `jsonlize(obj)` — 转换为json序列对象
+- `objectlize(js)` — 转换为python对象
+
+### [morqex.microstructure.helper.persistence](src/morqex/microstructure/helper/persistence.py)
+
+- `Config()`
+- `Config.load(self, load_cfg)`
+- `SaveConfig(self)`
+- `jsonlize(obj)` — 转换为json序列对象
+- `jcsvlize(obj, name='-')` — 转换为json-csv对象
+- `objectlize(js)` — 转换为python对象
+- `auto_load(cls, path_str: str)` — 根据id字符串加载,返回实例
+- `auto_save(self, path_str='')` — 默认保存为类名+id字符串
+- `save_vol(self, path_str)`
+- `load_vol(cls, path_str, *args)`
+
+### [morqex.microstructure.helper.plotting](src/morqex/microstructure/helper/plotting.py)
+
+- `Config()`
+- `Config.load(self, load_cfg)`
+- `ViewConfig(self)`
+- `plt_vol(vol, legend={}, cb=False, vrange=(), cmap='viridis')` — 绘制离散空间体积
+- `plt_vol_sem(phases_vol, phase_scale=12, depth_scale=0.2, cmap='viridis')` — 绘制离散空间体积,渲染时重新赋予相序号
+- `plt_cb()`
+- `plt_legend(vol, legend: dict={}, cmap='viridis', *args, **kwargs)`
+- `plt_data(data, nbin=50, density=True, weights=[], cum=False, *args, **kwargs)` — "分布数据的绘制
+- `plt_dns(mats, rlt_mark, x, colors, methods, marks, styles, smth=1, loc='best', every=3)`
+- `plt_bar(hs, xs, labs, clrs, loc=2, per=True, sci=False, **kwargs)` — 绘制多级条形图
+- `plt_bar_stack(hs, xs, labs, clrs, loc=2, per=True)` — 绘制多级条形图
+- `poly(x, y, xi, reg=1)`
+- `plt_img_save(fname)`
+- `adjust_pts_order(pts_2ds)` — sort rectangle points by counterclockwise
+- `plt_circle2d(seeds, figure, axes, colors=None, fill=True)`
+- `plt_voro2d(seeds, figure, axes, colors=None, fill=True)`
+- `stereographic_projection(v)` — v: array of shape (N,3)
+- `plot_pole_figure(vectors)`
+- `normalize(v)`
+- `cubic_ipf_sector_reduce(v)` — Map arbitrary direction to cubic IPF sector
+- `plot_pole_figure_kde(vectors, grid_res=400)`
+- `ipf_sector_projection(v)`
+- `plot_ipf_sector(vectors, title='Cubic Inverse Pole Figure (Fan-shaped)')`
+- `data_vol_plt(data_vol: DataVol)`
+- `phs_vol_plt(phs_vol: ObjVol)`
+- `obj_plt(obj: Object)`
+- `obj_pnt_plt(obj_pnt: ObjectPnt)`
+- `seeds_pnt_plt(obj_pnt: SeedsPnt)`
+- `pnt_opt_plt(obj_pnt: SeedsPntOperator)`
+- `dist_func_plt(df, smth=1, *args, **kwargs)` — 绘制分布密度 支持多维分布
+- `seeds_plt(seeds)`
+- `rnd_sp_plt(rp)`
+- `hist_plt(data, nbin=40)`
+- `error_plt(avg, std, alpha=0.5, x=[], label=None)`
+- `curve_error(x1, y1, x2, y2)`
+
+### [morqex.microstructure.image](src/morqex/microstructure/image.py)
+
+- `load_stack(directory, spacing=(1.0, 1.0, 1.0))`
+- `segment(array, thresholds=None, phases=2)`
+- `clean(volume, minimum_size=16)`
+- `save_slices(volume, directory, axis='z', prefix='slice')`
+
+### [morqex.microstructure.io](src/morqex/microstructure/io.py)
+
+- `load_legacy(path)` — Load the user's trusted PCG pickle, without installing global import aliases.
+- `convert_legacy_volume(path, output, spacing=(1.0, 1.0, 1.0))`
+
+### [morqex.microstructure.legacy_generator.network](src/morqex/microstructure/legacy_generator/network.py)
+
+- `ResBlock3D(self, channels)` — 3D 残差块，用于生成器
+- `ResBlock3D.forward(self, x)`
+- `ResBlock2D(self, channels)` — 2D 残差块，用于判别器
+- `ResBlock2D.forward(self, x)`
+- `Generator(self, z_dim=64, dim=64, out_channels=1)`
+- `Generator.forward(self, z)`
+- `Discriminator(self, dim=64, in_channels=1)`
+- `Discriminator.forward(self, x)`
+
+### [morqex.microstructure.legacy_generator.train](src/morqex/microstructure/legacy_generator/train.py)
+
+- `create_dummy_data_if_not_exists()` — 如果没有训练图片，生成一张模拟的多孔结构图
+- `load_data()`
+- `main_process()`
+
+### [morqex.microstructure.legacy_generator.utils](src/morqex/microstructure/legacy_generator/utils.py)
+
+- `compute_gradient_penalty(D, real_samples, fake_samples, device)` — 计算 WGAN-GP 的梯度惩罚
+- `post_process_output(generated_vol, reference_img)` — 后处理：将生成的[-1, 1]连续体积映射回参考图像的整数分布 (相分布)
+- `save_checkpoint(netG, netD, epoch, path='checkpoint.pth')`
+
+### [morqex.microstructure.mesh.elements](src/morqex/microstructure/mesh/elements.py)
+
+- `set_float_precision(value_arr, precision=12, zero_th=1e-32)`
+- `hex_id(obj)`
+- `Mesh(self, verts=np.array([]), cells=np.array([]), vert_data=np.array([]), cell_data=np.array([]))`
+- `Mesh.parse_name(self, path_str='')`
+- `Mesh.save_mesh(self, path_str='', on=True)`
+- `Mesh.load_mesh(cls, name_str='', on=True)`
+- `Mesh.read_meshio(cls, path='', name='meshio_mesh', fmt='vtk', on=True)`
+- `Mesh.read_gmsh(cls, path='', name='meshio_mesh', fmt='vtk')` — 调用meshio.gmsh读取gmsh文件
+- `Mesh.n_cell(self)`
+- `Mesh.n_vert(self)`
+- `Mesh.n_attr(self)`
+- `Mesh.unique_attrs(self)`
+- `Mesh.cell_centers(self)`
+- `Mesh.vol_frac(self)`
+- `Mesh.spec_surf_area(self)` — 比表面积
+- `Mesh.cell_volume(self)`
+- `Mesh.reg_volume(self)`
+- `Mesh.cls_id_str(self)`
+- `Mesh.cls_str(self)`
+- `Mesh.id_str(self)`
+- `Mesh.find(self, mark)`
+- `Mesh.mask_mesh(self, cell_mask)` — 从当前单元网格掩膜构造新的网格
+- `Mesh.grid_sample(self, n_intp=(50, 50, 50), mode='vert')`
+- `Mesh.write_meshio(self, path='', name='gmsh_mesh', fmt='vtk', on=True)` — 调用meshio写文件
+- `Mesh.write_gmsh(self, path='', name='meshio_mesh', fmt='msh', binary=False, on=True)` — 调用meshio.gmsh写.msh文件
+- `Mesh.write_mph(self, path='', name='mph_mesh', fmt='mphtxt', on=True)` — 导出comsol支持的mph格式(三角形, 四边形, 四面体, 六面体)
+- `Mesh.attr_map(self, map: list[int])`
+- `Mesh.vol_query(self, vol, stable=False)` — 顶点插值采样 网格采样 返回datavol
+- `Mesh.query(self, loc, stable=False)` — 顶点插值采样
+- `Mesh.ndim(self)` — 空间维度 默认verts按顺序填充维度
+- `LineMesh()`
+- `LineMesh.from_vol(cls, vol: PhaseVol)` — 从体素网格(三维, (n, 1, 1))初始化的线段网格
+- `TriMesh()`
+- `TriMesh.surf_area(self)`
+- `TriMesh.h(self)`
+- `TriMesh.cell_volume(self)` — 网格表面积计算
+- `TriMesh.volres_weight(cls, phs_vol: PhaseVol, smp_verts, sigma=1.0, n_level=np.inf, wfac=2.0)` — 残差权重计算  中值+平滑/高斯
+- `TriMesh.mcvrt_weight(cls, phs_vol: PhaseVol, smp_verts, sigma=1.0, n_level=np.inf, wfac=2.0)` — 残差权重计算  中值+平滑/高斯
+- `TriMesh.from_vol(cls, vol: PhaseVol, vsub=0.1, sigma=1.0, n_level=np.inf, wfac=2.0)` — 从体素网格初始化的四面体网格
+- `TriMesh.from_vol2d(cls, vol: PhaseVol, vsub=0.1, sigma=1.0, n_level=np.inf, wfac=1.0)` — 从体素网格初始化, 平面三角网格
+- `TriMesh.skewness_quality(self)` — 向量化计算三角形网格的偏度
+- `remove_degenerate(tri_verts, tri_faces, quality_th=0.01)` — 移除有重叠部分的三角面 按照对角长度选择面进行修复
+- `remove_entities(entities, to_remove)` — 从实体列表中移除指定的实体（忽略顶点顺序），完全向量化实现。
+- `fix_tetrahedrons(verts, faces, tets)` — 将平面四面体划分转化为一致的三角面
+- `TetMesh()`
+- `TetMesh.from_sur(cls, sur_mesh, vol=PhaseVol.ones((3, 3, 3)))` — 从表面网格剖分四面体网格
+- `TetMesh.from_vol(cls, vol, vsub=0.1, sigma=1.0, n_level=np.inf, wfac=2.0)` — 从体素网格剖分四面体网格
+- `TetMesh.cell_volume(self)`
+- `TetMesh.circum_radius(self)` — 计算四面体网格中每个四面体的外接圆半径
+- `TetMesh.skewness_quality(self)` — 向量化计算四面体网格的偏度
+- `TetMesh.h(self)` — 计算四面体网格中所有四面体的最大高度
+- `TetMesh.surf_mesh(self)` — 求表面网格,界面属性重新映射,表面重新旋转
+- `TetMesh.surf_area(self)` — 四面体网格表面积计算
+- `attr_marching_cubes(attr_vol: PhaseVol, method='lorensen')` — 多属性marching_cubes算法
+- `extract_surface_triangles(label)` — label: (Nx,Ny,Nz) 多相体素标签，0 表示空位
+- `sur_optimize(verts, faces, nvrt, weights=np.array([]))` — 加权表面粗化
+- `sur_tetgen(verts, faces, order=1, mindihedral=15, minratio=2.0, nobisect=True)` — 四面体化
+- `remove_dul_points(vertices)` — 移除重复点,输入整数点坐标
+- `remove_unuse_points(vertices, faces)`
+- `remove_dul_points_xyz(vertices)`
+- `face_ncell(cells)` — 建立单元-相邻单元表
+- `edge_length(verts, tets)` — 计算单元的边长
+- `QuadMesh()`
+- `QuadMesh.from_vol_2d(cls, attr_vol: PhaseVol)`
+- `QuadMesh.from_vol(cls, vol: PhaseVol)`
+- `HexMesh(self, verts, cells, vert_attr, cell_attr)`
+- `HexMesh.from_vol(cls, vol: PhaseVol)` — 将体素网格转化为六面体网格
+- `HexMesh.cell_volume(self)`
+- `HexMesh.vol_from_tet(cell_verts, cells, cell_attrs, voxel_l, stride=1)` — 将四面体网格转化为体素网格
+- `HsHexMesh(self, verts, cells, vert_data, cell_data, face_mark=np.array([]), cell_mark=np.array([]))`
+- `HsHexMesh.from_vol(cls, vol: PhaseVol)` — 将体素网格转化为六面体网格
+- `HsHexMesh.cell_volume(self)`
+- `HsHexMesh.add_axis_bound(self, axis, mark=(0, 0), cell_relative_th=0.6, face_relative_th=0.1)` — 为体积网格添加坐标轴指定的边界,mark指示上下界的标记,0表示不为边界 要求mark的值大于0. 默认单元顺序zyx.
+- `HsHexMesh.read_hsdat(cls, path='', name='hsdat_mesh', fmt='hsdat', on=True)`
+- `HsHexMesh.vol(self)`
+- `HsHexMesh.write_hsdat(self, path='', name='hsdat_mesh', fmt='hsdat', on=True)`
+- `HsHexMesh.write_bounds(self, path='', name='hsdat_bnd', fmt='hsbnd', on=True)` — 如果标记了边界则进行边界文件的写出
+- `HsHexMesh.faces(self)`
+- `HsHexMesh.n_face(self)`
+- `HsHexMesh.face_centers(self)`
+- `where_xyz(vol)` — 按xyz方向顺序的where
+- `np_mode(arr)` — 针对非负整数的优化版本
+- `extract_faces_tet(cells)` — 从单元提取表面,顺序对应
+- `extract_tets_hex(cells)` — 从单元提取四面体
+- `extract_faces_hex(cells)` — 从单元提取表面,顺序对应(有冗余,临时)
+- `extract_faces_quad(cells)`
+- `query_value(points, data, shape=(50, 50, 50))` — 获取网格数据
+- `subdivide_mesh(vertices, faces)` — 对三角网格进行一次细分，每个三角形细分为4个小三角形
+- `compute_face_normals(vertices, faces)` — 计算三角形面的法向量
+- `compute_vertex_normals(vertices, faces)` — 计算三角表面网格的顶点法向量
+- `vert_face_normals(vert_normals, faces)` — 从顶点计算面法向量
+- `orient_tetrahedrons(tetrahedrons, vertices)` — 调整四面体顶点顺序使法向一致向外
+- `calc_voro(points, limits, dispersion, weights)` — 计算voroni图 返回顶点坐标列表,多边形顶点索引列表
+- `voro_extract(voro_regions)` — 从voro域提取全局顶点坐标和多边形索引表
+- `file_str_list(fname, comm_start='#')`
+- `read_node(fname)` — 读取节点坐标文件
+- `read_ele(fname)` — 读取单元文件
+- `read_face(fname)` — 读取面(包含邻接关系)文件
+- `read_neigh(fname)` — 读取邻接单元文件
+- `read_tetgen(fname, idx=1)` — 读取tetgen文件,返回顶点,面,单元,邻接关系
+- `VoronoiMesh(self, points, reg, rads=[], attrs=[])`
+- `VoronoiMesh.from_seeds(cls, seeds, reg)` — 从种子初始化
+- `VoronoiMesh.n_region(self)`
+- `VoronoiMesh.n_point(self)`
+- `VoronoiMesh.n_vertice(self)`
+- `VoronoiMesh.write_poly(voro_mesh, fname='')` — 写voronoi线性多面体网格文件(tetgen的poly)
+- `VoronoiMesh.calc_tetra_tetgen(voro_mesh, min_angle=14)`
+
+### [morqex.microstructure.mesh.pyacvd.clustering](src/morqex/microstructure/mesh/pyacvd/clustering.py)
+
+- `Clustering(self, points, faces, weights=[])` — Uniform point clustering based on ACVD.
+- `Clustering.cluster(self, nclus, maxiter=100, debug=False, iso_try=10)` — Cluster points
+- `Clustering.create_mesh(self, flipnorm=True)` — Generates mesh from clusters
+- `Clustering.cluster_norm(self)` — Return cluster norms
+- `Clustering.cluster_centroid(self)` — Computes an area normalized value for each cluster
+- `cluster_centroid(cent, area, clusters)` — Computes an area normalized centroid for each cluster
+- `create_mesh(points, faces, area, clusters, cnorm, flipnorm=True)` — Generates a new mesh given cluster data
+- `unique_row_indices(a)` — Indices of unique rows
+- `weighted_points(points, faces, return_weighted=True, additional_weights=None)` — Returns point weight based on area weight and weighted points.
+- `neighbors_from_mesh(points, faces)` — Assemble neighbor array.  Assumes all-triangular mesh.
+- `compute_face_normals(vertices, faces)` — 计算三角形面的法向量
+- `compute_vertex_normals(vertices, faces)` — 计算三角表面网格的顶点法向量
+
+### [morqex.microstructure.mesh.pyacvd.clustering_bk](src/morqex/microstructure/mesh/pyacvd/clustering_bk.py)
+
+- `Clustering(self, verts, faces, weights)` — Uniform point clustering based on ACVD.
+- `Clustering.cluster(self, nclus, maxiter=100, debug=False, iso_try=10)` — Cluster points
+- `Clustering.subdivide(self, nsub)` — Perform a linear subdivision of the mesh.
+- `Clustering.create_mesh(self, flipnorm=True)` — Generates mesh from clusters
+- `Clustering.cluster_norm(self)` — Return cluster norms
+- `Clustering.cluster_centroid(self)` — Computes an area normalized value for each cluster
+- `cluster_centroid(cent, area, clusters)` — Computes an area normalized centroid for each cluster
+- `create_mesh(mesh, area, clusters, cnorm, flipnorm=True)` — Generates a new mesh given cluster data
+- `unique_row_indices(a)` — Indices of unique rows
+- `weighted_points(mesh, return_weighted=True, additional_weights=None)` — Returns point weight based on area weight and weighted points.
+- `neighbors_from_mesh(mesh)` — Assemble neighbor array.  Assumes all-triangular mesh.
+
+### [morqex.microstructure.mesh.tetgen.pytetgen](src/morqex/microstructure/mesh/tetgen/pytetgen.py)
+
+- `TetGen(self, *args)` — Input, clean, and tetrahedralize surface meshes using TetGen.
+- `TetGen.tetrahedralize(self, plc=True, psc=0.0, refine=0.0, quality=True, nobisect=False, cdt=0.0, cdtrefine=7.0, coarsen=0.0, weighted=0.0, brio_hilbert=1.0, flipinsert=0.0, metric=0.0, varvolume=0.0, fixedvolume=0.0, regionattrib=0.0, insertaddpoints=0.0, diagnose=0.0, convex=0.0, nomergefacet=0.0, nomergevertex=0.0, noexact=0.0, nostaticfilter=0.0, zeroindex=0.0, facesout=0.0, edgesout=0.0, neighout=0.0, voroout=0.0, meditview=0.0, vtkview=0.0, vtksurfview=0.0, nobound=0.0, nonodewritten=0.0, noelewritten=0.0, nofacewritten=0.0, noiterationnum=0.0, nojettison=0.0, docheck=0.0, quiet=0.0, nowarning=0.0, verbose=0.0, vertexperblock=4092.0, tetrahedraperblock=8188.0, shellfaceperblock=2044.0, supsteiner_level=2.0, addsteiner_algo=1.0, coarsen_param=0.0, weighted_param=0.0, fliplinklevel=-1.0, flipstarsize=-1.0, fliplinklevelinc=1.0, opt_max_flip_level=3.0, opt_scheme=7.0, opt_iterations=3.0, smooth_cirterion=1.0, smooth_maxiter=7.0, delmaxfliplevel=1.0, order=1.0, reversetetori=0.0, steinerleft=100000.0, unflip_queue_limit=1000.0, no_sort=0.0, hilbert_order=52.0, hilbert_limit=8.0, brio_threshold=64.0, brio_ratio=0.125, epsilon=1e-08, facet_separate_ang_tol=179.9, collinear_ang_tol=179.9, facet_small_ang_tol=15.0, maxvolume=-1.0, maxvolume_length=-1.0, minratio=2.0, opt_max_asp_ratio=1000.0, opt_max_edge_ratio=100.0, mindihedral=0.0, optmaxdihedral=177.0, metric_scale=1.0, smooth_alpha=0.3, coarsen_percent=1.0, elem_growth_ratio=0.0, refine_progress_ratio=0.333, switches=None)` — Generates tetrahedrals interior to the surface mesh
+
+### [morqex.microstructure.mesh.voxel](src/morqex/microstructure/mesh/voxel.py)
+
+- `FEMesh()`
+- `FEMesh.signed_volumes(self)`
+- `FEMesh.boundary_faces(self)`
+- `FEMesh.save(self, path)`
+- `FEMesh.save_comsol(self, path)` — Delegate established COMSOL mphtxt ordering/selection writer; retain phase map.
+- `voxel_to_hex(volume, phases=None)`
+- `voxel_to_tetra(volume, phases=None)`
+- `surface(volume, phase=1)`
+
+### [morqex.microstructure.pipeline](src/morqex/microstructure/pipeline.py)
+
+- `Microstructure()`
+- `Microstructure.load(cls, path, **kwargs)`
+- `Microstructure.generate(cls, checkpoint, **kwargs)`
+- `Microstructure.save(self, path)`
+- `Microstructure.mesh(self, kind='tetra', phases=None)`
+- `Microstructure.describe(self)`
+- `Microstructure.show(self)`
+- `Microstructure.homogenize(self, coefficients, order=2)`
+
+### [morqex.microstructure.reporting](src/morqex/microstructure/reporting.py)
+
+- `structure_html(volume, path, title='GEM v1 三维微结构', phase_names=None, max_triangles=120000, reference=None)`
+
+### [morqex.microstructure.simulate.cell](src/morqex/microstructure/simulate/cell.py)
+
+- `discharge(model='DFN', parameter_set='Chen2020', c_rate=1.0, duration=3600.0, points=101, updates=None)`
+- `microstructure_parameters(volume, pore_phase=0, electrode='Negative', tortuosity=None, active_phase=None)` — Map measured pore and active fractions consistently to a cell model.
+
+### [morqex.microstructure.simulate.elasticity](src/morqex/microstructure/simulate/elasticity.py)
+
+- `homogenize_elasticity(mesh, properties, order=1)` — Returns engineering-Voigt stiffness [xx,yy,zz,yz,xz,xy].
+
+### [morqex.microstructure.simulate.electrochemistry](src/morqex/microstructure/simulate/electrochemistry.py)
+
+- `backend_info()` — Report the installed native build, independently of numerical validation.
+- `assemble_cell(anode, cathode, separator_voxels, anode_map, cathode_map)` — Assemble cathode|separator|anode along x, matching upstream boundary conventions.
+- `prepare_case(volume, directory, phase_map, parameters=None, template=None)` — Write geometry, complete upstream Microstructure input template, and overrides.
+- `export_geometry(volume, directory, phase_map, nanoporosity=1.0, macmullin=1.0)` — Upstream x-fastest format: nx ny nz then phase labels.
+- `AMRConfig()`
+- `AMRConfig.write(self, path)`
+- `run(inputs, workdir, timeout=None, overrides=None)` — Native Python binding runs in an isolated process (AMReX global lifecycle).
+- `DischargeSettings()`
+- `DischargeCurve()`
+- `DischargeCurve.plot(self)`
+- `read_discharge(directory)`
+- `audit_solver(directory)` — Read actual convergence/mass evidence; never infer convergence from a curve.
+- `discharge_3d(anode, cathode, directory, anode_map, cathode_map, separator_voxels=4, settings=None, timeout=None, parameters=None)` — Fully coupled upstream microstructure-scale discharge; SI units required.
+
+### [morqex.microstructure.simulate.evolution](src/morqex/microstructure/simulate/evolution.py)
+
+- `DiffusionHistory()`
+- `diffuse(mesh, coefficients, initial=1.0, dt=0.01, steps=10, order=2, dirichlet='', boundary_value=0.0, save_every=1)`
+
+### [morqex.microstructure.simulate.homogenization](src/morqex/microstructure/simulate/homogenization.py)
+
+- `homogenize(volume, coefficients, order=2)`
+- `tortuosity(volume, pore_phase=0, axis='x', order=2)` — Pore-only RVE; isolated pores are removed to avoid singular FEM systems.
+
+### [morqex.microstructure.simulate.periodic](src/morqex/microstructure/simulate/periodic.py)
+
+- `conductivity_tensor(volume, coefficients, order=2)`
+
+### [morqex.microstructure.simulate.transport](src/morqex/microstructure/simulate/transport.py)
+
+- `to_ngsolve(mesh, periodic=False)`
+- `ConductionResult()`
+- `conduction(mesh, coefficients, axis='x', order=2)` — Unit potential difference; natural zero flux on lateral and pore boundaries.
+- `save_field(result, path)`
+
+### [morqex.microstructure.simulate.voxel_transport](src/morqex/microstructure/simulate/voxel_transport.py)
+
+- `effective_diffusion(volume, phase=0, axis='z', device='cuda', tolerance=1e-05, max_iterations=50000)`
+
+### [morqex.microstructure.view](src/morqex/microstructure/view.py)
+
+- `slices(volume, indices=None)`
+- `mesh(femesh, **kwargs)`
+- `raytrace(volume, phases=None, colors=None, start=True)` — Optional OptiX voxel rendering without hard-coded files or scene dimensions.
+
+### [morqex.microstructure.volume](src/morqex/microstructure/volume.py)
+
+- `Volume()`
+- `Volume.fractions(self)`
+- `Volume.save(self, path)`
+- `Volume.load(cls, path, **kwargs)`
+
+### [morqex.microstructure.workspace](src/morqex/microstructure/workspace.py)
+
+- `Workspace()`
+- `Workspace.default(cls)`
+- `Workspace.path(self, category, *parts)`
+- `Workspace.initialize(self)`
+
+### [morqex.runtime.aging](src/morqex/runtime/aging.py)
+
+- `AgingRuntime(self, operator_paths, parameters, config, *, nx=3, feedback=1.0, configuration_manifest=None, rtol=1e-07, atol=1e-08)`
+- `AgingRuntime.advance(self, dt, current_A)`
+- `AgingRuntime.recover(self, domain, *, x_index=0, selection=None)`
+- `AgingRuntime.reaction_bound(self, domain, *, x_index=0)`
+- `AgingRuntime.estimate_defect(self, *args, **kwargs)`
+- `AgingRuntime.checkpoint(self, path)`
+- `AgingRuntime.restore(self, path)`
+- `AgingRuntime.cohesive_error_bound(self, domain, *, x_index=0)` — Fixed-state compression bound; never a nonlinear trajectory bound.
+- `AgingRuntime.enrich(self, new_paths, *, relative_energy_tolerance=1e-05)` — Nested concentration and reaction-area reservoir transfer.
+
+### [morqex.solvers.pybamm_backend](src/morqex/solvers/pybamm_backend.py)
+
+- `solver(*, rtol=1e-07, atol=1e-08)`
+- `provenance()`
+
+### [morqex.sparse_coupled](src/morqex/sparse_coupled.py)
+
+- `sparse_bytes(a)`
+- `SparseCoupledState()`
+- `SparseChemoelasticSystem(self, solver, diffusion, expansion, patterns, *, chemical_curvature, reference_concentration, maximum_concentration)`
+- `SparseChemoelasticSystem.solve_mechanical(self, rhs)`
+- `SparseChemoelasticSystem.h_action(self, z)`
+- `SparseChemoelasticSystem.solve_h(self, rhs, *, relative_tolerance=1e-12)`
+- `SparseChemoelasticSystem.fields(self, c, e)`
+- `SparseChemoelasticSystem.energy(self, z, v, e)`
+- `SparseChemoelasticSystem.initialize(self, c, *, macro_strain=None)`
+- `SparseChemoelasticSystem.prepare(self, dt, method)`
+- `SparseChemoelasticSystem.step(self, previous, dt, u, *, macro_strain=None, method='Schur-GMRES', relative_tolerance=1e-10)`
+- `SparseChemoelasticSystem.retained_sparse_bytes(self)`
+- `SparseChemoelasticSystem.coupled_resolvent_basis(self, count, *, shifts=(0.01, 0.1, 1.0, 10.0), moments=3)` — Established rational Krylov responses of the actual coupled generator.
+
+### [morqex.statistics](src/morqex/statistics.py)
+
+- `principal_tension(stress)`
+- `von_mises(stress)`
+- `weighted_quantile(values, weights, probability)`
+- `weighted_cvar(values, weights, probability=0.99)`
+- `StressMoments()`
+- `StressMoments.build(cls, response, selection=None)`
+- `StressMoments.evaluate(self, q)`
+- `StressEnvelope()`
+- `StressEnvelope.build(cls, response, count, scales, *, radius=1.0, selection=None)`
+- `StressEnvelope.evaluate(self, q, *, probability=0.99, threshold=0.0)`
+
+### [morqex.streamed_rom](src/morqex/streamed_rom.py)
+
+- `StreamedState()`
+- `OnlineEnergyKernel()`
+- `OnlineEnergyKernel.dimension(self)`
+- `OnlineEnergyKernel.energy(self, a, e)`
+- `OnlineEnergyKernel.accept(self, state, tolerance)`
+- `OnlineEnergyKernel.trial(self, previous, dt, u, *, macro_strain=None)`
+- `OnlineEnergyKernel.step(self, previous, dt, u, *, error_tolerance, macro_strain=None)`
+- `OnlineEnergyKernel.online_array_bytes(self)`
+- `OnlineEnergyKernel.macro_stress(self, state)`
+- `OnlineEnergyKernel.batch_macro(self, coefficients, strains)`
+- `OnlineEnergyKernel.save(self, workspace, name, state=None)`
+- `OnlineEnergyKernel.load(cls, path)`
+- `StreamedEnergyROM(self, system, basis, *, projection='energy', add_mass_riesz=True, add_macro_lifting=True)`
+- `StreamedEnergyROM.initialize(self, initial, system, *, macro_strain=None, error_tolerance)`
+- `StreamedEnergyROM.detach_online(self)`
+- `StressLocalization(self, system, rom, selection, *, maximum_bytes=128 * 2 ** 20)` — Optional stress-only output columns; construction is streamed by mode.
+- `StressLocalization.stress(self, state)`
+- `StressLocalization.moments(self, state)`
+- `StressLocalization.detach_statistics(self)`
+- `QuadraticStressStatistics(self, mean, second, von_mises_second, fingerprint)` — Exact selected-volume linear means and quadratic moments, O(m²) storage.
+- `QuadraticStressStatistics.moments(self, state)`
+
+### [morqex.tail](src/morqex/tail.py)
+
+- `QuantileResult()`
+- `QuantileTree(self, response, *, scales=None, selection=None)`
+- `QuantileTree.query(self, q, *, probability=0.99, relative_tolerance=0.05, absolute_tolerance=1.0, scale_floor=1.0, threshold=0.0, maximum_nodes=None)`
+
+### [morqex.topology](src/morqex/topology.py)
+
+- `PorousCBD()`
+- `PorousCBD.ionic_phases(self, structure)`
+- `PorousCBD.ionic_efficiencies(self, structure)`
+- `PorousCBD.porosity(self, structure)`
+- `PorousCBD.metadata(self)`
+
+### [morqex.transport](src/morqex/transport.py)
+
+- `ConcentrationInfeasible()`
+- `DiffusionState()`
+- `VoxelDiffusion(self, volume, *, active_phases, diffusivity, particle_ids=None, reactive_phases=(), exterior_reactive=False)`
+- `VoxelDiffusion.source(self, flux)`
+- `VoxelDiffusion.step(self, concentration, dt, *, flux=None, maximum=None)`
+- `VoxelDiffusion.expand(self, values, *, inactive=0.0)`
+- `conservative_box_projection(values, weights, target, *, lower=0.0, upper=1.0)` — Weighted L2 projection with exact weighted-mass equality and box bounds.
+
+### [morqex.visualization.full_volume](src/morqex/visualization/full_volume.py)
+
+- `render_report(payload, destination, *, font_path=None, font_license=None)`
+
+### [morqex.visualization.report_font](src/morqex/visualization/report_font.py)
+
+- `embed_font(html, path, license_text)`
+
+### [morqex.visualization.voxel_fields](src/morqex/visualization/voxel_fields.py)
+
+- `file_hash(path)`
+- `export_reference_fields(model, u, c, directory, *, macro=(0.0,) * 6, temperature=0.0, chunk=131072)` — Exact discrete gradients/stress; no LOD in the saved numerical fields.
+
+### [morqex.workflow](src/morqex/workflow.py)
+
+- `ElectrodeRecipe()`
+- `ElectrodeRecipe.prepare(self, workspace, parameters, domain, name)`
+- `CoupledRecipe()`
+- `CoupledRecipe.prepare(self, workspace, parameters, name)`
+- `CoupledRecipe.model(self, paths, parameters)`
+
+### [morqex.workspace](src/morqex/workspace.py)
+
+- `Workspace()`
+- `Workspace.path(self, *parts: str)`

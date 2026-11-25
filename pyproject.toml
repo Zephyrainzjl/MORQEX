@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "morqex-research"
-version = "0.0.9"
+version = "0.1.0.dev0"
 description = "Evidence-first microstructure electro-chemo-mechanics research"
 requires-python = ">=3.11"
 dependencies = ["numpy>=2.1", "scipy>=1.14"]
@@ -17,7 +17,9 @@ ai = ["torch>=2.7", "diffusers>=0.35", "pillow", "opencv-python", "scikit-learn"
 simulation = ["ngsolve>=6.2", "pybammsolvers==0.6.0"]
 dfn = ["pybammsolvers==0.6.0", "casadi==3.7.2", "anytree>=2.8", "black", "pandas>=1.5", "platformdirs", "pooch>=1.8.1", "posthog", "PyYAML", "sympy>=1.12", "typing-extensions>=4.10", "xarray>=2022.6"]
 transport = ["taufactor"]
+gpu = ["cupy-cuda12x>=14.0", "pyamg>=5.3"]
 view = ["pyvista", "plotly"]
+report = ["fonttools>=4.50"]
 
 [project.scripts]
 morqex = "morqex.microstructure.cli:main"
@@ -27,7 +29,7 @@ where = ["src"]
 include = ["morqex*", "pybamm*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.pyx", "*.pxd", "*.h", "*.H", "*.hpp", "*.cxx", "*.cpp", "*.yaml", "*.inputs", "CMakeLists.txt", "pyproject.toml", "LICENSE", "provenance.json", "inputs*", "*.csv", "*.bib", "*.json", "*.txt"]
+"*" = ["*.html", "*.js", "*.cu", "*.pyx", "*.pxd", "*.h", "*.H", "*.hpp", "*.cxx", "*.cpp", "*.yaml", "*.inputs", "CMakeLists.txt", "pyproject.toml", "LICENSE", "provenance.json", "inputs*", "*.csv", "*.bib", "*.json", "*.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

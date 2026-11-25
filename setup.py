@@ -1,5 +1,6 @@
 """Optional integrated Cython geometry build; all generated files stay external."""
 import os
+import hashlib
 from pathlib import Path
 from setuptools import Extension, setup
 
@@ -7,8 +8,14 @@ root = Path(__file__).resolve().parent
 workspace = Path(os.environ.get("MORQEX_WORKSPACE", root.parent / "morph_workspace")).resolve()
 if workspace == root or root in workspace.parents:
     raise RuntimeError("Build workspace must be outside source")
-build = workspace / "build"
-metadata = workspace / "build/metadata"
+# Source snapshots deliberately normalize mtimes. A shared timestamp-based
+# build/lib can silently reuse old files, so isolate by actual package content.
+signature=hashlib.sha256()
+for path in [root/'setup.py',root/'pyproject.toml',*sorted((root/'src').rglob('*'))]:
+    if not path.is_file() or '__pycache__' in path.parts or path.suffix=='.pyc':continue
+    signature.update(str(path.relative_to(root)).encode()+b'\0'+path.read_bytes()+b'\0')
+build = workspace / "build/packages" / signature.hexdigest()[:24]
+metadata = build / "metadata"
 metadata.mkdir(parents=True, exist_ok=True)
 extensions = []
 if os.environ.get("MORQEX_BUILD_GEOMETRY") == "1":
