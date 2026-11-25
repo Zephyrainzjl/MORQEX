@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def check_protocol(solution, *, cycles, steps_per_cycle, lower_V, upper_V, current_A):
+def check_protocol(solution, *, cycles, steps_per_cycle, lower_V, upper_V, current_A,rest_s=600.):
     if len(solution.cycles)!=cycles:raise RuntimeError('Incomplete requested cycle count')
     records=[];continuity=0.
     previous=None
@@ -18,7 +18,7 @@ def check_protocol(solution, *, cycles, steps_per_cycle, lower_V, upper_V, curre
             if steps_per_cycle==5:
                 if j==2 and abs(v-upper_V)>1e-4:raise RuntimeError('CC charge did not reach upper voltage')
                 if j==3 and abs(abs(current)-current_A/20)>1e-4:raise RuntimeError('CV charge did not reach C/20')
-                if j in [1,4] and abs(duration-600)>1e-3:raise RuntimeError('Incomplete rest')
+                if j in [1,4] and abs(duration-rest_s)>1e-3:raise RuntimeError('Incomplete rest')
             for variable in ['Negative particle concentration [mol.m-3]','Positive particle concentration [mol.m-3]','Volume-averaged cell temperature [K]']:
                 start=np.asarray(step[variable].entries)[...,0]
                 if previous is not None:

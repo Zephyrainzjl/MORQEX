@@ -15,6 +15,8 @@ from morqex.electrochemistry.microstructure_operator import MicrostructureElectr
 from morqex.electrochemistry.microstructure_cache import OnlineMicrostructureOperator,LocalizationMap
 from morqex.electrochemistry.microstructure_dfn import MicrostructureStack,build_microstructure_dfn,key
 from morqex.electrochemistry.microstructure_parameters import microstructure_parameters
+from morqex.bases import PortBasis
+from morqex.concentration_modes.tail import TailBasis
 from morqex.electrochemistry.microstructure_validation import thermodynamic_observables
 from morqex.electrochemistry.validation import check_protocol
 from morqex.solvers.pybamm_backend import solver,provenance
@@ -27,7 +29,7 @@ def source_hashes():
         'microstructure_parameters.py','microstructure_validation.py']),ROOT/'src/morqex/electrochemistry/parameters.py',
         ROOT/'src/morqex/electrochemistry/validation.py',ROOT/'src/morqex/solvers/pybamm_backend.py',
         ROOT/'src/morqex/transport.py',ROOT/'src/morqex/energy.py',*ROOT.joinpath('src/morqex/mechanics').glob('*.py'),
-        ROOT/'src/morqex/gemsim.py',ROOT/'configs/microstructure_dfn.toml',Path(__file__)]
+        ROOT/'src/morqex/gemsim.py',ROOT/'src/morqex/bases.py',ROOT/'src/morqex/concentration_modes/tail.py',ROOT/'configs/microstructure_dfn.toml',Path(__file__)]
     return {str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
 
 
@@ -43,7 +45,9 @@ def prepare(workspace,parameters,args,cfg):
             data=MicrostructureData(labels,tuple(x/args.refine for x in data.spacing_zyx_m),data.origin_zyx_m,data.phase_kinds,
                 data.provenance|{'exact_geometry_refinement':args.refine})
         full=MicrostructureElectrode(data,provider,parameters,domain,thermal_expansion=cfg['thermal_expansion_per_K'])
-        op=full.reduce() if args.regions==0 else full.partition(args.regions,args.strategy)
+        if args.regions==0:op=full.reduce()
+        elif args.strategy in {'port','tail'}:op=full.reduce((PortBasis() if args.strategy=='port' else TailBasis()).build(full,args.regions),args.strategy)
+        else:op=full.partition(args.regions,args.strategy)
         paths[domain]=op.save(workspace,args.case+'_'+domain)
         records[domain]=op.metadata()|{'seed':seed,'grid_shape':list(data.labels.shape),'rve_volume_m3':full.mesh.rve_volume,
             'full_diffusion_components':int(full.diffusion.n_components),'requested_regions':args.regions,
@@ -56,7 +60,7 @@ def prepare(workspace,parameters,args,cfg):
 def main():
     cfg=tomllib.loads((ROOT/'configs/microstructure_dfn.toml').read_text());parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case',required=True);parser.add_argument('--regions',type=int,default=cfg['regions'])
-    parser.add_argument('--strategy',choices=['geometry','mechanics'],default='geometry');parser.add_argument('--shape',type=int,default=cfg['shape'][0])
+    parser.add_argument('--strategy',choices=['geometry','mechanics','port','tail'],default='geometry');parser.add_argument('--shape',type=int,default=cfg['shape'][0])
     parser.add_argument('--seed',type=int,default=cfg['negative_seed']);parser.add_argument('--positive-seed',type=int)
     parser.add_argument('--refine',type=int,default=1);parser.add_argument('--nx',type=int,default=cfg['x_points'])
     parser.add_argument('--rate',type=float,default=1.);parser.add_argument('--feedback',type=float,default=1.)

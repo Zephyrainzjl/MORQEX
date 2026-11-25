@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "morqex-research"
-version = "0.0.7"
+version = "0.0.8"
 description = "Evidence-first microstructure electro-chemo-mechanics research"
 requires-python = ">=3.11"
 dependencies = ["numpy>=2.1", "scipy>=1.14"]
@@ -12,6 +12,7 @@ dependencies = ["numpy>=2.1", "scipy>=1.14"]
 [project.optional-dependencies]
 test = ["pytest>=8"]
 geometry = ["scikit-image>=0.24", "tifffile", "meshio", "matplotlib", "PyYAML", "edt"]
+ct = ["tifffile>=2024.1", "imagecodecs>=2024.1"]
 ai = ["torch>=2.7", "diffusers>=0.35", "pillow", "opencv-python", "scikit-learn"]
 simulation = ["ngsolve>=6.2", "pybammsolvers==0.6.0"]
 dfn = ["pybammsolvers==0.6.0", "casadi==3.7.2", "anytree>=2.8", "black", "pandas>=1.5", "platformdirs", "pooch>=1.8.1", "posthog", "PyYAML", "sympy>=1.12", "typing-extensions>=4.10", "xarray>=2022.6"]

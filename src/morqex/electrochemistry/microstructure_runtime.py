@@ -96,6 +96,8 @@ class MicrostructureDFNRuntime:
         trajectory/pointwise-stress error bound. Fine work is done only on demand.
         """
         if self._last is None:raise ValueError('Advance before estimating the defect')
+        if 'phase_catalog' in self.stack.electrodes[domain].metadata()['material']:
+            raise ValueError('Legacy isotropic fine-defect estimator cannot certify phase-catalog anisotropic chemistry')
         started=time.perf_counter();op=self.stack.electrodes[domain];local=self._localizer(domain);a=local.arrays
         field=self.recover(domain,x_index=x_index);c=field['concentration'];stress=field['stress'];active=a['element_active_cell']>=0
         mu_el=np.bincount(a['element_active_cell'][active],weights=-op.descriptor['material']['molar_volume_m3_mol']/3*

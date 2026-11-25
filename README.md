@@ -2,17 +2,23 @@
 
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-当前 **0.0.7：有状态微结构 ⇄ DFN双向热—电化学—力学闭合**。真实几何的非均匀固相FV/区域状态替换径向颗粒；同源Tet4能量反馈化学势/反应，按需恢复局部场。包含变流逐步演算、完整放电/三次CC-CV循环、局部BV闭合上界、检查点与嵌套状态连续富集。见 [数学、接口与限制](docs/MICROSTRUCTURE_DFN.md)。17个工况、149测试通过限定数值检查，**不等于论文验收**：16区正极应力L2约10.45%、P99归一化RMS约34.60%，尾部精度未过；凸化OCP/Ω×0.1与合成SVE不是材料标定结果。
+当前 **0.0.8：可组合的分相CBD、CT与退化跨尺度研究框架**。非均匀DFN保留，新增相材料/拓扑/算子/子模型接口、真实CT来源、变化cohesive界面、SEI与析锂/剥离/死锂库存、热反馈及数值重启。[数学与限制](docs/EXTENSIBLE_DEGRADATION.md)，[自定义API](docs/CUSTOM_COMPONENTS.md)。**不是几乎所有物理组合或顶刊验收已完成**：固定bulk C、单宿主化学、标量界面损伤和集总热等限制仍在。
 
-当前交互HTML在外部 `morph_workspace/reports/MORQEX_microstructure_report.html`，总入口为`MORQEX_test_report.html`；可以切换时间/位置/微结构/电极，恢复浓度、应力、力学化学势，并核对双向反应端口。含真实曲线、误差、资源、失败和证据下载。0.0.6独立参照/实验报告保留为`MORQEX_DFN_report.html`，旧0.0.5为`MORQEX_0.0.5_report.html`；源码只保留生成/检查脚本。
+CBD可同时承担电子导通、固定弹性承载与微孔离子传输；分相弹性/化学膨胀张量、对角扩散倍率可自定义。真实CT形貌来自官方NMC/石墨数据，CBD由源作者重构，演示物性/退化参数未标定。接口拒绝不支持的混合化学、非对角扩散、有限变形/摩擦等组合，需对应新后端。
 
-实际实时变流演算（从本目录启动，所有输出自动外置）：
+最新交互HTML：外部`morph_workspace/reports/MORQEX_degradation_CT_report.html`，总入口`MORQEX_test_report.html`。包含3D/切片演化场、界面位移跳量、SEI/金属锂、循环对照、误差与失败。0.0.7归档`MORQEX_0.0.7_report.html`；0.0.6独立实验/参照在`MORQEX_DFN_report.html`。171测试通过；21正式工况分为19限定通过及2预期物理拒绝，不等于全部精度门禁通过。
+
+实际复现（从本目录运行，数据/输出自动外置）：
 
 ```bash
-python scripts/run_local.py --label micro_live -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/run_microstructure_live.py
+python scripts/run_local.py --label ct_fetch -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/fetch_ct_data.py
+python scripts/run_local.py --label ct_crops -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/prepare_ct_crops.py
+/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python scripts/run_upgrade_suite.py
+python scripts/run_local.py --label upgrade_html -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/build_upgrade_report.py
+python scripts/run_local.py --label upgrade_html_check -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/check_upgrade_report.py
 ```
 
-加`--interactive`后逐行输入JSON：`{"action":"advance","dt":20,"current_A":5}`、`{"action":"recover","domain":"negative","x_index":1}`、`{"action":"checkpoint"}`。默认demo先放电再给充电脉冲，避免在初始接近满充时触及上限。暖步进约6–11ms是当前小模型实测，不是硬实时承诺；冷编译/富集单列。HTML滑块重放已求轨迹，新负载由Python核重新求解。
+逐步变流/数值重启使用`morqex.runtime.aging.AgingRuntime`；相目录与自定义SEI示例见API文档。旧`run_microstructure_live.py`仍为0.0.7固定几何路线，不能当作已包含退化的新运行核。
 
 源码：`/home/zephyrain/lw/MORQEX`。所有数据、测试输出、编译产物、安装环境、权重和缓存：`/home/zephyrain/lw/morph_workspace`。独立Git仓库，不修改、不依赖ZynJoule。
 
@@ -72,7 +78,7 @@ python scripts/run_local.py --label test_html -- /home/zephyrain/lw/morph_worksp
 
 - [RESUME.md](RESUME.md)、[RESEARCH_LOG.md](RESEARCH_LOG.md)：恢复入口、实测结果、失败与下一步。
 - [CODE_AUDIT.md](CODE_AUDIT.md)：已有物理、可复用能力及实测问题。
-- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：45条文献、28方法矩阵及创新门禁。
+- [LITERATURE_REVIEW.md](LITERATURE_REVIEW.md)、[NOVELTY_MATRIX.md](NOVELTY_MATRIX.md)：53条来源、28方法矩阵及创新门禁。
 - [docs/SPARSE_SCALING.md](docs/SPARSE_SCALING.md)：稀疏耦合、全生成元响应空间、分离在线核/统计/场和规模验证。
 - [docs/ENERGY_ADAPTIVITY.md](docs/ENERGY_ADAPTIVITY.md)：同能量耦合、状态转移、辅助误差动力学及八候选消融。
 - [docs/CERTIFIED_TRANSPORT.md](docs/CERTIFIED_TRANSPORT.md)：后验界推导、通量/新热点试验与HTML说明。

@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MORQEX · CBD / CT / 退化闭环</title>
+<style>body{margin:0;background:#edf2f5;color:#183044;font:16px/1.75 system-ui,sans-serif}main{max-width:1160px;margin:30px auto;padding:34px;background:white;border-radius:16px}h1{font-size:32px}h2{margin-top:40px;color:#12566a;font-size:23px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #dce4e9}th{background:#e9f1f5}figure{margin:18px 0}img{width:100%;height:auto}.notice{padding:18px;background:#fff4df;border-left:4px solid #c78f39}.controls{display:flex;gap:16px;flex-wrap:wrap;margin:18px 0}label{display:flex;align-items:center;gap:7px}select,input{padding:6px;border:1px solid #bdcdd5;border-radius:5px}canvas{display:block;max-width:100%;border:1px solid #dbe6eb;background:#f8fafb}a{color:#087b9c}small{color:#56727d}</style>
+<main><small>0.0.8 · 本地单核受限实测 · 2026-11-25</small><h1>MORQEX · 分相CBD与退化跨尺度闭环</h1><p>真实CT来源 · 变化界面算子 · SEI与金属锂库存 · 可恢复演化场</p><!-- CONTENT --></main>
+<script id="viewer-data" type="application/json">/* VIEWER_DATA */</script>
+<script id="viewer-code">
+const DATA=JSON.parse(document.getElementById('viewer-data').textContent),el=id=>document.getElementById(id);
+for(const name of Object.keys(DATA)){const o=document.createElement('option');o.value=name;o.textContent=name;el('case').appendChild(o)}
+function draw(){const d=DATA[el('case').value],m=d.micro[el('domain').value],key=el('field').value;el('time').max=d.time.length-1;el('depth').max=m.shape[0]-1;
+ const ti=Math.min(+el('time').value,d.time.length-1),xi=+el('macro').value,z=Math.min(+el('depth').value,m.shape[0]-1),v=m.fields[key][xi][ti];
+ const whole=m.fields[key].flat(2);let lo=Infinity,hi=-Infinity;for(const row of whole){for(const x of Array.isArray(row)?row:[row]){lo=Math.min(lo,x);hi=Math.max(hi,x)}}if(hi-lo<1e-15)hi=lo+1e-15;
+ const ctx=el('map').getContext('2d');ctx.clearRect(0,0,760,390);const size=Math.min(320/m.shape[1],510/m.shape[2]),ox=30,oy=30;
+ for(let y=0;y<m.shape[1];y++)for(let x=0;x<m.shape[2];x++){const i=z*m.shape[1]*m.shape[2]+y*m.shape[2]+x,p=m.labels[i];
+  ctx.fillStyle=p===0?'#dce2e7':p===2?'#b28a5e':'#659786';if((key==='vm'&&p!==0)||(p===1&&key!=='vm'))ctx.fillStyle=`hsl(${235-235*(v[i]-lo)/(hi-lo)},72%,52%)`;
+  ctx.fillRect(ox+x*size+1,oy+y*size+1,size-2,size-2)}
+ ctx.fillStyle='#183044';ctx.font='14px sans-serif';ctx.fillText(`全时域 min ${lo.toPrecision(5)} / max ${hi.toPrecision(5)}`,350,45);ctx.fillText(`Z=${z} | ${m.active_voxels} active voxels → ${m.regions} regions`,350,75);
+ el('readout').textContent=`t=${d.time[ti].toFixed(2)} s | V=${d.voltage[ti].toFixed(5)} V | T=${d.temperature[ti].toFixed(3)} K | 界面位移跳量P99=${m.opening_P99_nm[xi][ti].toPrecision(5)} nm。滑块重放真实求解轨迹；新负载须由Python求解核积分。`;
+}
+for(const id of ['case','domain','macro','field','time','depth'])el(id).addEventListener('input',draw);draw();
+</script></html>

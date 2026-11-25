@@ -6,6 +6,7 @@ SOC. Clustering/static condensation are established methods, not novelty claims.
 """
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 import numpy as np
 from scipy import sparse
@@ -16,19 +17,22 @@ from morqex.mechanics import TetMesh,ElasticitySolver,isotropic_stiffness
 from morqex.energy import ResponseBuilder
 
 
-def phase_transport(volume,phases,axis_xyz=0):
+def phase_transport(volume,phases,axis_xyz=0,phase_factors=None):
     """Unit-conductivity TPFA cell problem, Dirichlet x ends/insulated sides.
 
     Disconnected floating components carry no current. Boundary half-cell
     distances are included. Returns a dimensionless directional efficiency.
     """
     if axis_xyz not in (0,1,2):raise ValueError('XYZ axis required')
-    fv=VoxelDiffusion(volume,active_phases=phases,diffusivity=1.)
+    factors=np.ones(volume.data.size) if phase_factors is None else np.array([phase_factors.get(int(p),1.) for p in volume.data.ravel()])
+    selected=np.isin(volume.data.ravel(),phases)
+    if np.any((factors[selected]<=0)|(factors[selected]>1)):raise ValueError('Directional phase efficiencies must lie in (0,1]')
+    fv=VoxelDiffusion(volume,active_phases=phases,diffusivity=factors[selected,None])
     axis=2-axis_xyz;shape=volume.data.shape;h=volume.spacing[axis]
     length=shape[axis]*h
     boundary=2*np.prod(volume.spacing)/h**2/fv.rve_volume
-    left=(fv.coordinates_zyx[:,axis]==0)*boundary
-    right=(fv.coordinates_zyx[:,axis]==shape[axis]-1)*boundary
+    left=(fv.coordinates_zyx[:,axis]==0)*boundary*factors[fv.voxel_ids]
+    right=(fv.coordinates_zyx[:,axis]==shape[axis]-1)*boundary*factors[fv.voxel_ids]
     anchored=np.isin(fv.components,np.unique(fv.components[left+right>0]))
     potential=np.zeros(len(fv.weights));matrix=fv.stiffness+sparse.diags(left+right)
     if anchored.any():potential[anchored]=spsolve(matrix[anchored][:,anchored].tocsc(),right[anchored])
@@ -115,9 +119,9 @@ class MicrostructureOperator:
         mean=np.einsum('e,eij->ij',volumes/self.full.mesh.rve_volume,self.stress_map)
         second=np.einsum('e,eik,eil->ikl',volumes/volumes.sum(),self.stress_map,self.stress_map)
         cell=self.full._element_cells;active=cell>=0;mu_map=np.zeros((self.full.n,self.dimension+2))
-        trace=self.stress_map[active,:3,:].sum(axis=1)
+        conjugate=-np.einsum('ei,eij->ej',self.full._chemical_tensors[active],self.stress_map[active])
         for k in range(self.dimension+2):
-            np.add.at(mu_map[:,k],cell[active],-self.full._omega/3*volumes[active]*trace[:,k])
+            np.add.at(mu_map[:,k],cell[active],volumes[active]*conjugate[:,k])
         mu_map/=self.full.diffusion.volumes[:,None]
         delta=mu_map-self.H[1:-1,:][self.partition]/self.weights[self.partition,None]
         port_gram=np.zeros((self.dimension,self.dimension+2,self.dimension+2));port_box=np.zeros((self.dimension,self.dimension+2))
@@ -137,14 +141,20 @@ class MicrostructureOperator:
 
 class MicrostructureElectrode:
     """Full active-voxel diffusion and fixed-C FEM energy on the SAME geometry."""
-    def __init__(self,structure,provider,parameters,domain,*,thermal_expansion=1e-5,cbd_young=1e9):
+    def __init__(self,structure,provider,parameters,domain,*,thermal_expansion=1e-5,cbd_young=1e9,topology=None,materials=None):
         if domain not in {'negative','positive'}:raise ValueError('Electrode domain required')
         self.structure=structure;self.volume=provider.to_volume(structure);self.domain=domain
         active=[p for p,k in structure.phase_kinds.items() if k=='active']
         pores=[p for p,k in structure.phase_kinds.items() if k=='pore']
         solid=[p for p,k in structure.phase_kinds.items() if k in {'active','cbd','inert'}]
-        if not active or not pores:raise ValueError('Active and pore phases required')
-        self.diffusion=VoxelDiffusion(self.volume,active_phases=active,diffusivity=1.,reactive_phases=pores)
+        if not active or (not pores and topology is None and materials is None):raise ValueError('Active and pore phases or an explicit ion-conducting topology required')
+        if materials is not None:
+            materials.validate(structure)
+            if topology is None:topology=materials
+        ionic=pores if topology is None else topology.ionic_phases(structure)
+        selected_active=np.isin(structure.labels.ravel(),active)
+        diffusion=1. if materials is None else np.array([materials.phases[int(p)].diffusion_factor_XYZ for p in structure.labels.ravel()[selected_active]])
+        self.diffusion=VoxelDiffusion(self.volume,active_phases=active,diffusivity=diffusion,reactive_phases=ionic)
         fv=self.diffusion;self.n=len(fv.weights)
         self.reference=float(parameters[f'Initial concentration in {domain} electrode [mol.m-3]'])
         self.reference_T=float(parameters['Reference temperature [K]'])
@@ -153,10 +163,13 @@ class MicrostructureElectrode:
         omega=float(parameters[f'{Domain} electrode partial molar volume [m3.mol-1]'])
         self.material_record={'young_Pa':young,'poisson':nu,'molar_volume_m3_mol':omega,'thermal_expansion_per_K':thermal_expansion,
             'cbd_young_Pa':cbd_young,'scope':'fixed linear elasticity; synthetic CBD/thermal alpha, not material calibration'}
-        self.transport={'electrolyte':phase_transport(self.volume,pores),'electrode':phase_transport(self.volume,solid)}
+        ionic_factors=None if topology is None else topology.ionic_efficiencies(structure)
+        electronic=solid if not hasattr(topology,'electronic_phases') else topology.electronic_phases(structure)
+        electronic_factors=None if not hasattr(topology,'electronic_efficiencies') else topology.electronic_efficiencies(structure)
+        self.transport={'electrolyte':phase_transport(self.volume,ionic,phase_factors=ionic_factors),'electrode':phase_transport(self.volume,electronic,phase_factors=electronic_factors)}
         if min(v['efficiency'] for v in self.transport.values())<1e-10:raise ValueError('SVE has no through-thickness ionic/electronic percolation')
-        pore_access=_connected_to_x_boundary(self.volume,pores,'right' if domain=='negative' else 'left')
-        solid_access=_connected_to_x_boundary(self.volume,solid,'left' if domain=='negative' else 'right')
+        pore_access=_connected_to_x_boundary(self.volume,ionic,'right' if domain=='negative' else 'left')
+        solid_access=_connected_to_x_boundary(self.volume,electronic,'left' if domain=='negative' else 'right')
         reactive=fv.reactive.copy()
         for face in np.flatnonzero(reactive):
             cell=fv.face_cells[face];coord=fv.coordinates_zyx[cell]
@@ -176,19 +189,27 @@ class MicrostructureElectrode:
             self.mesh=TetMesh(self.mesh.points[pairs[:,1]],inverse.reshape(-1,4),self.mesh.phases,self.mesh.box,self.mesh.voxel_ids)
         self.material_record['mechanical_contact']='face-connected solid; corner-only and edge-only components are not tied'
         tensor={p:isotropic_stiffness(young,nu) if p in active else isotropic_stiffness(cbd_young,.3) for p in solid}
+        if materials is not None:tensor={p:materials.phases[p].elasticity for p in solid}
         self.solver=ElasticitySolver(self.mesh,np.array([tensor[int(p)] for p in self.mesh.phases]),boundary='kubc')
         parent=np.full(self.volume.data.size,-1,dtype=int);parent[fv.voxel_ids]=np.arange(self.n)
         cell=parent[self.mesh.voxel_ids];selected=cell>=0
         self._element_cells=cell;self._selected=selected;self._omega=omega;self._alpha=thermal_expansion;self._full_response=None
-        self.porosity=float(np.isin(structure.labels,pores).mean())
-        self.fingerprint=hashlib.sha256((structure.fingerprint+self.mesh.fingerprint+domain).encode()+np.array([young,nu,omega,thermal_expansion,cbd_young,self.reference,self.reference_T]).tobytes()+Path(__file__).read_bytes()).hexdigest()
+        self._chemical_tensors=np.zeros((len(cell),6));self._chemical_tensors[selected,:3]=omega/3
+        self._thermal_tensors=np.zeros((len(cell),6));self._thermal_tensors[:,:3]=thermal_expansion
+        if materials is not None:
+            self._chemical_tensors=np.array([materials.phases[int(p)].chemical_strain_per_concentration for p in self.mesh.phases])
+            self._thermal_tensors=np.array([materials.phases[int(p)].thermal_strain_per_K for p in self.mesh.phases])
+            self.material_record['phase_catalog']=materials.metadata()
+        self.porosity=float(np.isin(structure.labels,pores).mean()) if topology is None else topology.porosity(structure)
+        if topology is not None:self.material_record['ionic_topology']=topology.metadata()
+        self.fingerprint=hashlib.sha256((structure.fingerprint+self.mesh.fingerprint+domain+json.dumps(self.material_record,sort_keys=True)).encode()+np.array([young,nu,omega,thermal_expansion,cbd_young,self.reference,self.reference_T]).tobytes()+Path(__file__).read_bytes()).hexdigest()
 
     def _response(self,P):
         m=P.shape[1];ne=len(self.mesh.cells)
         if ne*6*(m+7)*8>128*2**20:raise MemoryError('Field allocation exceeds 128 MiB; reduce regions or stream localization')
         modes=np.zeros((ne,6,m+1));cell=self._element_cells;selected=self._selected
-        modes[selected,:3,:m]=self._omega/3*P[cell[selected],None,:]
-        modes[:,:3,-1]=self._alpha
+        modes[selected,:,:m]=self._chemical_tensors[selected,:,None]*P[cell[selected],None,:]
+        modes[:,:,-1]=self._thermal_tensors
         response=ResponseBuilder(self.solver,modes).exact()
         response.metadata.update(input_units=['1']*6+['mol.m-3']*m+['K'],geometry_fingerprint=self.structure.fingerprint,
             closure='actual represented nonuniform concentration; no sphere mapping')
