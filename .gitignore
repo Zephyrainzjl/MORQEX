@@ -22,5 +22,7 @@ dist/
 *.log
 results/
 data/
+!src/pybamm/**/data/
+!src/pybamm/**/data/**
 runs/
 

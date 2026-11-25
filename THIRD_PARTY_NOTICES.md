@@ -10,3 +10,6 @@ GEMsim顶层未声明统一许可证；不据此推断可自由公开再分发�
 
 AI生成路线、NGSolve、PyBaMM和echemAMR的科学出处仍应在实际使用时引用原方法。源码存在、可导入、可编译和物理数值验证是四种不同状态。没有进行模型训练或宣称复现上游全部平台性能。
 
+
+
+PyBaMM26.3.1来源为官方PyPI发行对应的纯Python包，固定上游链接https://github.com/pybamm-team/PyBaMM/tree/v26.3.1。355文本文件迁入src/pybamm，BSD-3-Clause许可保留在src/pybamm/LICENSE.txt，CITATIONS.bib与参数输入CSV均保留。原文件与修改hash见provenance/pybamm_migration.json；只修改__init__.py的补丁标记和convert_to_casadi.py的标量1D插值导数转换。本框架不将其宣称为自研DFN求解器。CasADi/pybammsolvers依赖遵循各自许可，二进制不放源码。独立venv安装本发行，避免与上游PyBaMM wheel覆盖同名namespace。

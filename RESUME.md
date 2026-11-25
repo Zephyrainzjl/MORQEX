@@ -1,6 +1,19 @@
 # MORQEX恢复入口
 
-更新：2026-11-24。软件0.0.5，分支 `research/sparse-coupled-scaling`。当前包括稀疏二次耦合规模路径、独立在线核/统计/场和离线HTML；**尚未完成论文框架、完整DFN或三项原创性验证**。本轮见 [SPARSE_SCALING](docs/SPARSE_SCALING.md)，旧推导/实测见 [ENERGY_ADAPTIVITY](docs/ENERGY_ADAPTIVITY.md)，旧Fick证据见 [CERTIFIED_TRANSPORT](docs/CERTIFIED_TRANSPORT.md)，旧线性证据见 [LINEAR_CORE](docs/LINEAR_CORE.md)。
+更新：2026-11-25。软件0.0.6，分支 `research/dfn-coupled-cycling`。完整DFN放电、三次CC-CV循环、集总热反馈与能量导出的平均浓度SVE/球力学已接入；**尚未达到论文验收、任意微结构三维热参照或三项原创性验证**。本轮见 [DFN热—力范围](docs/DFN_THERMOMECHANICS.md)，以下0.0.5段落保留为历史快照。
+
+## 0.0.6恢复与当前证据
+
+- `src/pybamm`为26.3.1固定版本355文件及许可证，两个文件改动由`provenance/pybamm_migration.json`追踪；CasADi3.7.2/pybammsolvers0.6.0二进制在外部venv。真实导数转换缺陷已修复，不能使用无补丁版本作为资格后端。
+- 新模块`electrochemistry/{dfn,mechanical_closure,parameters,validation}.py`。原DFN状态是唯一锂状态；KUBC微结构只接收平均浓度，球零均值扩散能独立叠加。原始非凸OCP触发失败，不接受部分Solution为完整放电；验证轨凸化/Ω×0.1显式标注。
+- `scripts/run_dfn_suite.py`串行调用受限launcher；单例原始数据`results/dfn/<case>/result.json`，局部SVE快照NPZ、算子、公开参照数据均外置。源码hash绑定每个结果；`reports/dfn_suite.json`及各latest记录成功/拒绝。
+- 独立COMSOL比较使用官方面积/电流/电导率；Ai2020原始DFN对公开Enertech电压与温升，不宣称复现其全部力学；修改的OKane2022验证轨测试倍率/循环/约束/网格/短时第二求解器。
+- 热账本仅证明集总温度ODE积分一致性，完整DFN化学/电/弹性能证书待完成。循环无老化模型，不能预测容量衰减。原始Ω强反馈案例不是材料结论。
+- 当前18个工况通过限定数值检查，另保留1个代数初值阈值过松的失败对照；132自身测试通过，包含原生本地checkpoint重启、标量/向量插值导数节点回归及实际热体积归一化。COMSOL细网格电压RMSE0.550mV/最大2.957mV，固相表面/电解液浓度相对L2约0.0754%/0.00958%/0.0291%；负极电势接近零需用绝对误差5.25μV而非20.6%相对误差判断。预算内网格差仅是同一离散族比较，非连续体严格误差界。
+- 原始Ai常规DFN对实验电压RMSE61.6/74.6/115.5mV，尚未通过实验准确性；温升RMSE0.215/0.450/1.272K只覆盖放电，文件中的后续冷却尚未仿真。不得将COMSOL离散一致性与此实验材料差异混淆。
+- 独立venv `venvs/morqex_dfn`只装本框架wheel与依赖，没有上游PyBaMM发行包；去掉源码sys.path后60s热—力DFN验证通过。wheel约1.8MB，包含356个PyBaMM资源（355源文件+许可证）及22个参数CSV。外部二进制不进源码。
+- 当前HTML：`reports/MORQEX_DFN_report.html`，总入口`MORQEX_test_report.html`；历史报告`MORQEX_0.0.5_report.html`。生成脚本`build_dfn_report.py`拒绝数值源码/公开数据hash不匹配；旧报告生成脚本是历史0.0.5流程。
+- 下一步优先改善未经校准的物性/闭合、完整非等温能量理论、预算内网格收敛与独立三维短时参照，再做DFN联合降阶/认证和先进基线。不得套用旧二次误差界或速度倍率到DFN。
 
 ## 路径与限制
 

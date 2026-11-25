@@ -31,6 +31,17 @@ def main():
         destination.write_text(json.dumps(state, indent=2))
     else:
         assert json.loads(destination.read_text()) == state, "Integrated source differs; review and record intentional changes"
+    pybamm = json.loads((ROOT / 'provenance/pybamm_migration.json').read_text())
+    assert pybamm['version'] == '26.3.1'
+    modified = []
+    for row in pybamm['files']:
+        path = ROOT / 'src/pybamm' / row['path']
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == row['local_sha256'], path
+        if row['locally_modified']:modified.append(row['path'])
+    assert set(modified) == {'__init__.py','expression_tree/operations/convert_to_casadi.py'}
+    assert (ROOT/'src/pybamm/LICENSE.txt').is_file()
+    expected = {r['path'] for r in pybamm['files']} | {'LICENSE.txt'}
+    assert {str(p.relative_to(ROOT/'src/pybamm')) for p in (ROOT/'src/pybamm').rglob('*') if p.is_file()} == expected
     for path in (ROOT / "src").rglob("*.py"):
         tree = ast.parse(path.read_text(), filename=str(path))
         for node in ast.walk(tree):
@@ -63,10 +74,10 @@ def main():
         reader = csv.DictReader(f, delimiter="\t")
         methods = list(reader)
         assert len(reader.fieldnames) == 25
-    assert len(refs) == 45 and len({r["id"] for r in refs}) == 45
+    assert len(refs) >= 49 and len({r["id"] for r in refs}) == len(refs)
     assert len(methods) == 28
     assert all(r["source_id"] == "THEORY/RESEARCH_PLAN" or r["source_id"] in {x["id"] for x in refs} for r in methods)
-    print(json.dumps({"integrated_files": len(rows), "intentional_additional_adaptations": sum(r["additional_local_adaptation"] for r in rows),
+    print(json.dumps({"integrated_files": len(rows), "pybamm_source_files":len(pybamm['files']), "pybamm_modified_files":modified, "intentional_additional_adaptations": sum(r["additional_local_adaptation"] for r in rows),
                       "references": len(refs), "methods": len(methods), "capability_fields": 25,
                       "local_document_links": link_count, "forbidden_artifacts": 0}, indent=2))
 

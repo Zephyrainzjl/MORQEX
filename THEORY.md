@@ -131,3 +131,8 @@ A_{ij}=V^{-1}\int_{Y_a}\nabla\phi_i\cdot L\nabla\phi_j\,dV.
 ## 0.0.5稀疏规模路径
 
 新路径稀疏混合(v,z,p)的完整BE与Schur-GMRES交叉；H_z=D_z−JᵀK_m⁻¹J且I≤H_z≤D_z。逐模式投影、H逆质量Riesz/宏观提升均无需稠密H；非扩张BE给δ_n≤δ_old+‖r_n‖D_z，离线QR后在线仅小矩阵。初态误差和FP64/连续体边界明确，详细公式见链接。 详见 [推导、范围和失败记录](docs/SPARSE_SCALING.md)。
+
+
+## 0.0.6非线性DFN与集总热闭合增量
+
+完整推导、单位、能量集合及假设见[DFN热—力](docs/DFN_THERMOMECHANICS.md)。DFN径向浓度为唯一固相锂状态，SVE只接收其平均值；自由球零均值弹性能另加。由同一凝聚W的c/T导数修正OCP、熵系数和有效热容。以M=D/f''建立扩散时必须f''>0，原始非凸拟合直接拒绝；凸化是显式参数修改。热积分账本验证Cp−TF_TT的温度ODE，不宣称完整非等温DFN能量定理。已有固定二次模型的收缩/余项界不能外推至此。

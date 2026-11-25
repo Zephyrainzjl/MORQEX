@@ -1,0 +1,2 @@
+# Preserve audited upstream bytes, including native CRLF and whitespace.
+src/pybamm/** -text -whitespace

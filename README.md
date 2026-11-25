@@ -2,9 +2,9 @@
 
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-当前 **0.0.5：稀疏耦合、按模式构建与独立在线计算核**。取消新路径对完整浓度H/identity全场响应的依赖，以三规模/三种子验证固定二次模型；旧0.0.4原样保留交叉。按原误差容限选择模式，稀疏混合LU与Schur-GMRES取最快全阶对照，全部离线/场输出成本分开记录。完整DFN/真实CT/独立原创仍未验收，见 [规模升级说明](docs/SPARSE_SCALING.md)。
+当前 **0.0.6：完整DFN、集总热反馈与能量导出的力学闭合**。PyBaMM26.3.1纯Python源码已迁入src并修复固定版本的插值导数转换；接入完整放电与三次CC-CV可逆循环。微结构采用GEMsim平均浓度SVE闭合，球内非均匀应力单独表示，尚非任意微结构全三维热电化学参照。参数凸化、膨胀缩放、失败分支和未过门槛均显式记录，见 [DFN热—力说明](docs/DFN_THERMOMECHANICS.md)。旧稀疏二次模型见 [规模升级说明](docs/SPARSE_SCALING.md)，其加速结果不能推广到DFN。
 
-测试HTML在外部 `morph_workspace/reports/MORQEX_test_report.html`，单文件离线打开，包含逐项JUnit、实算场/图、失败门槛与原始证据下载；源码只保留生成/检查脚本。
+当前测试HTML在外部 `morph_workspace/reports/MORQEX_DFN_report.html`，总入口为`MORQEX_test_report.html`，单文件离线打开，包含真实曲线、逐步终止条件、JUnit、负结果和内嵌证据下载。旧0.0.5归档为`MORQEX_0.0.5_report.html`；源码只保留生成/检查脚本。
 
 源码：`/home/zephyrain/lw/MORQEX`。所有数据、测试输出、编译产物、安装环境、权重和缓存：`/home/zephyrain/lw/morph_workspace`。独立Git仓库，不修改、不依赖ZynJoule。
 
@@ -14,7 +14,9 @@
 
 **运行时不读取外部GEMsim checkout，也不需要导入`gem`。** 外部原始checkout仅作迁移/审计依据；逐文件SHA256和转换记录见 [provenance/gemsim_migration.json](provenance/gemsim_migration.json)。数据和二进制未迁入。
 
-保留已有算法不等于所有算法已验证。当前随机场、体素/网格、数据格式及输入模板已测试；AI训练、NGSolve、PyBaMM与AMReX尚缺独立数值资格验证，均为可选依赖。
+PyBaMM的355个Python/文本文件另迁入[src/pybamm](src/pybamm)，BSD许可证保留；二进制求解依赖留外部环境。迁移hash见[清单](provenance/pybamm_migration.json)。默认core安装不要求DFN依赖，使用DFN需`morqex-research[dfn]`。该发行包提供`pybamm`命名空间，应在独立venv安装，避免与另一个PyBaMM发行包共同覆盖同名文件。
+
+保留已有算法不等于所有算法已验证。当前随机场、体素/网格、数据格式及输入模板已测试；DFN验证范围见专门说明，AI训练、NGSolve与AMReX可选后端仍缺独立资格验证。
 
 ## 使用
 

@@ -45,6 +45,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", required=True)
     parser.add_argument("--workspace", type=Path, default=ROOT.parent / "morph_workspace")
+    parser.add_argument("--dependency-install", action="store_true", help="Allow external pip installation disk space; CPU/RAM/GPU/time limits unchanged")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
@@ -53,6 +54,10 @@ def main():
     if not args.label or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.label):
         parser.error("Label may contain only letters, digits, underscore and hyphen")
     cfg = tomllib.loads((ROOT / "configs/local.toml").read_text())["resources"]
+    if args.dependency_install:
+        if len(command) < 4 or command[1:4] != ["-m", "pip", "install"]:
+            parser.error("Dependency disk profile is restricted to python -m pip install")
+        cfg.update(file_size_mib=256, run_disk_mib=1024)
     if cfg["gpu_enabled"]:
         raise SystemExit("GPU execution needs a separately validated resource policy")
     ws = Workspace(args.workspace)

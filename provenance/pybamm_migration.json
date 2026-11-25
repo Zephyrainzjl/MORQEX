@@ -1,0 +1,2496 @@
+{
+  "upstream": "https://github.com/pybamm-team/PyBaMM/tree/v26.3.1",
+  "version": "26.3.1",
+  "source": "unmodified installed PyPI wheel before local copy",
+  "destination": "src/pybamm",
+  "license": "BSD-3-Clause; retained LICENSE.txt",
+  "excluded": "bytecode/binaries/dist-info; compiled CasADi/IDAKLU dependencies remain external",
+  "files": [
+    {
+      "path": "CITATIONS.bib",
+      "upstream_sha256": "4430ea60a1e63016fef713754cfc57faeeca68e8ba7690f3fa97e1375ba022e7",
+      "bytes": 32935,
+      "local_sha256": "4430ea60a1e63016fef713754cfc57faeeca68e8ba7690f3fa97e1375ba022e7",
+      "locally_modified": false
+    },
+    {
+      "path": "__init__.py",
+      "upstream_sha256": "7b29a862ed112bfc1a4f0c985f7382f1e513a3194f7747ad5a61972effe1d871",
+      "bytes": 8694,
+      "local_sha256": "1d9dfb726427f16f6e665248824fecacaec342d79216124004506dd03fbb8cf7",
+      "locally_modified": true
+    },
+    {
+      "path": "_version.py",
+      "upstream_sha256": "6a3e40cc7e0d960ebd2373d59740cc26bd9ba69a545bf971875db7037c1f6d6b",
+      "bytes": 522,
+      "local_sha256": "6a3e40cc7e0d960ebd2373d59740cc26bd9ba69a545bf971875db7037c1f6d6b",
+      "locally_modified": false
+    },
+    {
+      "path": "batch_study.py",
+      "upstream_sha256": "45bbe2aa6b6fc6bb5d207a922d5ecc6a4da57a8d478f0abf661dd75f866a2d32",
+      "bytes": 6980,
+      "local_sha256": "45bbe2aa6b6fc6bb5d207a922d5ecc6a4da57a8d478f0abf661dd75f866a2d32",
+      "locally_modified": false
+    },
+    {
+      "path": "callbacks.py",
+      "upstream_sha256": "b4ed373168a7eb9cfc5bbdec2aba38467733193ace5a06d68f317698a62b57af",
+      "bytes": 9291,
+      "local_sha256": "b4ed373168a7eb9cfc5bbdec2aba38467733193ace5a06d68f317698a62b57af",
+      "locally_modified": false
+    },
+    {
+      "path": "citations.py",
+      "upstream_sha256": "86cbd33e39ea18f488a36827bfa758db78ff19e93c085a560ddeabc39906b4a5",
+      "bytes": 10523,
+      "local_sha256": "86cbd33e39ea18f488a36827bfa758db78ff19e93c085a560ddeabc39906b4a5",
+      "locally_modified": false
+    },
+    {
+      "path": "config.py",
+      "upstream_sha256": "1cf8b8584d9f8a7167ccace3ac33516e7fc63a8959b316a00359821200f4d6c0",
+      "bytes": 4946,
+      "local_sha256": "1cf8b8584d9f8a7167ccace3ac33516e7fc63a8959b316a00359821200f4d6c0",
+      "locally_modified": false
+    },
+    {
+      "path": "discretisations/__init__.py",
+      "upstream_sha256": "6fc579975e5fad8e1b4bacbf637ff61a59a9fbaf1981eb7fbd8aca7d43450b86",
+      "bytes": 29,
+      "local_sha256": "6fc579975e5fad8e1b4bacbf637ff61a59a9fbaf1981eb7fbd8aca7d43450b86",
+      "locally_modified": false
+    },
+    {
+      "path": "discretisations/discretisation.py",
+      "upstream_sha256": "5beabb8de276a73cfccd62b4c403d6b5d4eae15b50cc568aabe5edc9cd5d70e1",
+      "bytes": 57371,
+      "local_sha256": "5beabb8de276a73cfccd62b4c403d6b5d4eae15b50cc568aabe5edc9cd5d70e1",
+      "locally_modified": false
+    },
+    {
+      "path": "dispatch/__init__.py",
+      "upstream_sha256": "94de617300849770500d03ce6595603ff1b9b843ba8d735dcd6023270c3b77e7",
+      "bytes": 120,
+      "local_sha256": "94de617300849770500d03ce6595603ff1b9b843ba8d735dcd6023270c3b77e7",
+      "locally_modified": false
+    },
+    {
+      "path": "dispatch/entry_points.py",
+      "upstream_sha256": "91560261adc921d8e3686f7e44ade6a2463a78cd9d89b3edf4abdb1e58e549ee",
+      "bytes": 4926,
+      "local_sha256": "91560261adc921d8e3686f7e44ade6a2463a78cd9d89b3edf4abdb1e58e549ee",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/__init__.py",
+      "upstream_sha256": "8eafa1cb38a105e0768b211183375ea05293a3b18db006fc5f2fd86161f3cd26",
+      "bytes": 33,
+      "local_sha256": "8eafa1cb38a105e0768b211183375ea05293a3b18db006fc5f2fd86161f3cd26",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/experiment.py",
+      "upstream_sha256": "45c5fdad1d7326d71a1730c87c9c8cc3799ee125e5c75a0ed9e3e0e06d0b6f83",
+      "bytes": 9915,
+      "local_sha256": "45c5fdad1d7326d71a1730c87c9c8cc3799ee125e5c75a0ed9e3e0e06d0b6f83",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/step/__init__.py",
+      "upstream_sha256": "a7846f7b4ce2e122e4b76e469b5c4962805b1662f036ec3642b7f13f7ad2fb78",
+      "bytes": 303,
+      "local_sha256": "a7846f7b4ce2e122e4b76e469b5c4962805b1662f036ec3642b7f13f7ad2fb78",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/step/base_step.py",
+      "upstream_sha256": "a70aa9725620f7c6cdf9df384505611164ab6dac6c08ec32e921e67802508fe0",
+      "bytes": 21998,
+      "local_sha256": "a70aa9725620f7c6cdf9df384505611164ab6dac6c08ec32e921e67802508fe0",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/step/step_termination.py",
+      "upstream_sha256": "be064d6b52e14b46c7e418212d18e1b4b61ab482200ee61b759cd3348a64341c",
+      "bytes": 6701,
+      "local_sha256": "be064d6b52e14b46c7e418212d18e1b4b61ab482200ee61b759cd3348a64341c",
+      "locally_modified": false
+    },
+    {
+      "path": "experiment/step/steps.py",
+      "upstream_sha256": "477cd4cb6c4d6b52f8390ea9ee7e7e1d9d9ce1f53a4fe66c1409ba2500150b09",
+      "bytes": 13966,
+      "local_sha256": "477cd4cb6c4d6b52f8390ea9ee7e7e1d9d9ce1f53a4fe66c1409ba2500150b09",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/__init__.py",
+      "upstream_sha256": "c5f4e0da5579dfe08e4dee4310154760ecd7f7d055c7a48bbba63eee795c77be",
+      "bytes": 390,
+      "local_sha256": "c5f4e0da5579dfe08e4dee4310154760ecd7f7d055c7a48bbba63eee795c77be",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/array.py",
+      "upstream_sha256": "1a6e6d176ec5ddb83be532fcd3f9a0c753c4e389fe7700f91c6e579fb61f2fed",
+      "bytes": 6907,
+      "local_sha256": "1a6e6d176ec5ddb83be532fcd3f9a0c753c4e389fe7700f91c6e579fb61f2fed",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/averages.py",
+      "upstream_sha256": "b03e88f5623a0c0d8d12c5a7d1cebbcb94cbbcf0d465d4f0061180063486af34",
+      "bytes": 15936,
+      "local_sha256": "b03e88f5623a0c0d8d12c5a7d1cebbcb94cbbcf0d465d4f0061180063486af34",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/binary_operators.py",
+      "upstream_sha256": "c7e4334406f437a19453f50a5a2d1af71de30cc1ada3856ec71161b9488c2409",
+      "bytes": 65410,
+      "local_sha256": "c7e4334406f437a19453f50a5a2d1af71de30cc1ada3856ec71161b9488c2409",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/broadcasts.py",
+      "upstream_sha256": "488c22d9f26d1bdfa90b46089d03a4c36ce8b9f95eac59f48a91c095964d1058",
+      "bytes": 23285,
+      "local_sha256": "488c22d9f26d1bdfa90b46089d03a4c36ce8b9f95eac59f48a91c095964d1058",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/concatenations.py",
+      "upstream_sha256": "71b59101f6be2a2001c0f76bbc5e8ab1b28adfdb2205749b5b5bdc581581786d",
+      "bytes": 23047,
+      "local_sha256": "71b59101f6be2a2001c0f76bbc5e8ab1b28adfdb2205749b5b5bdc581581786d",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/coupled_variable.py",
+      "upstream_sha256": "1a739d771a36224c6eeaaecc1d5b54bd8d40f91792e7ec8962ee52f59c1a1c2b",
+      "bytes": 1303,
+      "local_sha256": "1a739d771a36224c6eeaaecc1d5b54bd8d40f91792e7ec8962ee52f59c1a1c2b",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/discrete_time_sum.py",
+      "upstream_sha256": "47df635b10390a75b1cd314b19cf3dfec12ce19590184e2d3f93d15b3841aa36",
+      "bytes": 3083,
+      "local_sha256": "47df635b10390a75b1cd314b19cf3dfec12ce19590184e2d3f93d15b3841aa36",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/exceptions.py",
+      "upstream_sha256": "524814b42c98c201d314e83e4337c38f18e6338eb804c0b929607c6ef59f6f18",
+      "bytes": 1417,
+      "local_sha256": "524814b42c98c201d314e83e4337c38f18e6338eb804c0b929607c6ef59f6f18",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/functions.py",
+      "upstream_sha256": "531487f6e2f97485d53108ae1458248fa2933a5061dfe755947548125a909244",
+      "bytes": 33859,
+      "local_sha256": "531487f6e2f97485d53108ae1458248fa2933a5061dfe755947548125a909244",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/independent_variable.py",
+      "upstream_sha256": "22477e4c56846c0078ede4cb038048ce79bf85d2fc34c9f7f466165cbc6f9eb3",
+      "bytes": 6781,
+      "local_sha256": "22477e4c56846c0078ede4cb038048ce79bf85d2fc34c9f7f466165cbc6f9eb3",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/input_parameter.py",
+      "upstream_sha256": "db63bdd00ec2cad730930b6602dd2c3558338dcb3a4f629de33c99d20ee71655",
+      "bytes": 4550,
+      "local_sha256": "db63bdd00ec2cad730930b6602dd2c3558338dcb3a4f629de33c99d20ee71655",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/interpolant.py",
+      "upstream_sha256": "9b852ee3225c6b12cb6cd2ac57f28373cd502d14208b7222d9a9f78e9d2f61c7",
+      "bytes": 13777,
+      "local_sha256": "9b852ee3225c6b12cb6cd2ac57f28373cd502d14208b7222d9a9f78e9d2f61c7",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/matrix.py",
+      "upstream_sha256": "d940500a31918dd38898409b7be0cfd796d30b47bc78fd59f7ea33482bebb6d5",
+      "bytes": 1206,
+      "local_sha256": "d940500a31918dd38898409b7be0cfd796d30b47bc78fd59f7ea33482bebb6d5",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/__init__.py",
+      "upstream_sha256": "b7223b565ce576ab217ae14b5a0536a9e67f5c701c97e5f5f4afc0945f247075",
+      "bytes": 131,
+      "local_sha256": "b7223b565ce576ab217ae14b5a0536a9e67f5c701c97e5f5f4afc0945f247075",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/convert_to_casadi.py",
+      "upstream_sha256": "011ba11549bbb6d8004df1b767493a8bb982b862926adbad3c6fff9fa6df5f07",
+      "bytes": 19488,
+      "local_sha256": "46332b189f07792ebe30f99331b9b30e86d3a4e6b3edf56cc151f4a487bd750f",
+      "locally_modified": true
+    },
+    {
+      "path": "expression_tree/operations/diffsl.py",
+      "upstream_sha256": "a518f27c2b68a9c636ff1f505786b49cdc84ecf375a5dfb5c4c1a7d21628ad4c",
+      "bytes": 27498,
+      "local_sha256": "a518f27c2b68a9c636ff1f505786b49cdc84ecf375a5dfb5c4c1a7d21628ad4c",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/evaluate_python.py",
+      "upstream_sha256": "95371ab0683152a1a7087cd2ec0fa31b76852d7ed60099d40eccf68d74016a72",
+      "bytes": 26722,
+      "local_sha256": "95371ab0683152a1a7087cd2ec0fa31b76852d7ed60099d40eccf68d74016a72",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/jacobian.py",
+      "upstream_sha256": "07abbe45fc53275b45e3867a21f3e1540135842e3dd1021dad2bcd49384f49cb",
+      "bytes": 3528,
+      "local_sha256": "07abbe45fc53275b45e3867a21f3e1540135842e3dd1021dad2bcd49384f49cb",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/latexify.py",
+      "upstream_sha256": "5896283bffb04275bdf704128df0f149360b624567424d468f399c7126111ab2",
+      "bytes": 11171,
+      "local_sha256": "5896283bffb04275bdf704128df0f149360b624567424d468f399c7126111ab2",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/regularise.py",
+      "upstream_sha256": "8222cf563186a988a725bacdd3c50806bf9181480768e9f79887ae034e895cff",
+      "bytes": 4547,
+      "local_sha256": "8222cf563186a988a725bacdd3c50806bf9181480768e9f79887ae034e895cff",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/serialise.py",
+      "upstream_sha256": "79a4f8e02d3a2259818ffdef761e2a5633308d1314a7498febc6ce16d69cf20a",
+      "bytes": 87916,
+      "local_sha256": "79a4f8e02d3a2259818ffdef761e2a5633308d1314a7498febc6ce16d69cf20a",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/operations/unpack_symbols.py",
+      "upstream_sha256": "bc55a415805a46e5cdffa30408bc1921ef8cd50e51bbef263974ab066298af42",
+      "bytes": 2989,
+      "local_sha256": "bc55a415805a46e5cdffa30408bc1921ef8cd50e51bbef263974ab066298af42",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/parameter.py",
+      "upstream_sha256": "7dee23cfa4c0aeddcea180099934c75f8edfa09619a005fd7e2c9708e81a8c9b",
+      "bytes": 8311,
+      "local_sha256": "7dee23cfa4c0aeddcea180099934c75f8edfa09619a005fd7e2c9708e81a8c9b",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/printing/__init__.py",
+      "upstream_sha256": "52131836063116f17530afc825c90d65b733f6e3ae4b1eb9cf0eb3736dec8785",
+      "bytes": 44,
+      "local_sha256": "52131836063116f17530afc825c90d65b733f6e3ae4b1eb9cf0eb3736dec8785",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/printing/print_name.py",
+      "upstream_sha256": "436a597a30fbba5c576c58b0136b19bdd0c50b4cc3661b59d38a98fbd9b34683",
+      "bytes": 2969,
+      "local_sha256": "436a597a30fbba5c576c58b0136b19bdd0c50b4cc3661b59d38a98fbd9b34683",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/printing/sympy_overrides.py",
+      "upstream_sha256": "4073731b6a9e98d514acea2f325949da3a2f5098d08b2cedd84a068a9b8ec569",
+      "bytes": 672,
+      "local_sha256": "4073731b6a9e98d514acea2f325949da3a2f5098d08b2cedd84a068a9b8ec569",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/scalar.py",
+      "upstream_sha256": "845ee9d5632661a2e8d842148c33d6d2e38845fff7e7e156d8a36ec9a1647a81",
+      "bytes": 4114,
+      "local_sha256": "845ee9d5632661a2e8d842148c33d6d2e38845fff7e7e156d8a36ec9a1647a81",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/state_vector.py",
+      "upstream_sha256": "fd993058493c67816525b8a97d564ccc183c03ee8e8a45c28279ae044d356393",
+      "bytes": 13892,
+      "local_sha256": "fd993058493c67816525b8a97d564ccc183c03ee8e8a45c28279ae044d356393",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/symbol.py",
+      "upstream_sha256": "26df83f0f25b93f4ed43e87fb15187eca5d386c28ff3670cf2777a12357b02ad",
+      "bytes": 39591,
+      "local_sha256": "26df83f0f25b93f4ed43e87fb15187eca5d386c28ff3670cf2777a12357b02ad",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/tensor_field.py",
+      "upstream_sha256": "a015e342dfda2cab29b7400a2c6f9cdaa75ff08554ff31ea6b20192054da78ee",
+      "bytes": 5527,
+      "local_sha256": "a015e342dfda2cab29b7400a2c6f9cdaa75ff08554ff31ea6b20192054da78ee",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/tracing.py",
+      "upstream_sha256": "b118a899c558b1e455c0034c2914396233f983ab035723eb3078e88db20128b6",
+      "bytes": 1552,
+      "local_sha256": "b118a899c558b1e455c0034c2914396233f983ab035723eb3078e88db20128b6",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/unary_operators.py",
+      "upstream_sha256": "8691af8e036bd6a6be5239bafdfb32cc8a3231dab2010c37f819db9f58cdb514",
+      "bytes": 54511,
+      "local_sha256": "8691af8e036bd6a6be5239bafdfb32cc8a3231dab2010c37f819db9f58cdb514",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/variable.py",
+      "upstream_sha256": "26a0970048c74bb121c8464e64aaa598162788c8557202d985582d586664da9f",
+      "bytes": 10226,
+      "local_sha256": "26a0970048c74bb121c8464e64aaa598162788c8557202d985582d586664da9f",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/vector.py",
+      "upstream_sha256": "2514d3006db112fa22b6a6ab9bc219f626645cc1c3ed12e44fc7ef2b97ad5af7",
+      "bytes": 1286,
+      "local_sha256": "2514d3006db112fa22b6a6ab9bc219f626645cc1c3ed12e44fc7ef2b97ad5af7",
+      "locally_modified": false
+    },
+    {
+      "path": "expression_tree/vector_field.py",
+      "upstream_sha256": "394c04bf61edd6e95420bb2302e5880080f3bef359803962760aa5623062f21c",
+      "bytes": 2551,
+      "local_sha256": "394c04bf61edd6e95420bb2302e5880080f3bef359803962760aa5623062f21c",
+      "locally_modified": false
+    },
+    {
+      "path": "geometry/__init__.py",
+      "upstream_sha256": "95c957942c842a5151ac171bb3e4a32ecf09b95c444d12573c079f3f87862eea",
+      "bytes": 68,
+      "local_sha256": "95c957942c842a5151ac171bb3e4a32ecf09b95c444d12573c079f3f87862eea",
+      "locally_modified": false
+    },
+    {
+      "path": "geometry/battery_geometry.py",
+      "upstream_sha256": "889737798e95f1d56166172e8b5cde61fa66f3307c806d4586a42c2c1f1e4bff",
+      "bytes": 6854,
+      "local_sha256": "889737798e95f1d56166172e8b5cde61fa66f3307c806d4586a42c2c1f1e4bff",
+      "locally_modified": false
+    },
+    {
+      "path": "geometry/geometry.py",
+      "upstream_sha256": "5c1ab039d4d47af74dff759b9b6a3e3c3e5e15074b147037ef91e39f109f6036",
+      "bytes": 1996,
+      "local_sha256": "5c1ab039d4d47af74dff759b9b6a3e3c3e5e15074b147037ef91e39f109f6036",
+      "locally_modified": false
+    },
+    {
+      "path": "geometry/standard_spatial_vars.py",
+      "upstream_sha256": "6db33515d152b31b8ac6268a9a00da4575af1302d292100f30a0e1a661af1e06",
+      "bytes": 5799,
+      "local_sha256": "6db33515d152b31b8ac6268a9a00da4575af1302d292100f30a0e1a661af1e06",
+      "locally_modified": false
+    },
+    {
+      "path": "input/__init__.py",
+      "upstream_sha256": "e17c519d3c2df0d511b8cd27d181632a887132b43c48f085feffc5dd7324e645",
+      "bytes": 25,
+      "local_sha256": "e17c519d3c2df0d511b8cd27d181632a887132b43c48f085feffc5dd7324e645",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/__init__.py",
+      "upstream_sha256": "1bd90ce04f7d6102b6029680bd76b7dbfa79bac2def0e571ecb47c63c46e96d0",
+      "bytes": 60,
+      "local_sha256": "1bd90ce04f7d6102b6029680bd76b7dbfa79bac2def0e571ecb47c63c46e96d0",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/__init__.py",
+      "upstream_sha256": "8be4a9486313a42e14c3014bb8a73e966349ebfdef5dae030835c500a5edd931",
+      "bytes": 26,
+      "local_sha256": "8be4a9486313a42e14c3014bb8a73e966349ebfdef5dae030835c500a5edd931",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/data/ecm_example_c1.csv",
+      "upstream_sha256": "0f757978165265e43ead2d4a357c47fe6884a7746ff93f99de2d57b8a58866e3",
+      "bytes": 135520,
+      "local_sha256": "0f757978165265e43ead2d4a357c47fe6884a7746ff93f99de2d57b8a58866e3",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/data/ecm_example_dudt.csv",
+      "upstream_sha256": "96fa7f4fae039671b9ddd1a21b2e3032a6611b7ff62e74f3e084bec5b655a96c",
+      "bytes": 4321,
+      "local_sha256": "96fa7f4fae039671b9ddd1a21b2e3032a6611b7ff62e74f3e084bec5b655a96c",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/data/ecm_example_ocv.csv",
+      "upstream_sha256": "9aee69ea97ac17d75e8da3712a2550b18c1516e300239d3b5ee8c274500e3369",
+      "bytes": 4008,
+      "local_sha256": "9aee69ea97ac17d75e8da3712a2550b18c1516e300239d3b5ee8c274500e3369",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/data/ecm_example_r0.csv",
+      "upstream_sha256": "88b1be7851dc1c84111a430dc64e7b32d293208ff2d63efa884ba9cb7f0456d3",
+      "bytes": 149886,
+      "local_sha256": "88b1be7851dc1c84111a430dc64e7b32d293208ff2d63efa884ba9cb7f0456d3",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/data/ecm_example_r1.csv",
+      "upstream_sha256": "4cebe2e378cda132533836cd92392b5469a79e33c4ca9d3e2672d0dbeac0dc85",
+      "bytes": 149222,
+      "local_sha256": "4cebe2e378cda132533836cd92392b5469a79e33c4ca9d3e2672d0dbeac0dc85",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/ecm/example_set.py",
+      "upstream_sha256": "9363f5dffd8b19b2b1468a5b777127d41343a66f2eaa8066cf571cc18bd5c5de",
+      "bytes": 3460,
+      "local_sha256": "9363f5dffd8b19b2b1468a5b777127d41343a66f2eaa8066cf571cc18bd5c5de",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lead_acid/Sulzer2019.py",
+      "upstream_sha256": "d8617b0e40f1bcfd47d7db9ffbf8ff60277c21b19cf916d51474265b9dddad09",
+      "bytes": 14225,
+      "local_sha256": "d8617b0e40f1bcfd47d7db9ffbf8ff60277c21b19cf916d51474265b9dddad09",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lead_acid/__init__.py",
+      "upstream_sha256": "2eef38b9fb95fe38b5b14a817ef83e6f0038460e262bebce21db880701676184",
+      "bytes": 25,
+      "local_sha256": "2eef38b9fb95fe38b5b14a817ef83e6f0038460e262bebce21db880701676184",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Ai2020.py",
+      "upstream_sha256": "d98a2410a0269c017dd5c47c378669dfab49185cde966c308826097830c336cd",
+      "bytes": 24197,
+      "local_sha256": "d98a2410a0269c017dd5c47c378669dfab49185cde966c308826097830c336cd",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Chen2020.py",
+      "upstream_sha256": "7c360a546a76492585e147231caee2f8f4fe29222b893cb12091dc4d158f62f0",
+      "bytes": 12508,
+      "local_sha256": "7c360a546a76492585e147231caee2f8f4fe29222b893cb12091dc4d158f62f0",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Chen2020_composite.py",
+      "upstream_sha256": "06f89d239499a0180c8a3b4137d51815b64336ced17c51ec674e743c2d56d53a",
+      "bytes": 17421,
+      "local_sha256": "06f89d239499a0180c8a3b4137d51815b64336ced17c51ec674e743c2d56d53a",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Ecker2015.py",
+      "upstream_sha256": "9b1ad0267950b5ff4eae1989b76b592b6355de42fa914b3d1aa8062594e1abba",
+      "bytes": 23065,
+      "local_sha256": "9b1ad0267950b5ff4eae1989b76b592b6355de42fa914b3d1aa8062594e1abba",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Ecker2015_graphite_halfcell.py",
+      "upstream_sha256": "3fa9136036150f20cad1ec8aaa9ef68a2c00025d6a68454c67519c8c0ce7eb3a",
+      "bytes": 20126,
+      "local_sha256": "3fa9136036150f20cad1ec8aaa9ef68a2c00025d6a68454c67519c8c0ce7eb3a",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/MSMR_example_set.py",
+      "upstream_sha256": "f72e265268e114d7685e1e63114c3245d4b0395c94a2bc58f1fcfbd256622f0a",
+      "bytes": 10179,
+      "local_sha256": "f72e265268e114d7685e1e63114c3245d4b0395c94a2bc58f1fcfbd256622f0a",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Marquis2019.py",
+      "upstream_sha256": "deece5b1db575f392e3c611dc537564656e04796eb646f6fa66b6475c6f1739a",
+      "bytes": 17419,
+      "local_sha256": "deece5b1db575f392e3c611dc537564656e04796eb646f6fa66b6475c6f1739a",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Mohtat2020.py",
+      "upstream_sha256": "5b1963e2a9d5480b4e7433de25e463e8102faf7ad69fc4e75c38a3421bfc5499",
+      "bytes": 15987,
+      "local_sha256": "5b1963e2a9d5480b4e7433de25e463e8102faf7ad69fc4e75c38a3421bfc5499",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/NCA_Kim2011.py",
+      "upstream_sha256": "5d2f3d1b6ba4f74f267b29e00b32994af3fc50df6825b69e026f76887a126a63",
+      "bytes": 15892,
+      "local_sha256": "5d2f3d1b6ba4f74f267b29e00b32994af3fc50df6825b69e026f76887a126a63",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/OKane2022.py",
+      "upstream_sha256": "561c05aaee976979e9e1022daa0595c04a3f834d644ea0abe3546919e362883f",
+      "bytes": 24843,
+      "local_sha256": "561c05aaee976979e9e1022daa0595c04a3f834d644ea0abe3546919e362883f",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/OKane2022_graphite_SiOx_halfcell.py",
+      "upstream_sha256": "192b58c6d1f75e466f34069e964c6139bbe2ffdac0d8cf626e451eb14743fc99",
+      "bytes": 19341,
+      "local_sha256": "192b58c6d1f75e466f34069e964c6139bbe2ffdac0d8cf626e451eb14743fc99",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/ORegan2022.py",
+      "upstream_sha256": "df0f2893ea76330204d7add312584527743767513d1781b619a7275212528086",
+      "bytes": 30249,
+      "local_sha256": "df0f2893ea76330204d7add312584527743767513d1781b619a7275212528086",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Prada2013.py",
+      "upstream_sha256": "c7d9bb6119d85d266a54174db4197c0d5ef47021a83b390f3bb893b7a0f738ea",
+      "bytes": 8384,
+      "local_sha256": "c7d9bb6119d85d266a54174db4197c0d5ef47021a83b390f3bb893b7a0f738ea",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Ramadass2004.py",
+      "upstream_sha256": "3a64cbb727ced1e432840fdc1b0a1b347eb1ba16390b005f174fbed60c127f1a",
+      "bytes": 17327,
+      "local_sha256": "3a64cbb727ced1e432840fdc1b0a1b347eb1ba16390b005f174fbed60c127f1a",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/Xu2019.py",
+      "upstream_sha256": "008fd85a8b5184504bb28bcdfedc0fbe734023abe5ee2c9e5f00d744177d0268",
+      "bytes": 10454,
+      "local_sha256": "008fd85a8b5184504bb28bcdfedc0fbe734023abe5ee2c9e5f00d744177d0268",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/__init__.py",
+      "upstream_sha256": "734aa835a39c07fe2334c50e57c8d61e21fab773d1979f9ec4de2ced782cad36",
+      "bytes": 309,
+      "local_sha256": "734aa835a39c07fe2334c50e57c8d61e21fab773d1979f9ec4de2ced782cad36",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/graphite_LGM50_ocp_Chen2020.csv",
+      "upstream_sha256": "33d83d0c46cf0b484432951d5851fc2296ca0c716976a5f5f3c04f8c68e820e5",
+      "bytes": 9141,
+      "local_sha256": "33d83d0c46cf0b484432951d5851fc2296ca0c716976a5f5f3c04f8c68e820e5",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/graphite_ocp_Ecker2015.csv",
+      "upstream_sha256": "427504eabeae9b0cb0417932c93d1d733c743945fbc4f54f43dbcfb0abf04185",
+      "bytes": 1635,
+      "local_sha256": "427504eabeae9b0cb0417932c93d1d733c743945fbc4f54f43dbcfb0abf04185",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/graphite_ocp_Enertech_Ai2020.csv",
+      "upstream_sha256": "a338d120551d2758532785f2d0a7196ca7df6180060eb47444a22f37e4e1ccda",
+      "bytes": 3025,
+      "local_sha256": "a338d120551d2758532785f2d0a7196ca7df6180060eb47444a22f37e4e1ccda",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/lico2_ocp_Ai2020.csv",
+      "upstream_sha256": "d4c2be795e118fa46fe6cab88d652de92a09e1f2231951f208f92fe0b5e4c426",
+      "bytes": 11503,
+      "local_sha256": "d4c2be795e118fa46fe6cab88d652de92a09e1f2231951f208f92fe0b5e4c426",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/measured_graphite_diffusivity_Ecker2015.csv",
+      "upstream_sha256": "d02afc2591b3b3ae3e20b62aa8a159aba72e2c704de91bc21684f199c1f738ec",
+      "bytes": 955,
+      "local_sha256": "d02afc2591b3b3ae3e20b62aa8a159aba72e2c704de91bc21684f199c1f738ec",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/measured_nco_diffusivity_Ecker2015.csv",
+      "upstream_sha256": "50d103b2fdf121b435920efd23da21895eb1cfaf653432fe98d80d6b9a1026c5",
+      "bytes": 597,
+      "local_sha256": "50d103b2fdf121b435920efd23da21895eb1cfaf653432fe98d80d6b9a1026c5",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/nca_ocp_Kim2011_data.csv",
+      "upstream_sha256": "141b40a39d635514ead6c7db1deb3421ecf193617ff6ab1ae26fd925c65fc1d1",
+      "bytes": 2872,
+      "local_sha256": "141b40a39d635514ead6c7db1deb3421ecf193617ff6ab1ae26fd925c65fc1d1",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/nco_ocp_Ecker2015.csv",
+      "upstream_sha256": "a85d25cfad20a086f571b2ff283dcd86bfd09d8abe68d68ddbf198121778608d",
+      "bytes": 1653,
+      "local_sha256": "a85d25cfad20a086f571b2ff283dcd86bfd09d8abe68d68ddbf198121778608d",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/lithium_ion/data/nmc_LGM50_ocp_Chen2020.csv",
+      "upstream_sha256": "b17e405eb0b75315b849c69ea7ff6352792d0cd47da036eb70a282343be094dd",
+      "bytes": 8463,
+      "local_sha256": "b17e405eb0b75315b849c69ea7ff6352792d0cd47da036eb70a282343be094dd",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/Chayambuka2022.py",
+      "upstream_sha256": "c8f68aac6192fa5cba7561280e803c88986ffdfc6fcdf1f544f2d92527481b2b",
+      "bytes": 11418,
+      "local_sha256": "c8f68aac6192fa5cba7561280e803c88986ffdfc6fcdf1f544f2d92527481b2b",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/__init__.py",
+      "upstream_sha256": "590566e7d5cf2f1148eaa84121831ed2c9100fc5d437cad893b2f9a1a53c9af4",
+      "bytes": 29,
+      "local_sha256": "590566e7d5cf2f1148eaa84121831ed2c9100fc5d437cad893b2f9a1a53c9af4",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/D_e.csv",
+      "upstream_sha256": "460110db025f5b640edd27bc4ad74d050ab38555987c65e3f7f481d2068317d4",
+      "bytes": 344,
+      "local_sha256": "460110db025f5b640edd27bc4ad74d050ab38555987c65e3f7f481d2068317d4",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/D_n.csv",
+      "upstream_sha256": "2493d78ba0020cb27b4df4e8a5401dd37666487fd81962990e46e9b3fc8bcf92",
+      "bytes": 933,
+      "local_sha256": "2493d78ba0020cb27b4df4e8a5401dd37666487fd81962990e46e9b3fc8bcf92",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/D_p.csv",
+      "upstream_sha256": "809b0eee9e21b92d979c8c738adf622c6d36f1cc7a151872de5779c58fac33b4",
+      "bytes": 814,
+      "local_sha256": "809b0eee9e21b92d979c8c738adf622c6d36f1cc7a151872de5779c58fac33b4",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/U_n.csv",
+      "upstream_sha256": "f4d69ce24edc4b7f0d78771117cb88708bf318849ea24f25b0ed9c05949a65c3",
+      "bytes": 574,
+      "local_sha256": "f4d69ce24edc4b7f0d78771117cb88708bf318849ea24f25b0ed9c05949a65c3",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/U_p.csv",
+      "upstream_sha256": "17676435e4952854531a591c00ae0dd870f65eed32fb01b2160034b09605e42b",
+      "bytes": 743,
+      "local_sha256": "17676435e4952854531a591c00ae0dd870f65eed32fb01b2160034b09605e42b",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/k_n.csv",
+      "upstream_sha256": "c53f75a049115b475e3468c3a07687bfee81b8ec92dd965eb81f9ec03de45785",
+      "bytes": 770,
+      "local_sha256": "c53f75a049115b475e3468c3a07687bfee81b8ec92dd965eb81f9ec03de45785",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/k_p.csv",
+      "upstream_sha256": "2cf1f7034aea9809ba770390e599082958648c65e96523b048320a8c94e92cce",
+      "bytes": 601,
+      "local_sha256": "2cf1f7034aea9809ba770390e599082958648c65e96523b048320a8c94e92cce",
+      "locally_modified": false
+    },
+    {
+      "path": "input/parameters/sodium_ion/data/sigma_e.csv",
+      "upstream_sha256": "0face534b86241ea07ca2a72badb1676bcb09bdb7d3453600a7382eb32cc520d",
+      "bytes": 126,
+      "local_sha256": "0face534b86241ea07ca2a72badb1676bcb09bdb7d3453600a7382eb32cc520d",
+      "locally_modified": false
+    },
+    {
+      "path": "logger.py",
+      "upstream_sha256": "d222990d2dd000087beaeb784029555304d9907ce03bf673292fe9ca2f93ac2e",
+      "bytes": 1559,
+      "local_sha256": "d222990d2dd000087beaeb784029555304d9907ce03bf673292fe9ca2f93ac2e",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/__init__.py",
+      "upstream_sha256": "92ff97c1ae2e1b297f568c48f0af5d758b29b021ab15fce19bf1a5c995eee2dc",
+      "bytes": 140,
+      "local_sha256": "92ff97c1ae2e1b297f568c48f0af5d758b29b021ab15fce19bf1a5c995eee2dc",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/meshes.py",
+      "upstream_sha256": "2ec6084282048d531adf08d94d876daa4951e7279749ae542b158c556ebd36a0",
+      "bytes": 19537,
+      "local_sha256": "2ec6084282048d531adf08d94d876daa4951e7279749ae542b158c556ebd36a0",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/one_dimensional_submeshes.py",
+      "upstream_sha256": "26f6b8b86ea1d73c912de54c83dcf3f58f4c879cd7ed03d01f7827057c212e7a",
+      "bytes": 16208,
+      "local_sha256": "26f6b8b86ea1d73c912de54c83dcf3f58f4c879cd7ed03d01f7827057c212e7a",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/scikit_fem_submeshes.py",
+      "upstream_sha256": "8f66e5599322925f7f510db7e4fa4e4b5bb3541430fc1537f4a7e0964bc7c921",
+      "bytes": 14334,
+      "local_sha256": "8f66e5599322925f7f510db7e4fa4e4b5bb3541430fc1537f4a7e0964bc7c921",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/scikit_fem_submeshes_3d.py",
+      "upstream_sha256": "a1048aa5d0b6ded8796117c1fa133bca8a710fbe706fc996e3bcf81157e96373",
+      "bytes": 24720,
+      "local_sha256": "a1048aa5d0b6ded8796117c1fa133bca8a710fbe706fc996e3bcf81157e96373",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/two_dimensional_submeshes.py",
+      "upstream_sha256": "106a1d690594a89fb95449650b6586c82cb850590f81c3fc5b6af8285cbc684b",
+      "bytes": 5563,
+      "local_sha256": "106a1d690594a89fb95449650b6586c82cb850590f81c3fc5b6af8285cbc684b",
+      "locally_modified": false
+    },
+    {
+      "path": "meshes/zero_dimensional_submesh.py",
+      "upstream_sha256": "9b7f69ac59ffdf965be705dddb8e20936512c484182e02aa6a8bac3c8b54669d",
+      "bytes": 1584,
+      "local_sha256": "9b7f69ac59ffdf965be705dddb8e20936512c484182e02aa6a8bac3c8b54669d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/__init__.py",
+      "upstream_sha256": "b902849fb3e0869d5091f3a7b39813145fa0de624fa2e53340aefb3af2bb21c3",
+      "bytes": 70,
+      "local_sha256": "b902849fb3e0869d5091f3a7b39813145fa0de624fa2e53340aefb3af2bb21c3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/base_model.py",
+      "upstream_sha256": "0a2e1ae78813a94b770fa078026f36519e4306e0b47e567b69834fd90c21d53a",
+      "bytes": 96035,
+      "local_sha256": "0a2e1ae78813a94b770fa078026f36519e4306e0b47e567b69834fd90c21d53a",
+      "locally_modified": false
+    },
+    {
+      "path": "models/event.py",
+      "upstream_sha256": "17495ff906cfe8b266edc92fdafb9df949e492b9628bbd90816e22830bcb7a40",
+      "bytes": 3179,
+      "local_sha256": "17495ff906cfe8b266edc92fdafb9df949e492b9628bbd90816e22830bcb7a40",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/__init__.py",
+      "upstream_sha256": "b45e3b7ab2e537dbd459b8d5e0b22768a0eaebbf3e733515123e62179d5d5799",
+      "bytes": 108,
+      "local_sha256": "b45e3b7ab2e537dbd459b8d5e0b22768a0eaebbf3e733515123e62179d5d5799",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/base_battery_model.py",
+      "upstream_sha256": "d7076a916a7f41c2606de7453c8c2369b589ef828364056f79175f48c4550654",
+      "bytes": 74692,
+      "local_sha256": "d7076a916a7f41c2606de7453c8c2369b589ef828364056f79175f48c4550654",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/equivalent_circuit/__init__.py",
+      "upstream_sha256": "15b1dbe0c83ec92c66cd89db64881d4ced162945321a331c1a6e860b20b04f91",
+      "bytes": 114,
+      "local_sha256": "15b1dbe0c83ec92c66cd89db64881d4ced162945321a331c1a6e860b20b04f91",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/equivalent_circuit/ecm_model_options.py",
+      "upstream_sha256": "519c51158710bdfcb9973b1bc71fb8902c6cf1e7201455a656fa259d3b8ea32f",
+      "bytes": 1067,
+      "local_sha256": "519c51158710bdfcb9973b1bc71fb8902c6cf1e7201455a656fa259d3b8ea32f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/equivalent_circuit/initial_state.py",
+      "upstream_sha256": "42f030487e39bc0b22eb0e93d6569d3351336815effc8976e2446fa9ed8928de",
+      "bytes": 3216,
+      "local_sha256": "42f030487e39bc0b22eb0e93d6569d3351336815effc8976e2446fa9ed8928de",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/equivalent_circuit/thevenin.py",
+      "upstream_sha256": "491f96acd8d69fd48c487bbffcdfcfa504c9c9e26f157cbcf285278aa54756be",
+      "bytes": 10105,
+      "local_sha256": "491f96acd8d69fd48c487bbffcdfcfa504c9c9e26f157cbcf285278aa54756be",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lead_acid/__init__.py",
+      "upstream_sha256": "b82acc3cdbad089a54e5070851effabbf5fa483499c5d4bc322fbfe16eeea381",
+      "bytes": 233,
+      "local_sha256": "b82acc3cdbad089a54e5070851effabbf5fa483499c5d4bc322fbfe16eeea381",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lead_acid/base_lead_acid_model.py",
+      "upstream_sha256": "912674df3b3daafebe3469403e38513387fdb9d9eb9dd71edddd7bbff554d464",
+      "bytes": 4311,
+      "local_sha256": "912674df3b3daafebe3469403e38513387fdb9d9eb9dd71edddd7bbff554d464",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lead_acid/basic_full.py",
+      "upstream_sha256": "b09368fa701b2da7674539a8f31e478b6cbbbcb1c19a39700d5eda3d02e81d8d",
+      "bytes": 9956,
+      "local_sha256": "b09368fa701b2da7674539a8f31e478b6cbbbcb1c19a39700d5eda3d02e81d8d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lead_acid/full.py",
+      "upstream_sha256": "f782cd1310d201fd315e12818038ceb5f61fadee2806a23c16f4cc750291d0bd",
+      "bytes": 5351,
+      "local_sha256": "f782cd1310d201fd315e12818038ceb5f61fadee2806a23c16f4cc750291d0bd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lead_acid/loqs.py",
+      "upstream_sha256": "6e7df53bfa5f75225ab33057639e332b63c53a9242102eded2237fe0d63ebd50",
+      "bytes": 9390,
+      "local_sha256": "6e7df53bfa5f75225ab33057639e332b63c53a9242102eded2237fe0d63ebd50",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/Yang2017.py",
+      "upstream_sha256": "3b67ea6d6d620a557b65798fe4a5c00774ee8179983b54c78cd66ceb848b85a1",
+      "bytes": 512,
+      "local_sha256": "3b67ea6d6d620a557b65798fe4a5c00774ee8179983b54c78cd66ceb848b85a1",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/__init__.py",
+      "upstream_sha256": "12793cb1ec40108384598c06b277b1da6d4d5d625466f32dbfe763ae4a5ce0be",
+      "bytes": 1462,
+      "local_sha256": "12793cb1ec40108384598c06b277b1da6d4d5d625466f32dbfe763ae4a5ce0be",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/base_lithium_ion_model.py",
+      "upstream_sha256": "ddd9d0ecbc311864f4afd82ef581bb61dccd48d75918bd8d82feca5abec54da7",
+      "bytes": 24832,
+      "local_sha256": "ddd9d0ecbc311864f4afd82ef581bb61dccd48d75918bd8d82feca5abec54da7",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_dfn.py",
+      "upstream_sha256": "f96dd68b955955ed3526655b637a20450f3cccac46238e4d8d0464301bc84282",
+      "bytes": 11787,
+      "local_sha256": "f96dd68b955955ed3526655b637a20450f3cccac46238e4d8d0464301bc84282",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_dfn_2d.py",
+      "upstream_sha256": "565de1e8c6138d2f079c54b365091a8e475a481dc4602253d5bc147d9818cc43",
+      "bytes": 18804,
+      "local_sha256": "565de1e8c6138d2f079c54b365091a8e475a481dc4602253d5bc147d9818cc43",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_dfn_composite.py",
+      "upstream_sha256": "8eb1daf9207be138761fe5c519a891074ce1d17f7b14d013e5a7b665dd97892c",
+      "bytes": 18129,
+      "local_sha256": "8eb1daf9207be138761fe5c519a891074ce1d17f7b14d013e5a7b665dd97892c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_dfn_half_cell.py",
+      "upstream_sha256": "3bf634b1a8fe29aa3524a5c3df84362a1fab146096f19a302d1ad8fb42b83327",
+      "bytes": 12375,
+      "local_sha256": "3bf634b1a8fe29aa3524a5c3df84362a1fab146096f19a302d1ad8fb42b83327",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_splitOCVR.py",
+      "upstream_sha256": "ac87d2556bcadcc1b8f4938af512a28822426a8616055169c170a478ccecf16c",
+      "bytes": 3777,
+      "local_sha256": "ac87d2556bcadcc1b8f4938af512a28822426a8616055169c170a478ccecf16c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_spm.py",
+      "upstream_sha256": "5c3d02e77f7783c89c827f90c09ca8189ebb4ef528058d3d8afa732de35b2bf4",
+      "bytes": 7787,
+      "local_sha256": "5c3d02e77f7783c89c827f90c09ca8189ebb4ef528058d3d8afa732de35b2bf4",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/basic_spm_with_3d_thermal.py",
+      "upstream_sha256": "0a03135c64416a770881199daf8f0a56a02ca7b12f73f7c167f438550b31c201",
+      "bytes": 12673,
+      "local_sha256": "0a03135c64416a770881199daf8f0a56a02ca7b12f73f7c167f438550b31c201",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/dfn.py",
+      "upstream_sha256": "84711c3ac78beac3c4de102f043549d8ffb11f6a1411c47ce47d0e4488c8a00c",
+      "bytes": 5536,
+      "local_sha256": "84711c3ac78beac3c4de102f043549d8ffb11f6a1411c47ce47d0e4488c8a00c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/electrode_soh.py",
+      "upstream_sha256": "b659e0fc40b6cf2969d25080cab1cca2ff2748412349630df7e006c4dd23c7bc",
+      "bytes": 51517,
+      "local_sha256": "b659e0fc40b6cf2969d25080cab1cca2ff2748412349630df7e006c4dd23c7bc",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/electrode_soh_composite.py",
+      "upstream_sha256": "efdd0fb7ce4504d5f72d54e9c72f367a0406023219193204469736d56070d951",
+      "bytes": 37455,
+      "local_sha256": "efdd0fb7ce4504d5f72d54e9c72f367a0406023219193204469736d56070d951",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/electrode_soh_half_cell.py",
+      "upstream_sha256": "aa962ff9c06ee6f761836dd6bb55fcce58a3580656e27e2e3ef3dd7ce5244cba",
+      "bytes": 11337,
+      "local_sha256": "aa962ff9c06ee6f761836dd6bb55fcce58a3580656e27e2e3ef3dd7ce5244cba",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/initial_state.py",
+      "upstream_sha256": "77b28eab9ae8c44ed9f38408e08cea1ea7e292a5a8c6a277daf8b1da7afd7ce4",
+      "bytes": 11321,
+      "local_sha256": "77b28eab9ae8c44ed9f38408e08cea1ea7e292a5a8c6a277daf8b1da7afd7ce4",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/mpm.py",
+      "upstream_sha256": "8c20853c2f281ef4378acd70c4714f0a94323b4c18ab4425367e5cc13bd83ed2",
+      "bytes": 1712,
+      "local_sha256": "8c20853c2f281ef4378acd70c4714f0a94323b4c18ab4425367e5cc13bd83ed2",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/msmr.py",
+      "upstream_sha256": "e0a80b71103784f97631d485f3493bd632fa0044ac1d4593f9fc797018eb1a06",
+      "bytes": 3682,
+      "local_sha256": "e0a80b71103784f97631d485f3493bd632fa0044ac1d4593f9fc797018eb1a06",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/newman_tobias.py",
+      "upstream_sha256": "be08a39d9ab962fef00b3ab198626c9cdb04b2e3b97e21cd422e40d70f2bd41d",
+      "bytes": 3301,
+      "local_sha256": "be08a39d9ab962fef00b3ab198626c9cdb04b2e3b97e21cd422e40d70f2bd41d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/spm.py",
+      "upstream_sha256": "33d14a11819f1a74b43270ab67a6cfdf58511890a7729bec18ace0ad5855aa87",
+      "bytes": 7261,
+      "local_sha256": "33d14a11819f1a74b43270ab67a6cfdf58511890a7729bec18ace0ad5855aa87",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/spme.py",
+      "upstream_sha256": "3a5a1b870be8f88cdd510f3dc131731029d89b304c68b5d2f4b7084781304543",
+      "bytes": 3215,
+      "local_sha256": "3a5a1b870be8f88cdd510f3dc131731029d89b304c68b5d2f4b7084781304543",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_ion/util.py",
+      "upstream_sha256": "e8f26009c8049cbe7bade9a9d85f61512fa64bf82c350b476273a0b616e0e950",
+      "bytes": 4029,
+      "local_sha256": "e8f26009c8049cbe7bade9a9d85f61512fa64bf82c350b476273a0b616e0e950",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/lithium_metal/dfn.py",
+      "upstream_sha256": "f2be66fa2472aef7b110b3cba9f1bd89c5517757950937ca9086406febdbb472",
+      "bytes": 1396,
+      "local_sha256": "f2be66fa2472aef7b110b3cba9f1bd89c5517757950937ca9086406febdbb472",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/sodium_ion/__init__.py",
+      "upstream_sha256": "1ad8ee4540cfd16e03e9b6136d8bdda17aef04cf914391c51b56315a9886cfbd",
+      "bytes": 101,
+      "local_sha256": "1ad8ee4540cfd16e03e9b6136d8bdda17aef04cf914391c51b56315a9886cfbd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/full_battery_models/sodium_ion/basic_dfn.py",
+      "upstream_sha256": "860f68cde40d3c6dd33750e1d488f3934f05570cb0d837692cbbdd51f7dc30fd",
+      "bytes": 11383,
+      "local_sha256": "860f68cde40d3c6dd33750e1d488f3934f05570cb0d837692cbbdd51f7dc30fd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/__init__.py",
+      "upstream_sha256": "02595fecf19bdec17bf38da9ebe582295d16dbab064738141f423ab7c1ae663f",
+      "bytes": 357,
+      "local_sha256": "02595fecf19bdec17bf38da9ebe582295d16dbab064738141f423ab7c1ae663f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/active_material/__init__.py",
+      "upstream_sha256": "5a971fbfca2b301971bf4bc01884d0e96efa8d7403af32bd35c880821335da23",
+      "bytes": 309,
+      "local_sha256": "5a971fbfca2b301971bf4bc01884d0e96efa8d7403af32bd35c880821335da23",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/active_material/base_active_material.py",
+      "upstream_sha256": "0cc5ddf1660f0f944ca10184a930e7394c268528e046dedb1e0fe9f39d1b80be",
+      "bytes": 5466,
+      "local_sha256": "0cc5ddf1660f0f944ca10184a930e7394c268528e046dedb1e0fe9f39d1b80be",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/active_material/constant_active_material.py",
+      "upstream_sha256": "cd3c9b9954fb45fe8d0b2f99c1450c8ca386c54ec2b9d178b1de6936ce59c98f",
+      "bytes": 1202,
+      "local_sha256": "cd3c9b9954fb45fe8d0b2f99c1450c8ca386c54ec2b9d178b1de6936ce59c98f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/active_material/loss_active_material.py",
+      "upstream_sha256": "55cb67045bd9e8f3e941afa71fa878b472e27646bd496377961f040d5771e85d",
+      "bytes": 8824,
+      "local_sha256": "55cb67045bd9e8f3e941afa71fa878b472e27646bd496377961f040d5771e85d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/active_material/total_active_material.py",
+      "upstream_sha256": "26884756b6763c95c6e81ca759b5049c1e2250a16f5ac2e31700ea10b80490b0",
+      "bytes": 3057,
+      "local_sha256": "26884756b6763c95c6e81ca759b5049c1e2250a16f5ac2e31700ea10b80490b0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/base_submodel.py",
+      "upstream_sha256": "3f3e56ce3eb084134ec933a1e0270355e8dfebd155afe4159ee993dfbc704c73",
+      "bytes": 9125,
+      "local_sha256": "3f3e56ce3eb084134ec933a1e0270355e8dfebd155afe4159ee993dfbc704c73",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/__init__.py",
+      "upstream_sha256": "71688d4fe02e8d3d5240efbed46ff11229ac25411a546b42a393801b5c685604",
+      "bytes": 139,
+      "local_sha256": "71688d4fe02e8d3d5240efbed46ff11229ac25411a546b42a393801b5c685604",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/base_convection.py",
+      "upstream_sha256": "706b3f90bce060ce6f02e04ccf3603117a22a4d6c98f69d535fefd39c61a1c3a",
+      "bytes": 3067,
+      "local_sha256": "706b3f90bce060ce6f02e04ccf3603117a22a4d6c98f69d535fefd39c61a1c3a",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/through_cell/__init__.py",
+      "upstream_sha256": "239b4c3f89f6842de010731bed26ea44f5a157fa17557e52c6c98e29c7ee67ac",
+      "bytes": 293,
+      "local_sha256": "239b4c3f89f6842de010731bed26ea44f5a157fa17557e52c6c98e29c7ee67ac",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/through_cell/base_through_cell_convection.py",
+      "upstream_sha256": "f42de5fcad079cd861c7a1d1aed282c98747d030dfc106475be7cd730a1dc8c0",
+      "bytes": 1634,
+      "local_sha256": "f42de5fcad079cd861c7a1d1aed282c98747d030dfc106475be7cd730a1dc8c0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/through_cell/explicit_convection.py",
+      "upstream_sha256": "a72e26e674b1d58714c40df0dfdcbeb0a89e283678a41289c3e34aad6ce894f8",
+      "bytes": 3134,
+      "local_sha256": "a72e26e674b1d58714c40df0dfdcbeb0a89e283678a41289c3e34aad6ce894f8",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/through_cell/full_convection.py",
+      "upstream_sha256": "7ab65e53a66d15e3c217aa245676b3cb9df2e3a596ff8d95901fada7c7b1fdfa",
+      "bytes": 4076,
+      "local_sha256": "7ab65e53a66d15e3c217aa245676b3cb9df2e3a596ff8d95901fada7c7b1fdfa",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/through_cell/no_convection.py",
+      "upstream_sha256": "3ff7cc1238a235203e2e364b0bf6b19c6b0b0846bb79c4904a3dc202dceb26c2",
+      "bytes": 1795,
+      "local_sha256": "3ff7cc1238a235203e2e364b0bf6b19c6b0b0846bb79c4904a3dc202dceb26c2",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/transverse/__init__.py",
+      "upstream_sha256": "e66f34b95924113dd04f8112efd700da4df556e2e427ecd8280f7ad65b3be8f8",
+      "bytes": 285,
+      "local_sha256": "e66f34b95924113dd04f8112efd700da4df556e2e427ecd8280f7ad65b3be8f8",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/transverse/base_transverse_convection.py",
+      "upstream_sha256": "d866774006ecd90fa34bb2b7c5303c497fc4714463a699261d363357d7f16e64",
+      "bytes": 1875,
+      "local_sha256": "d866774006ecd90fa34bb2b7c5303c497fc4714463a699261d363357d7f16e64",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/transverse/full_convection.py",
+      "upstream_sha256": "876a3c8cf6b3ac9ccec23882f9f6c631e1edcef421e2dea654c1d2a3857d0a94",
+      "bytes": 2427,
+      "local_sha256": "876a3c8cf6b3ac9ccec23882f9f6c631e1edcef421e2dea654c1d2a3857d0a94",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/transverse/no_convection.py",
+      "upstream_sha256": "3423d98771bfc20a4d3d0dd0b18eeb6e1a8b58fbf74ac4a56e5715a6122f88fa",
+      "bytes": 1120,
+      "local_sha256": "3423d98771bfc20a4d3d0dd0b18eeb6e1a8b58fbf74ac4a56e5715a6122f88fa",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/convection/transverse/uniform_convection.py",
+      "upstream_sha256": "cfc07fe9681a15b583abf5755bdb9c843fdbb8aeb78c76b2bdcb305f009c9f58",
+      "bytes": 1572,
+      "local_sha256": "cfc07fe9681a15b583abf5755bdb9c843fdbb8aeb78c76b2bdcb305f009c9f58",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/current_collector/__init__.py",
+      "upstream_sha256": "d5950cc8f291738e7c5568318ce7122b4bac9d636829ccbd7360bc216e43005a",
+      "bytes": 466,
+      "local_sha256": "d5950cc8f291738e7c5568318ce7122b4bac9d636829ccbd7360bc216e43005a",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/current_collector/base_current_collector.py",
+      "upstream_sha256": "5365fe239db4fef291ce12608683a69c8c161c681b661b11d32e8610fbcffcfe",
+      "bytes": 1824,
+      "local_sha256": "5365fe239db4fef291ce12608683a69c8c161c681b661b11d32e8610fbcffcfe",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/current_collector/effective_resistance_current_collector.py",
+      "upstream_sha256": "2e8bee157053649688146a3d1d4d8282301adbdd7179b53398d4208f8264cf7a",
+      "bytes": 14583,
+      "local_sha256": "2e8bee157053649688146a3d1d4d8282301adbdd7179b53398d4208f8264cf7a",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/current_collector/homogeneous_current_collector.py",
+      "upstream_sha256": "bed79e380456779730d4e91b390960d47f7f3f2291ba97975df8aba849eb1d7a",
+      "bytes": 1038,
+      "local_sha256": "bed79e380456779730d4e91b390960d47f7f3f2291ba97975df8aba849eb1d7a",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/current_collector/potential_pair.py",
+      "upstream_sha256": "52f978126555a2f6fd043f110675964a2b25082c0d8e445e8f2f308d5d044b44",
+      "bytes": 6299,
+      "local_sha256": "52f978126555a2f6fd043f110675964a2b25082c0d8e445e8f2f308d5d044b44",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/__init__.py",
+      "upstream_sha256": "62db6a6ed3738daa26ccf027e0d63eadf38ecaf53545a79b924dc9ed008f844d",
+      "bytes": 97,
+      "local_sha256": "62db6a6ed3738daa26ccf027e0d63eadf38ecaf53545a79b924dc9ed008f844d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/base_electrode.py",
+      "upstream_sha256": "5c80959cfb9a91e53addb8caca34a6c5a9351f3207ae489d886671e5ccc48928",
+      "bytes": 6386,
+      "local_sha256": "5c80959cfb9a91e53addb8caca34a6c5a9351f3207ae489d886671e5ccc48928",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/__init__.py",
+      "upstream_sha256": "5fd77a8064e1aba3dfc76e28bd89a7be6143840f1b5abf64965d84d3aceec43d",
+      "bytes": 355,
+      "local_sha256": "5fd77a8064e1aba3dfc76e28bd89a7be6143840f1b5abf64965d84d3aceec43d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/base_ohm.py",
+      "upstream_sha256": "707f6eb59f2b3a1ad83c891d3d3ce59debafc54658c1e8d79545ca8eb8bc4244",
+      "bytes": 1690,
+      "local_sha256": "707f6eb59f2b3a1ad83c891d3d3ce59debafc54658c1e8d79545ca8eb8bc4244",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/composite_ohm.py",
+      "upstream_sha256": "6c5da5b206a33103499bf64c6cc8a236b4792fc11d4fdc2f96bb288350f8870e",
+      "bytes": 3296,
+      "local_sha256": "6c5da5b206a33103499bf64c6cc8a236b4792fc11d4fdc2f96bb288350f8870e",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/full_ohm.py",
+      "upstream_sha256": "05ac62def3dd75a44d56580fc1109a2272b80611767eac957dad43309592eabe",
+      "bytes": 4016,
+      "local_sha256": "05ac62def3dd75a44d56580fc1109a2272b80611767eac957dad43309592eabe",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/leading_ohm.py",
+      "upstream_sha256": "4f25291c3a748744b64269fe4fdbedf681111d68652ba1a261391fbf634a9311",
+      "bytes": 2747,
+      "local_sha256": "4f25291c3a748744b64269fe4fdbedf681111d68652ba1a261391fbf634a9311",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/li_metal.py",
+      "upstream_sha256": "7650077cd6bdbcdf32c353bbaa764bad194fb7777c9e025160caa562f3c9533e",
+      "bytes": 5320,
+      "local_sha256": "7650077cd6bdbcdf32c353bbaa764bad194fb7777c9e025160caa562f3c9533e",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrode/ohm/surface_form_ohm.py",
+      "upstream_sha256": "4cddf61ad1662486179352ccdb1640fbae0f220aa6cbd1bc946aa46741294cc3",
+      "bytes": 2279,
+      "local_sha256": "4cddf61ad1662486179352ccdb1640fbae0f220aa6cbd1bc946aa46741294cc3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/__init__.py",
+      "upstream_sha256": "e67053bfe9a3a4cb14ad6e94b0338447ecccc077f7030253cea97668515a8fee",
+      "bytes": 489,
+      "local_sha256": "e67053bfe9a3a4cb14ad6e94b0338447ecccc077f7030253cea97668515a8fee",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/base_electrolyte_conductivity.py",
+      "upstream_sha256": "55b13ad84b2c9cdbfe96ff9067e8a9e8c276e7a6e9ccc9039cc4c16f98dc31a3",
+      "bytes": 9857,
+      "local_sha256": "55b13ad84b2c9cdbfe96ff9067e8a9e8c276e7a6e9ccc9039cc4c16f98dc31a3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/composite_conductivity.py",
+      "upstream_sha256": "027d8529b0a110c5217cac4e3ad149dc7f6d27ce9f87d7d37a1a55a12b9863d3",
+      "bytes": 6726,
+      "local_sha256": "027d8529b0a110c5217cac4e3ad149dc7f6d27ce9f87d7d37a1a55a12b9863d3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/full_conductivity.py",
+      "upstream_sha256": "682a60cd45918c36af1a4725d7f515b2e0f983f48153c95480ca10f01af0a64e",
+      "bytes": 2799,
+      "local_sha256": "682a60cd45918c36af1a4725d7f515b2e0f983f48153c95480ca10f01af0a64e",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/integrated_conductivity.py",
+      "upstream_sha256": "bf64eea707697299dc36bf61430234b0dd0a95a3e8a71e383759767fbe7b1732",
+      "bytes": 5950,
+      "local_sha256": "bf64eea707697299dc36bf61430234b0dd0a95a3e8a71e383759767fbe7b1732",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/leading_order_conductivity.py",
+      "upstream_sha256": "0292f133ecbfa943b4befac6516c4b3c63cfd351bebacbfe4d252a4f0579ee2b",
+      "bytes": 2540,
+      "local_sha256": "0292f133ecbfa943b4befac6516c4b3c63cfd351bebacbfe4d252a4f0579ee2b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/surface_potential_form/__init__.py",
+      "upstream_sha256": "9b4a54ea9789f4e0b3402ea93e16ed1ea7311d0fcbfa3063c07a9a54ea928595",
+      "bytes": 620,
+      "local_sha256": "9b4a54ea9789f4e0b3402ea93e16ed1ea7311d0fcbfa3063c07a9a54ea928595",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/surface_potential_form/composite_surface_form_conductivity.py",
+      "upstream_sha256": "9d80b015ff0fdc146a505bbe9001b25330a10bf0fcee39cab443a0bf6d6bd130",
+      "bytes": 5053,
+      "local_sha256": "9d80b015ff0fdc146a505bbe9001b25330a10bf0fcee39cab443a0bf6d6bd130",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/surface_potential_form/explicit_surface_form_conductivity.py",
+      "upstream_sha256": "a5dec92887c4a11f417deebee9cf894a77759aa5c56126dfc2de5a1c4b6c5a8f",
+      "bytes": 1518,
+      "local_sha256": "a5dec92887c4a11f417deebee9cf894a77759aa5c56126dfc2de5a1c4b6c5a8f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/surface_potential_form/full_surface_form_conductivity.py",
+      "upstream_sha256": "760f637f1ae37ad837d73534ed5bb890e19ca5f8baac0dd0a6f9ce44823f88cd",
+      "bytes": 11017,
+      "local_sha256": "760f637f1ae37ad837d73534ed5bb890e19ca5f8baac0dd0a6f9ce44823f88cd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_conductivity/surface_potential_form/leading_surface_form_conductivity.py",
+      "upstream_sha256": "2a2f93b6d6aa360faa12e8749ec61862ed333f0198fdf509bc0d69b4c318e937",
+      "bytes": 4901,
+      "local_sha256": "2a2f93b6d6aa360faa12e8749ec61862ed333f0198fdf509bc0d69b4c318e937",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_diffusion/__init__.py",
+      "upstream_sha256": "daeb742019c0ae9633ff6bd7e14a56afdb466dd5291e0ca993183aafba12182b",
+      "bytes": 330,
+      "local_sha256": "daeb742019c0ae9633ff6bd7e14a56afdb466dd5291e0ca993183aafba12182b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_diffusion/base_electrolyte_diffusion.py",
+      "upstream_sha256": "87f6ec64eba6fb36f52e17413a22715223720bcffcc8aa0e6fd39429c775d287",
+      "bytes": 4635,
+      "local_sha256": "87f6ec64eba6fb36f52e17413a22715223720bcffcc8aa0e6fd39429c775d287",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_diffusion/constant_concentration.py",
+      "upstream_sha256": "25d39f93b26e7f7f723dc52d0b03406c59ba8d7d6541b34833c6ecd90983ee6c",
+      "bytes": 2652,
+      "local_sha256": "25d39f93b26e7f7f723dc52d0b03406c59ba8d7d6541b34833c6ecd90983ee6c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_diffusion/full_diffusion.py",
+      "upstream_sha256": "9892f95fc0d6e55a23961f61eb60d37bc562b29f262f28f4106cfd44432f55c7",
+      "bytes": 5546,
+      "local_sha256": "9892f95fc0d6e55a23961f61eb60d37bc562b29f262f28f4106cfd44432f55c7",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/electrolyte_diffusion/leading_order_diffusion.py",
+      "upstream_sha256": "7d21fda1347079d9837842c33b2887962f506c73708aaca3d1a2e9ebd793ac86",
+      "bytes": 3712,
+      "local_sha256": "7d21fda1347079d9837842c33b2887962f506c73708aaca3d1a2e9ebd793ac86",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/__init__.py",
+      "upstream_sha256": "c4fc470d33848528fe8a8fca7c0071ca1c034d45532b28c5b79f71344212ce5b",
+      "bytes": 354,
+      "local_sha256": "c4fc470d33848528fe8a8fca7c0071ca1c034d45532b28c5b79f71344212ce5b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/diffusion_element.py",
+      "upstream_sha256": "4e7ced5ce04125e37ab25ee2bcfb80e0044bcc4607edebf54134852bfe905c27",
+      "bytes": 3170,
+      "local_sha256": "4e7ced5ce04125e37ab25ee2bcfb80e0044bcc4607edebf54134852bfe905c27",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/ocv_element.py",
+      "upstream_sha256": "92d635bee29a862a8d86c4edc2c9da1e55d72023f9a6459ca9a6a66e73d02de3",
+      "bytes": 1765,
+      "local_sha256": "92d635bee29a862a8d86c4edc2c9da1e55d72023f9a6459ca9a6a66e73d02de3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/rc_element.py",
+      "upstream_sha256": "6a2c0f83a4203c8ef7eb32090c6b0a3c3ea6de76e0cb0e7dcf389991860611ad",
+      "bytes": 2330,
+      "local_sha256": "6a2c0f83a4203c8ef7eb32090c6b0a3c3ea6de76e0cb0e7dcf389991860611ad",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/resistor_element.py",
+      "upstream_sha256": "c26e76d5afda8e71afda82a92a330c5facdd630e51e30c7abb85363d3403499c",
+      "bytes": 1006,
+      "local_sha256": "c26e76d5afda8e71afda82a92a330c5facdd630e51e30c7abb85363d3403499c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/thermal.py",
+      "upstream_sha256": "c2dc54a05078f81f514da8ae7aca0d4a48d3fdfb5c44228fff7050d68db72c21",
+      "bytes": 2809,
+      "local_sha256": "c2dc54a05078f81f514da8ae7aca0d4a48d3fdfb5c44228fff7050d68db72c21",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/equivalent_circuit_elements/voltage_model.py",
+      "upstream_sha256": "31ade6628dc23951ed88b7ddbe5212d3d33eb969a41715530d7d5024bea2bf2f",
+      "bytes": 2773,
+      "local_sha256": "31ade6628dc23951ed88b7ddbe5212d3d33eb969a41715530d7d5024bea2bf2f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/external_circuit/__init__.py",
+      "upstream_sha256": "27dd068081dd0ad0cd3ab9c191884c594f7051d8219912861b59a9572afcd632",
+      "bytes": 539,
+      "local_sha256": "27dd068081dd0ad0cd3ab9c191884c594f7051d8219912861b59a9572afcd632",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/external_circuit/base_external_circuit.py",
+      "upstream_sha256": "9375f1f9cf2e54755ab446f45f5a9a66bb86ab9ff135182753f5b476c51f7805",
+      "bytes": 254,
+      "local_sha256": "9375f1f9cf2e54755ab446f45f5a9a66bb86ab9ff135182753f5b476c51f7805",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/external_circuit/discharge_throughput.py",
+      "upstream_sha256": "c1c59de97633f6c99b8f5a90cf46f59bfd24ce6fed60b5ebd83cd4f8b2e1fb21",
+      "bytes": 2651,
+      "local_sha256": "c1c59de97633f6c99b8f5a90cf46f59bfd24ce6fed60b5ebd83cd4f8b2e1fb21",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/external_circuit/explicit_control_external_circuit.py",
+      "upstream_sha256": "5c17893b01e88fad940dbbc880c9018f0b6d2f5728b3579851c48326683f1e52",
+      "bytes": 2533,
+      "local_sha256": "5c17893b01e88fad940dbbc880c9018f0b6d2f5728b3579851c48326683f1e52",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/external_circuit/function_control_external_circuit.py",
+      "upstream_sha256": "b5335f57735739f5dbb901b4276c235b5e79277be06aa36b5c66fb2553dba7f8",
+      "bytes": 6079,
+      "local_sha256": "b5335f57735739f5dbb901b4276c235b5e79277be06aa36b5c66fb2553dba7f8",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/__init__.py",
+      "upstream_sha256": "71ae58add63583b743f3254b3d82138257ba38738ed22d9ecbe3edc824fd0eea",
+      "bytes": 275,
+      "local_sha256": "71ae58add63583b743f3254b3d82138257ba38738ed22d9ecbe3edc824fd0eea",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/base_interface.py",
+      "upstream_sha256": "ad84a23552237b6e16fbbcbf8f5634bad6134f4bcb3c756eabeec00d4f525ff6",
+      "bytes": 19643,
+      "local_sha256": "ad84a23552237b6e16fbbcbf8f5634bad6134f4bcb3c756eabeec00d4f525ff6",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/interface_utilisation/__init__.py",
+      "upstream_sha256": "0ef9025675c0d66dca15afc921c45f293617e4c04c7e3bb87fef88c234ccff92",
+      "bytes": 289,
+      "local_sha256": "0ef9025675c0d66dca15afc921c45f293617e4c04c7e3bb87fef88c234ccff92",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/interface_utilisation/base_utilisation.py",
+      "upstream_sha256": "469ff6b7a6ec0e541494130d6514f35314e452f3869f530c8829b6d3c68870f9",
+      "bytes": 1400,
+      "local_sha256": "469ff6b7a6ec0e541494130d6514f35314e452f3869f530c8829b6d3c68870f9",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/interface_utilisation/constant_utilisation.py",
+      "upstream_sha256": "7bf82f16ee1d86e4b9109d0c80c737aca2412efa2fd6b0db6a8538da7ecfa0e0",
+      "bytes": 736,
+      "local_sha256": "7bf82f16ee1d86e4b9109d0c80c737aca2412efa2fd6b0db6a8538da7ecfa0e0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/interface_utilisation/current_driven_utilisation.py",
+      "upstream_sha256": "10bee9723e87adbaa91d2b539bc524d4624e38a0b6e40e99e7bf4d3bb09601ef",
+      "bytes": 3858,
+      "local_sha256": "10bee9723e87adbaa91d2b539bc524d4624e38a0b6e40e99e7bf4d3bb09601ef",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/interface_utilisation/full_utilisation.py",
+      "upstream_sha256": "78f5ea9eb17ba5349d866de7a46f09a03f3a29f61f0eaa0c5fa3782fb8eb3165",
+      "bytes": 685,
+      "local_sha256": "78f5ea9eb17ba5349d866de7a46f09a03f3a29f61f0eaa0c5fa3782fb8eb3165",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/__init__.py",
+      "upstream_sha256": "a5952c2a62b832edd243d4e4cdc430586278952b6318f85c1f6295679babbc87",
+      "bytes": 950,
+      "local_sha256": "a5952c2a62b832edd243d4e4cdc430586278952b6318f85c1f6295679babbc87",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/base_kinetics.py",
+      "upstream_sha256": "2aad9d406a9c66f99f736e260eb758e1c456777bcfd01ed8a1b9b655c2c3c55b",
+      "bytes": 11362,
+      "local_sha256": "2aad9d406a9c66f99f736e260eb758e1c456777bcfd01ed8a1b9b655c2c3c55b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/butler_volmer.py",
+      "upstream_sha256": "2671481c2f406dbd90e0e9f6c34573f3d8732db4b3e9e482aecfa1ccf1d03e10",
+      "bytes": 1804,
+      "local_sha256": "2671481c2f406dbd90e0e9f6c34573f3d8732db4b3e9e482aecfa1ccf1d03e10",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/diffusion_limited.py",
+      "upstream_sha256": "51bb8766f304e851df72e9fa26f60001d42800d9e680e4794417695dedbe43ae",
+      "bytes": 3287,
+      "local_sha256": "51bb8766f304e851df72e9fa26f60001d42800d9e680e4794417695dedbe43ae",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/inverse_kinetics/__init__.py",
+      "upstream_sha256": "7acbcb51e14a2960bfdb142be82092f269b21a7b908513af50248732c49809cc",
+      "bytes": 36,
+      "local_sha256": "7acbcb51e14a2960bfdb142be82092f269b21a7b908513af50248732c49809cc",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/inverse_kinetics/base_inverse.py",
+      "upstream_sha256": "50ed322d00ad9ec68cbeda75a71d43dfcea7cc8a956eb8c5c0f1a043e44bc4d5",
+      "bytes": 6825,
+      "local_sha256": "50ed322d00ad9ec68cbeda75a71d43dfcea7cc8a956eb8c5c0f1a043e44bc4d5",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/inverse_kinetics/inverse_butler_volmer.py",
+      "upstream_sha256": "1abcbd3286fa33ee5a313306c3109dc42dbedc79e5a36ee09e296018323e3cae",
+      "bytes": 997,
+      "local_sha256": "1abcbd3286fa33ee5a313306c3109dc42dbedc79e5a36ee09e296018323e3cae",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/inverse_kinetics/inverse_linear.py",
+      "upstream_sha256": "8337d114d860e2a4c0e7503e1455df6d2af7f93b583ccf2bdaa122cd58c87f4f",
+      "bytes": 802,
+      "local_sha256": "8337d114d860e2a4c0e7503e1455df6d2af7f93b583ccf2bdaa122cd58c87f4f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/linear.py",
+      "upstream_sha256": "6b2113b3839677d071bf7f4f90749a701fb5fe8c01aaaed96a293bc808c831b0",
+      "bytes": 806,
+      "local_sha256": "6b2113b3839677d071bf7f4f90749a701fb5fe8c01aaaed96a293bc808c831b0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/marcus.py",
+      "upstream_sha256": "9edfb1500a5c6863ff3911baf3994c4dad617aca3c4f5d1d36e49b53535d8b55",
+      "bytes": 2539,
+      "local_sha256": "9edfb1500a5c6863ff3911baf3994c4dad617aca3c4f5d1d36e49b53535d8b55",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/msmr_butler_volmer.py",
+      "upstream_sha256": "665c5b71727338043c2bff6146c34b73d2a1180cfc893f3bd1638eafa022debb",
+      "bytes": 5498,
+      "local_sha256": "665c5b71727338043c2bff6146c34b73d2a1180cfc893f3bd1638eafa022debb",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/no_reaction.py",
+      "upstream_sha256": "f79602ce36f5b75a22798f8948b5d31cbe374d010d6eb16e6e79b89dfb1391d5",
+      "bytes": 1371,
+      "local_sha256": "f79602ce36f5b75a22798f8948b5d31cbe374d010d6eb16e6e79b89dfb1391d5",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/tafel.py",
+      "upstream_sha256": "a723270cbd855b214475df141e17195c816ac4b2c1bb1e98e7e2d4c7860e59b5",
+      "bytes": 1644,
+      "local_sha256": "a723270cbd855b214475df141e17195c816ac4b2c1bb1e98e7e2d4c7860e59b5",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/kinetics/total_main_kinetics.py",
+      "upstream_sha256": "a59868c0513f0be83eb35da4f2a058e93e45f80c1245697f1dee69a38f876992",
+      "bytes": 1693,
+      "local_sha256": "a59868c0513f0be83eb35da4f2a058e93e45f80c1245697f1dee69a38f876992",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/lithium_plating/__init__.py",
+      "upstream_sha256": "88b9b8975ac1d634fa35ce36685ee0b34d314366a7aa97e2bd5af045795994c6",
+      "bytes": 232,
+      "local_sha256": "88b9b8975ac1d634fa35ce36685ee0b34d314366a7aa97e2bd5af045795994c6",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/lithium_plating/base_plating.py",
+      "upstream_sha256": "598ab607036183a91c2650024397c973c3c4c155fd6af77f296fc92b818f6c68",
+      "bytes": 7178,
+      "local_sha256": "598ab607036183a91c2650024397c973c3c4c155fd6af77f296fc92b818f6c68",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/lithium_plating/no_plating.py",
+      "upstream_sha256": "03a8810762763a0a4b4e08b0613f4e5fc4694b18539d71beab716a670ba0f322",
+      "bytes": 1712,
+      "local_sha256": "03a8810762763a0a4b4e08b0613f4e5fc4694b18539d71beab716a670ba0f322",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/lithium_plating/plating.py",
+      "upstream_sha256": "e39d2d116272443ecfdcc44dff4fd4ee97400768ab206bce9280541a8497e739",
+      "bytes": 7613,
+      "local_sha256": "e39d2d116272443ecfdcc44dff4fd4ee97400768ab206bce9280541a8497e739",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/lithium_plating/total_lithium_plating.py",
+      "upstream_sha256": "b8d16cc6eddb5338571694be26db6dbdddaf2af17d5d7a7692a16388563705c3",
+      "bytes": 1492,
+      "local_sha256": "b8d16cc6eddb5338571694be26db6dbdddaf2af17d5d7a7692a16388563705c3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/__init__.py",
+      "upstream_sha256": "fbb8f1305f1ceaca267d42412c2a1c384a29c764d75edef7d70ac5c13642cf59",
+      "bytes": 691,
+      "local_sha256": "fbb8f1305f1ceaca267d42412c2a1c384a29c764d75edef7d70ac5c13642cf59",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/base_hysteresis_ocp.py",
+      "upstream_sha256": "05562dfd042b613080d45deaa31630a19b22fb7003e9919d71ae8ba2cb63b6e1",
+      "bytes": 5812,
+      "local_sha256": "05562dfd042b613080d45deaa31630a19b22fb7003e9919d71ae8ba2cb63b6e1",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/base_ocp.py",
+      "upstream_sha256": "fd2d3f5da99283ca92da44fdb87659deaa44f5669ac9d5a60548cba338f83978",
+      "bytes": 6323,
+      "local_sha256": "fd2d3f5da99283ca92da44fdb87659deaa44f5669ac9d5a60548cba338f83978",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/current_sigmoid_ocp.py",
+      "upstream_sha256": "aaa1d324096e6cdf72518b6600e59370715dc1c77f5f5de2b172a357a13b66a0",
+      "bytes": 2070,
+      "local_sha256": "aaa1d324096e6cdf72518b6600e59370715dc1c77f5f5de2b172a357a13b66a0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/msmr_ocp.py",
+      "upstream_sha256": "f4cc146b1921f1b3c39630f1a4c7decd8b0b324d610687bd5422893939b9476c",
+      "bytes": 3327,
+      "local_sha256": "f4cc146b1921f1b3c39630f1a4c7decd8b0b324d610687bd5422893939b9476c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/one_state_differential_capacity_hysteresis_ocp.py",
+      "upstream_sha256": "d80fdecb1fbf913d26391f2e32dfba7127cfcaa0702744553461d3183cf90ba9",
+      "bytes": 4749,
+      "local_sha256": "d80fdecb1fbf913d26391f2e32dfba7127cfcaa0702744553461d3183cf90ba9",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/one_state_hysteresis_ocp.py",
+      "upstream_sha256": "c345e7e3e1ef124a4870d1e8ca6b93ce705cd2f6802817a9bd908fb29af1ae13",
+      "bytes": 3465,
+      "local_sha256": "c345e7e3e1ef124a4870d1e8ca6b93ce705cd2f6802817a9bd908fb29af1ae13",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/open_circuit_potential/single_ocp.py",
+      "upstream_sha256": "06447055fd1f47345c4105349d651b498f48c4d9edadc02fb9cdde2e47aad5ff",
+      "bytes": 2031,
+      "local_sha256": "06447055fd1f47345c4105349d651b498f48c4d9edadc02fb9cdde2e47aad5ff",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/__init__.py",
+      "upstream_sha256": "c662b8b4d5e1edd66b6d1b0c9be9d7a472fd11b04b8f25ddf74a99c765faee15",
+      "bytes": 302,
+      "local_sha256": "c662b8b4d5e1edd66b6d1b0c9be9d7a472fd11b04b8f25ddf74a99c765faee15",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/base_sei.py",
+      "upstream_sha256": "c6aa0deb8b980b6bc6acdc3fa653ad6cb5abd0536af576b389aa36689104865b",
+      "bytes": 7102,
+      "local_sha256": "c6aa0deb8b980b6bc6acdc3fa653ad6cb5abd0536af576b389aa36689104865b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/constant_sei.py",
+      "upstream_sha256": "26fe71aaba94cd7d36054386f72265eaa2becfce1ba81663899a08cd3162efdd",
+      "bytes": 1854,
+      "local_sha256": "26fe71aaba94cd7d36054386f72265eaa2becfce1ba81663899a08cd3162efdd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/no_sei.py",
+      "upstream_sha256": "37619ce4360c3c2e1141c36cff971088aad5ca42cf021271fda54c2164624119",
+      "bytes": 1972,
+      "local_sha256": "37619ce4360c3c2e1141c36cff971088aad5ca42cf021271fda54c2164624119",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/sei_growth.py",
+      "upstream_sha256": "b85a1ae62c6e024737ead714d3f0fb8134a8a7796a6fbe2fde6b75cd50e376f3",
+      "bytes": 13463,
+      "local_sha256": "b85a1ae62c6e024737ead714d3f0fb8134a8a7796a6fbe2fde6b75cd50e376f3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/sei_thickness.py",
+      "upstream_sha256": "d86e6f2caa874f8a03bc5d4c5f9645ba8189da1428db95e24939aae0ba15241c",
+      "bytes": 4438,
+      "local_sha256": "d86e6f2caa874f8a03bc5d4c5f9645ba8189da1428db95e24939aae0ba15241c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/sei/total_sei.py",
+      "upstream_sha256": "5739273689f77ec3d2495accc26663a047e41f3961386e3eb404b04b8d8df737",
+      "bytes": 1696,
+      "local_sha256": "5739273689f77ec3d2495accc26663a047e41f3961386e3eb404b04b8d8df737",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/interface/total_interfacial_current.py",
+      "upstream_sha256": "c637d5abeebd4694f533ad82607a1a40fbcd65b534feec711d59abc87e88e9f0",
+      "bytes": 6953,
+      "local_sha256": "c637d5abeebd4694f533ad82607a1a40fbcd65b534feec711d59abc87e88e9f0",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/oxygen_diffusion/__init__.py",
+      "upstream_sha256": "6baa6c415e3f7bbad8382fcf41cff79ce8a04b65f08fd9ec969257f7b8178689",
+      "bytes": 282,
+      "local_sha256": "6baa6c415e3f7bbad8382fcf41cff79ce8a04b65f08fd9ec969257f7b8178689",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/oxygen_diffusion/base_oxygen_diffusion.py",
+      "upstream_sha256": "4301d51696e59da9d59d9d3149584e9b394d2b8f5724f781466637bf7dc6688b",
+      "bytes": 2021,
+      "local_sha256": "4301d51696e59da9d59d9d3149584e9b394d2b8f5724f781466637bf7dc6688b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/oxygen_diffusion/full_oxygen_diffusion.py",
+      "upstream_sha256": "baf99ac57c42e57773a8d68b1d524bc78b4c73074048dd918a311a0c90989423",
+      "bytes": 4173,
+      "local_sha256": "baf99ac57c42e57773a8d68b1d524bc78b4c73074048dd918a311a0c90989423",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/oxygen_diffusion/leading_oxygen_diffusion.py",
+      "upstream_sha256": "14128b0f1d3e978bedb9b76ffe3ee8db7d84fbc95321e30806b5bcb776435db3",
+      "bytes": 2744,
+      "local_sha256": "14128b0f1d3e978bedb9b76ffe3ee8db7d84fbc95321e30806b5bcb776435db3",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/oxygen_diffusion/no_oxygen.py",
+      "upstream_sha256": "193a075ac4bcbb0ebddd51e0cee6902077bc83722685efe872a31a94bb0536df",
+      "bytes": 993,
+      "local_sha256": "193a075ac4bcbb0ebddd51e0cee6902077bc83722685efe872a31a94bb0536df",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/__init__.py",
+      "upstream_sha256": "f327bc58d2a0388dd03f99f8f6d37a6e295007bf222a79228df83f3471859470",
+      "bytes": 521,
+      "local_sha256": "f327bc58d2a0388dd03f99f8f6d37a6e295007bf222a79228df83f3471859470",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/base_particle.py",
+      "upstream_sha256": "5e8c7d68aca24b9b4ae14d4e22e654fa1554d05f4e41ee5421baf9988ff6908d",
+      "bytes": 20767,
+      "local_sha256": "5e8c7d68aca24b9b4ae14d4e22e654fa1554d05f4e41ee5421baf9988ff6908d",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/fickian_diffusion.py",
+      "upstream_sha256": "fadae0f840061a743e9e2bdfbbf895f5a0d14acceb6dad514b46c4412a658664",
+      "bytes": 13770,
+      "local_sha256": "fadae0f840061a743e9e2bdfbbf895f5a0d14acceb6dad514b46c4412a658664",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/msmr_diffusion.py",
+      "upstream_sha256": "610ec7dab3bd6b65cd83e75a7716b37e225bf59d27f2d0f4d21fae8ca1dc8360",
+      "bytes": 29542,
+      "local_sha256": "610ec7dab3bd6b65cd83e75a7716b37e225bf59d27f2d0f4d21fae8ca1dc8360",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/polynomial_profile.py",
+      "upstream_sha256": "61d09da08473fe1c2254fb0c2c845a9ca1e733800058f7523adb4c69f64ab639",
+      "bytes": 14556,
+      "local_sha256": "61d09da08473fe1c2254fb0c2c845a9ca1e733800058f7523adb4c69f64ab639",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/total_particle_concentration.py",
+      "upstream_sha256": "6cf654bc458bed841e1afb5913d3ae19bb8ec54bd64b0d5cccdd7d09e064c59c",
+      "bytes": 1781,
+      "local_sha256": "6cf654bc458bed841e1afb5913d3ae19bb8ec54bd64b0d5cccdd7d09e064c59c",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle/x_averaged_polynomial_profile.py",
+      "upstream_sha256": "1cfb4cd84f66529994f49492d1f0c5948c6a255c30a42742cea79569ed72d2f7",
+      "bytes": 13365,
+      "local_sha256": "1cfb4cd84f66529994f49492d1f0c5948c6a255c30a42742cea79569ed72d2f7",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle_mechanics/__init__.py",
+      "upstream_sha256": "a859dd3110cb484dd2b7536c5248d1e24a37cafac92b21413351c546ec11b9b9",
+      "bytes": 263,
+      "local_sha256": "a859dd3110cb484dd2b7536c5248d1e24a37cafac92b21413351c546ec11b9b9",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle_mechanics/base_mechanics.py",
+      "upstream_sha256": "65c81c9bb58a7d5233787136f3755c1695626fe6834f475141ba6ea36cb24af2",
+      "bytes": 17594,
+      "local_sha256": "65c81c9bb58a7d5233787136f3755c1695626fe6834f475141ba6ea36cb24af2",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle_mechanics/crack_propagation.py",
+      "upstream_sha256": "0c0b1a7557d6da7662633e38365cbe5d91529958375f4c3f02d38b02806fa299",
+      "bytes": 7846,
+      "local_sha256": "0c0b1a7557d6da7662633e38365cbe5d91529958375f4c3f02d38b02806fa299",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle_mechanics/no_mechanics.py",
+      "upstream_sha256": "2b466f0ef85b85d306df9970b18b994f1a59934fc3f1e5d4326d8f31f7d6fca2",
+      "bytes": 1372,
+      "local_sha256": "2b466f0ef85b85d306df9970b18b994f1a59934fc3f1e5d4326d8f31f7d6fca2",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/particle_mechanics/swelling_only.py",
+      "upstream_sha256": "8ebecc6b85609908adb7d41d57a3271217a685894dbf24bcaa4d53a00e1eb972",
+      "bytes": 1707,
+      "local_sha256": "8ebecc6b85609908adb7d41d57a3271217a685894dbf24bcaa4d53a00e1eb972",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/porosity/__init__.py",
+      "upstream_sha256": "1ea67a58b3c8b2059df05dc46a905dd0fc7e1903a6d421edaab6c44f42e93474",
+      "bytes": 311,
+      "local_sha256": "1ea67a58b3c8b2059df05dc46a905dd0fc7e1903a6d421edaab6c44f42e93474",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/porosity/base_porosity.py",
+      "upstream_sha256": "ba05ba63c8d73d0c6f3cfa61806ad4eeb447a7c7c0840abd3b7cfddd3db11686",
+      "bytes": 1405,
+      "local_sha256": "ba05ba63c8d73d0c6f3cfa61806ad4eeb447a7c7c0840abd3b7cfddd3db11686",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/porosity/constant_porosity.py",
+      "upstream_sha256": "f09bc2894a43f6505e7fa684ed9639cf9c4b02a114bc7703858a2b528d47f0cd",
+      "bytes": 869,
+      "local_sha256": "f09bc2894a43f6505e7fa684ed9639cf9c4b02a114bc7703858a2b528d47f0cd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/porosity/reaction_driven_porosity.py",
+      "upstream_sha256": "5a2996903a09083796e878e7d261caae198db4a4cc6fa38b8dd9c68047c78cc5",
+      "bytes": 4646,
+      "local_sha256": "5a2996903a09083796e878e7d261caae198db4a4cc6fa38b8dd9c68047c78cc5",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/porosity/reaction_driven_porosity_ode.py",
+      "upstream_sha256": "4f8af0d9d0739caa48df99029781611c51cd4ba5891db4338e92a9bf6a58f1b4",
+      "bytes": 4351,
+      "local_sha256": "4f8af0d9d0739caa48df99029781611c51cd4ba5891db4338e92a9bf6a58f1b4",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/__init__.py",
+      "upstream_sha256": "6cb752f47f56fcfa54a496b15227b13bf7eeb84451ca8cc6e8d1e00b1d48c535",
+      "bytes": 213,
+      "local_sha256": "6cb752f47f56fcfa54a496b15227b13bf7eeb84451ca8cc6e8d1e00b1d48c535",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/base_thermal.py",
+      "upstream_sha256": "316ba29de5564d39d286b28e4810818a59bd955737f7759fce5ff1c9b51cc53f",
+      "bytes": 23862,
+      "local_sha256": "316ba29de5564d39d286b28e4810818a59bd955737f7759fce5ff1c9b51cc53f",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/isothermal.py",
+      "upstream_sha256": "b3b3eb7a4eb3c2f9cafaca3e002a21cd42b41c2c8b38c929d4c3ccb6a7cb305b",
+      "bytes": 3357,
+      "local_sha256": "b3b3eb7a4eb3c2f9cafaca3e002a21cd42b41c2c8b38c929d4c3ccb6a7cb305b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/lumped.py",
+      "upstream_sha256": "5a31fdb659f33d4b66779713a076733f3ea32fca0a640568c48deed0da6dc040",
+      "bytes": 3785,
+      "local_sha256": "5a31fdb659f33d4b66779713a076733f3ea32fca0a640568c48deed0da6dc040",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/pouch_cell/__init__.py",
+      "upstream_sha256": "595bde23abc5eeef972e0f08ac06cc0c31b12bf249ec9b9396b5411ff74a89cc",
+      "bytes": 271,
+      "local_sha256": "595bde23abc5eeef972e0f08ac06cc0c31b12bf249ec9b9396b5411ff74a89cc",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/pouch_cell/pouch_cell_1D_current_collectors.py",
+      "upstream_sha256": "e2414ed3900420fdb6501ef46b0663d88d9ab033038c4fbc565cd0c9ef7020ef",
+      "bytes": 5645,
+      "local_sha256": "e2414ed3900420fdb6501ef46b0663d88d9ab033038c4fbc565cd0c9ef7020ef",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/pouch_cell/pouch_cell_2D_current_collectors.py",
+      "upstream_sha256": "1d910be45c0d193f9293c26fdbce7ebd7a8b055ca91bc726b99698c6068ba6f1",
+      "bytes": 5198,
+      "local_sha256": "1d910be45c0d193f9293c26fdbce7ebd7a8b055ca91bc726b99698c6068ba6f1",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/pouch_cell/x_full.py",
+      "upstream_sha256": "c97d780aac05efb8433137494ff46e72611152d60fa0508cdaffefce3a12c5aa",
+      "bytes": 7178,
+      "local_sha256": "c97d780aac05efb8433137494ff46e72611152d60fa0508cdaffefce3a12c5aa",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/surface/__init__.py",
+      "upstream_sha256": "15144cceeef90ca2a7a7f8dfdfec336f6b4c5b51a69329ee1a6501d5951dcc93",
+      "bytes": 56,
+      "local_sha256": "15144cceeef90ca2a7a7f8dfdfec336f6b4c5b51a69329ee1a6501d5951dcc93",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/surface/ambient.py",
+      "upstream_sha256": "b3b5c42e8065d97e9c525fcfc025c8f68309f8931f963ebed54b43323a5d1f11",
+      "bytes": 932,
+      "local_sha256": "b3b5c42e8065d97e9c525fcfc025c8f68309f8931f963ebed54b43323a5d1f11",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/thermal/surface/lumped.py",
+      "upstream_sha256": "956f6cda5f3402eccf8ad6bb1d91326824190732525e8446e8de1d88b8c0d685",
+      "bytes": 1670,
+      "local_sha256": "956f6cda5f3402eccf8ad6bb1d91326824190732525e8446e8de1d88b8c0d685",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/__init__.py",
+      "upstream_sha256": "dbaa17db158995a2d5ce88d22d2893a4213425ea26723875d8fea58262d78763",
+      "bytes": 725,
+      "local_sha256": "dbaa17db158995a2d5ce88d22d2893a4213425ea26723875d8fea58262d78763",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/base_transport_efficiency.py",
+      "upstream_sha256": "8e3181561e45e476ec980bf264a597fc7513e98ac675227ebe1d6d7b4bddd1e4",
+      "bytes": 1322,
+      "local_sha256": "8e3181561e45e476ec980bf264a597fc7513e98ac675227ebe1d6d7b4bddd1e4",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/bruggeman.py",
+      "upstream_sha256": "b863881007f3ef858b7c953bc51b9fbd102a71507968ac6d0673866cb82e26dd",
+      "bytes": 1837,
+      "local_sha256": "b863881007f3ef858b7c953bc51b9fbd102a71507968ac6d0673866cb82e26dd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/cation_exchange_membrane.py",
+      "upstream_sha256": "827af63188db171afafcb3dc3fe838b347845dcdcb419cbe386329765a1d2bbd",
+      "bytes": 1764,
+      "local_sha256": "827af63188db171afafcb3dc3fe838b347845dcdcb419cbe386329765a1d2bbd",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/heterogeneous_catalyst.py",
+      "upstream_sha256": "21d566153378f43525bdde2b455b3177ce305ded1d5eb6a9e14e6d94b76d73e6",
+      "bytes": 1779,
+      "local_sha256": "21d566153378f43525bdde2b455b3177ce305ded1d5eb6a9e14e6d94b76d73e6",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/hyperbola_of_revolution.py",
+      "upstream_sha256": "34337ab3feee3bf03fcc8f7c0ba741dd3a094a1d5a3761f4a1b304fd0abed984",
+      "bytes": 1727,
+      "local_sha256": "34337ab3feee3bf03fcc8f7c0ba741dd3a094a1d5a3761f4a1b304fd0abed984",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/ordered_packing.py",
+      "upstream_sha256": "81eba6d38e1e48bc2a626873358f3767be3db45bd36d020fbc53453da6b57c49",
+      "bytes": 1716,
+      "local_sha256": "81eba6d38e1e48bc2a626873358f3767be3db45bd36d020fbc53453da6b57c49",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/overlapping_spheres.py",
+      "upstream_sha256": "dcbf1d508a3301e1c09f1ab1e65b603ebf16688b4b50d1c6ff376fa435daad4e",
+      "bytes": 1754,
+      "local_sha256": "dcbf1d508a3301e1c09f1ab1e65b603ebf16688b4b50d1c6ff376fa435daad4e",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/random_overlapping_cylinders.py",
+      "upstream_sha256": "807b249daaa8c94022a7d972bb1a2df7d3d8b53cf733ca417f94c8806d161539",
+      "bytes": 1769,
+      "local_sha256": "807b249daaa8c94022a7d972bb1a2df7d3d8b53cf733ca417f94c8806d161539",
+      "locally_modified": false
+    },
+    {
+      "path": "models/submodels/transport_efficiency/tortuosity_factor.py",
+      "upstream_sha256": "fb3cd156989f978bdc9318a2faf46373bab188801ad2908b7519349e443c396b",
+      "bytes": 1733,
+      "local_sha256": "fb3cd156989f978bdc9318a2faf46373bab188801ad2908b7519349e443c396b",
+      "locally_modified": false
+    },
+    {
+      "path": "models/symbol_processor.py",
+      "upstream_sha256": "5a4b39a1be2a9f8b723422d36e8b940687d4ff915a21eaa7330b085eb6905eba",
+      "bytes": 4409,
+      "local_sha256": "5a4b39a1be2a9f8b723422d36e8b940687d4ff915a21eaa7330b085eb6905eba",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/__init__.py",
+      "upstream_sha256": "6825c0b912a4e4830d32a50dfb4ac8b0536372080cc2509db223fa9da29d1833",
+      "bytes": 778,
+      "local_sha256": "6825c0b912a4e4830d32a50dfb4ac8b0536372080cc2509db223fa9da29d1833",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/base_parameters.py",
+      "upstream_sha256": "56b2f782a61526e74574cfb5674666e868bee56790c89019e70995274e1973f2",
+      "bytes": 3852,
+      "local_sha256": "56b2f782a61526e74574cfb5674666e868bee56790c89019e70995274e1973f2",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/bpx.py",
+      "upstream_sha256": "5170e25f9f18bfab35513066ce3599774561f68573285e4c80b691c33389bb30",
+      "bytes": 17421,
+      "local_sha256": "5170e25f9f18bfab35513066ce3599774561f68573285e4c80b691c33389bb30",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/constants.py",
+      "upstream_sha256": "e347e9db3c6d452d0e40a9d33123f589ffeb9e15bbc21f9ed1fda3fa9575947d",
+      "bytes": 334,
+      "local_sha256": "e347e9db3c6d452d0e40a9d33123f589ffeb9e15bbc21f9ed1fda3fa9575947d",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/ecm_parameters.py",
+      "upstream_sha256": "5b4e02f56d0b6f8f77ac530fcb6b2d2e128bada141a59c08d84368ef7f2291b4",
+      "bytes": 2607,
+      "local_sha256": "5b4e02f56d0b6f8f77ac530fcb6b2d2e128bada141a59c08d84368ef7f2291b4",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/electrical_parameters.py",
+      "upstream_sha256": "088291b78291f98606edbf98b129b6f4a71dcf1e350536c110e81e88a2df1300",
+      "bytes": 1312,
+      "local_sha256": "088291b78291f98606edbf98b129b6f4a71dcf1e350536c110e81e88a2df1300",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/geometric_parameters.py",
+      "upstream_sha256": "4609bf6e420494d76e58102fbc43222778ceaa10bc167a2b054c642df436aff9",
+      "bytes": 7097,
+      "local_sha256": "4609bf6e420494d76e58102fbc43222778ceaa10bc167a2b054c642df436aff9",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/lead_acid_parameters.py",
+      "upstream_sha256": "8ac5e68497f1828cafd9cb8d7a81a15cb7c163d3f35885f95c4a0f065650db36",
+      "bytes": 15109,
+      "local_sha256": "8ac5e68497f1828cafd9cb8d7a81a15cb7c163d3f35885f95c4a0f065650db36",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/lithium_ion_parameters.py",
+      "upstream_sha256": "d384db69c663a47a3993e33f19e12a23174de02dd71732c7b08e3167b16d14c2",
+      "bytes": 36923,
+      "local_sha256": "d384db69c663a47a3993e33f19e12a23174de02dd71732c7b08e3167b16d14c2",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/parameter_store.py",
+      "upstream_sha256": "3e2eb000323f84a72279b4a94ee36fc09a25252d95f328b73478f6b92a8154e8",
+      "bytes": 16078,
+      "local_sha256": "3e2eb000323f84a72279b4a94ee36fc09a25252d95f328b73478f6b92a8154e8",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/parameter_substitutor.py",
+      "upstream_sha256": "c6ebfaa72729db32565a19fad9343f60a9913f6f5a2ab825df9cc53a127dfc47",
+      "bytes": 27638,
+      "local_sha256": "c6ebfaa72729db32565a19fad9343f60a9913f6f5a2ab825df9cc53a127dfc47",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/parameter_values.py",
+      "upstream_sha256": "86bf1f3b4408d3ac1f0b0b9b0465176d3f3c85bd16b76b2f0601819c3a09f716",
+      "bytes": 49721,
+      "local_sha256": "86bf1f3b4408d3ac1f0b0b9b0465176d3f3c85bd16b76b2f0601819c3a09f716",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/process_parameter_data.py",
+      "upstream_sha256": "ff3c14653e5c8ea9d3936683d32ee04291ee2a2d30e2fa7cc59d4f156d94b14e",
+      "bytes": 4103,
+      "local_sha256": "ff3c14653e5c8ea9d3936683d32ee04291ee2a2d30e2fa7cc59d4f156d94b14e",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/size_distribution_parameters.py",
+      "upstream_sha256": "a2455510cdbff6fc9dbd2be530f3f584643ee447517e44b440bc1d84e9947f9e",
+      "bytes": 8773,
+      "local_sha256": "a2455510cdbff6fc9dbd2be530f3f584643ee447517e44b440bc1d84e9947f9e",
+      "locally_modified": false
+    },
+    {
+      "path": "parameters/thermal_parameters.py",
+      "upstream_sha256": "605ea7d30bfe10ea5418d4fe3a2ce4705782fc6e631c01e436d031c8ba02083a",
+      "bytes": 7070,
+      "local_sha256": "605ea7d30bfe10ea5418d4fe3a2ce4705782fc6e631c01e436d031c8ba02083a",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/__init__.py",
+      "upstream_sha256": "25f6929dfc8b49e6caa0c4912291cb47f6e0c146b36310bff0bae8be64641e3a",
+      "bytes": 194,
+      "local_sha256": "25f6929dfc8b49e6caa0c4912291cb47f6e0c146b36310bff0bae8be64641e3a",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/dynamic_plot.py",
+      "upstream_sha256": "c94b928fe28252b5c0a702103008b1f544e9a6ef34958e73c83721ba0fe41459",
+      "bytes": 688,
+      "local_sha256": "c94b928fe28252b5c0a702103008b1f544e9a6ef34958e73c83721ba0fe41459",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot.py",
+      "upstream_sha256": "91a3636000aa3dd27a79cb576da71eb370011647debaa4f8e98070c7bf4e81d0",
+      "bytes": 1450,
+      "local_sha256": "91a3636000aa3dd27a79cb576da71eb370011647debaa4f8e98070c7bf4e81d0",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot2D.py",
+      "upstream_sha256": "6b871f66c1c334757c3236db5424ee9c9484dfb82803416fa1db960acb7a9367",
+      "bytes": 1998,
+      "local_sha256": "6b871f66c1c334757c3236db5424ee9c9484dfb82803416fa1db960acb7a9367",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot_3d_cross_section.py",
+      "upstream_sha256": "6d63680c96968abfc8a71e44d865c93ff80fccdd82adb58755735a0b2074ad8a",
+      "bytes": 12413,
+      "local_sha256": "6d63680c96968abfc8a71e44d865c93ff80fccdd82adb58755735a0b2074ad8a",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot_3d_heatmap.py",
+      "upstream_sha256": "5a7f13fa8e0c5cd7fa5b8776264afd5341b3ce9062611decec72fd1480fecea6",
+      "bytes": 2879,
+      "local_sha256": "5a7f13fa8e0c5cd7fa5b8776264afd5341b3ce9062611decec72fd1480fecea6",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot_summary_variables.py",
+      "upstream_sha256": "3d09766073927f02d7792c02331cb406465fcb481b18843ded95780d268e9eca",
+      "bytes": 2653,
+      "local_sha256": "3d09766073927f02d7792c02331cb406465fcb481b18843ded95780d268e9eca",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot_thermal_components.py",
+      "upstream_sha256": "48685a78d9313ef2f5f81102e457b9bf4c4f155ffcdc6a1320a8c91885c37388",
+      "bytes": 3653,
+      "local_sha256": "48685a78d9313ef2f5f81102e457b9bf4c4f155ffcdc6a1320a8c91885c37388",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/plot_voltage_components.py",
+      "upstream_sha256": "d2d0bab31c41c34ac94899d3e045ab3b1e345010c5125c9d550795d6ddb08b37",
+      "bytes": 7738,
+      "local_sha256": "d2d0bab31c41c34ac94899d3e045ab3b1e345010c5125c9d550795d6ddb08b37",
+      "locally_modified": false
+    },
+    {
+      "path": "plotting/quick_plot.py",
+      "upstream_sha256": "57df69930e6b21e6eb49e2d400c12dacb43c2a6d06a1f0c18888f15a93cd7327",
+      "bytes": 36389,
+      "local_sha256": "57df69930e6b21e6eb49e2d400c12dacb43c2a6d06a1f0c18888f15a93cd7327",
+      "locally_modified": false
+    },
+    {
+      "path": "pybamm_data.py",
+      "upstream_sha256": "3e702e116aafe5556f99a27dac534a17944b22344b999c532f1ad7826242ad6c",
+      "bytes": 6018,
+      "local_sha256": "3e702e116aafe5556f99a27dac534a17944b22344b999c532f1ad7826242ad6c",
+      "locally_modified": false
+    },
+    {
+      "path": "settings.py",
+      "upstream_sha256": "f23634bdc5e066ce8ec43abd97566df7a503f709841261baf4b0b6c2c932763b",
+      "bytes": 3027,
+      "local_sha256": "f23634bdc5e066ce8ec43abd97566df7a503f709841261baf4b0b6c2c932763b",
+      "locally_modified": false
+    },
+    {
+      "path": "simulation.py",
+      "upstream_sha256": "c22f785c09bb7f67451afd41aebe53be73ad36f38cd7767fed2861c1559b272a",
+      "bytes": 68021,
+      "local_sha256": "c22f785c09bb7f67451afd41aebe53be73ad36f38cd7767fed2861c1559b272a",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/__init__.py",
+      "upstream_sha256": "fdc2b63f33f6c8eafc67c00d247e98406beebc20b7201bf431ff40400790f0d8",
+      "bytes": 401,
+      "local_sha256": "fdc2b63f33f6c8eafc67c00d247e98406beebc20b7201bf431ff40400790f0d8",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/algebraic_solver.py",
+      "upstream_sha256": "bc95121efbefe0dfd989aff168f33f3d079f9d5d11304dbf5a3994e7b86004e2",
+      "bytes": 11200,
+      "local_sha256": "bc95121efbefe0dfd989aff168f33f3d079f9d5d11304dbf5a3994e7b86004e2",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/base_processed_variable.py",
+      "upstream_sha256": "66722733b595b4e55ec95060247f9cbbffc9d37ab1c90ddca6f8001dd9b59bba",
+      "bytes": 710,
+      "local_sha256": "66722733b595b4e55ec95060247f9cbbffc9d37ab1c90ddca6f8001dd9b59bba",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/base_solver.py",
+      "upstream_sha256": "47aed5c1219b5256ca6b11fbd6f6a8dced4fcbdb9b742b5450b0f1efe91b7161",
+      "bytes": 75401,
+      "local_sha256": "47aed5c1219b5256ca6b11fbd6f6a8dced4fcbdb9b742b5450b0f1efe91b7161",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/casadi_algebraic_solver.py",
+      "upstream_sha256": "471bd3c8958ca21f95b144a63f71598add92557996c0c2cd83cef48674914130",
+      "bytes": 10039,
+      "local_sha256": "471bd3c8958ca21f95b144a63f71598add92557996c0c2cd83cef48674914130",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/casadi_solver.py",
+      "upstream_sha256": "fde73c2c8444259edd326b6dd2c1a8dc685f720f2036eb9254e04c13bf31d04e",
+      "bytes": 31378,
+      "local_sha256": "fde73c2c8444259edd326b6dd2c1a8dc685f720f2036eb9254e04c13bf31d04e",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/composite_solver.py",
+      "upstream_sha256": "a540e804a83be9c476a52b30e4be8ca96faf4014f570565a9831fbed5bc5b239",
+      "bytes": 1457,
+      "local_sha256": "a540e804a83be9c476a52b30e4be8ca96faf4014f570565a9831fbed5bc5b239",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/dummy_solver.py",
+      "upstream_sha256": "db95fa05868e07415b37414ca57ad86ba868baee799242536f1e3b90cb269822",
+      "bytes": 1203,
+      "local_sha256": "db95fa05868e07415b37414ca57ad86ba868baee799242536f1e3b90cb269822",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/idaklu_jax.py",
+      "upstream_sha256": "ef3cebaeedd7518b9f08c53b1a82bd7afb6e8d2cbd04fc0d2fe8643dede0cf1b",
+      "bytes": 40447,
+      "local_sha256": "ef3cebaeedd7518b9f08c53b1a82bd7afb6e8d2cbd04fc0d2fe8643dede0cf1b",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/idaklu_solver.py",
+      "upstream_sha256": "fee8b0c178f5f9f58e9a709f8f29be93503939e0d59de36ce0299c323380eecc",
+      "bytes": 44300,
+      "local_sha256": "fee8b0c178f5f9f58e9a709f8f29be93503939e0d59de36ce0299c323380eecc",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/jax_bdf_solver.py",
+      "upstream_sha256": "fe882128d99dc60c901f55c883b484115d4e06e4e5d50c5014dda466d8c4af1c",
+      "bytes": 35855,
+      "local_sha256": "fe882128d99dc60c901f55c883b484115d4e06e4e5d50c5014dda466d8c4af1c",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/jax_solver.py",
+      "upstream_sha256": "47b8da4fdcb6a62aba02852bf44853fefdbecf85a5bef5c41dc4099bfd769fba",
+      "bytes": 12012,
+      "local_sha256": "47b8da4fdcb6a62aba02852bf44853fefdbecf85a5bef5c41dc4099bfd769fba",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/lrudict.py",
+      "upstream_sha256": "d1de5c24ad5c42e25cd57331ffec4cc23c0a5cca1c4e43f7064e97e0daeb91e6",
+      "bytes": 926,
+      "local_sha256": "d1de5c24ad5c42e25cd57331ffec4cc23c0a5cca1c4e43f7064e97e0daeb91e6",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/processed_variable.py",
+      "upstream_sha256": "d1071d304fb09fa1d0cfa97e9d823943f20d6c76f17d0a09b2bf57ee6dcbe340",
+      "bytes": 53133,
+      "local_sha256": "d1071d304fb09fa1d0cfa97e9d823943f20d6c76f17d0a09b2bf57ee6dcbe340",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/processed_variable_computed.py",
+      "upstream_sha256": "7f3f7829b9d30f4e865d35c39bf6b33fcf65a81ab169603de0d174e978c97df4",
+      "bytes": 26824,
+      "local_sha256": "7f3f7829b9d30f4e865d35c39bf6b33fcf65a81ab169603de0d174e978c97df4",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/processed_variable_time_integral.py",
+      "upstream_sha256": "97b61e85ff724e88da2f4be81e9549fc907c3185f3a1184c339a45727fda6f4e",
+      "bytes": 6418,
+      "local_sha256": "97b61e85ff724e88da2f4be81e9549fc907c3185f3a1184c339a45727fda6f4e",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/scipy_solver.py",
+      "upstream_sha256": "3a29db2389231928d5f869f2309ac64f37a783daa66923e3a23a35f0b20a371e",
+      "bytes": 5505,
+      "local_sha256": "3a29db2389231928d5f869f2309ac64f37a783daa66923e3a23a35f0b20a371e",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/solution.py",
+      "upstream_sha256": "05728e7312908974188f351d24f825f6c96f6f37d8b33c188f3cfd912e33b248",
+      "bytes": 41053,
+      "local_sha256": "05728e7312908974188f351d24f825f6c96f6f37d8b33c188f3cfd912e33b248",
+      "locally_modified": false
+    },
+    {
+      "path": "solvers/summary_variable.py",
+      "upstream_sha256": "c420130226b836aa05175cab5560e832363e04ddbeb71f2715fa3df2381fbeb6",
+      "bytes": 7655,
+      "local_sha256": "c420130226b836aa05175cab5560e832363e04ddbeb71f2715fa3df2381fbeb6",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/__init__.py",
+      "upstream_sha256": "6a77846723603a092d76a25a2effda1289429e0b9d80fba8fd4332a72091f7ea",
+      "bytes": 176,
+      "local_sha256": "6a77846723603a092d76a25a2effda1289429e0b9d80fba8fd4332a72091f7ea",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/finite_volume.py",
+      "upstream_sha256": "90e76f5228330a268b73834ba7a3a6749264c6fd4693608151256017932a5cc0",
+      "bytes": 77394,
+      "local_sha256": "90e76f5228330a268b73834ba7a3a6749264c6fd4693608151256017932a5cc0",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/finite_volume_2d.py",
+      "upstream_sha256": "816a33e2d2a1778be2f62096a854e2ee514fc77cb0178a3bfb4564c2cc7db13c",
+      "bytes": 119730,
+      "local_sha256": "816a33e2d2a1778be2f62096a854e2ee514fc77cb0178a3bfb4564c2cc7db13c",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/scikit_finite_element.py",
+      "upstream_sha256": "b8d88c1128f06ae28e6949a0b74aa107eedff092460eba9796b20fd919654a44",
+      "bytes": 20879,
+      "local_sha256": "b8d88c1128f06ae28e6949a0b74aa107eedff092460eba9796b20fd919654a44",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/scikit_finite_element_3d.py",
+      "upstream_sha256": "6f080f7dc7f14a5affd424c40371841921f60bc2fb1dea48d4edc2afdc6ac18d",
+      "bytes": 24148,
+      "local_sha256": "6f080f7dc7f14a5affd424c40371841921f60bc2fb1dea48d4edc2afdc6ac18d",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/spatial_method.py",
+      "upstream_sha256": "c2e0e1c2d07964d7457e8fbcb7ae84d473ef900e771007b0a9c726965ac88752",
+      "bytes": 17996,
+      "local_sha256": "c2e0e1c2d07964d7457e8fbcb7ae84d473ef900e771007b0a9c726965ac88752",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/spectral_volume.py",
+      "upstream_sha256": "904a1b33a6e1194600b870d096b50fee26324d09b16b10a7e0865b54f6b94a49",
+      "bytes": 28525,
+      "local_sha256": "904a1b33a6e1194600b870d096b50fee26324d09b16b10a7e0865b54f6b94a49",
+      "locally_modified": false
+    },
+    {
+      "path": "spatial_methods/zero_dimensional_method.py",
+      "upstream_sha256": "53646c11c4451f5f187c4d29130a46bc5f4156781dc460e9dce132e8f80bacb6",
+      "bytes": 1661,
+      "local_sha256": "53646c11c4451f5f187c4d29130a46bc5f4156781dc460e9dce132e8f80bacb6",
+      "locally_modified": false
+    },
+    {
+      "path": "telemetry.py",
+      "upstream_sha256": "ca727b791a4f34c53cc926908ab982a68753e2cc3dea4a5bc75288ad5e94fa67",
+      "bytes": 1095,
+      "local_sha256": "ca727b791a4f34c53cc926908ab982a68753e2cc3dea4a5bc75288ad5e94fa67",
+      "locally_modified": false
+    },
+    {
+      "path": "type_definitions.py",
+      "upstream_sha256": "83b14bd254b065bdfeb612e45ef0cc30310640565d381ace62589a2677ef17a9",
+      "bytes": 525,
+      "local_sha256": "83b14bd254b065bdfeb612e45ef0cc30310640565d381ace62589a2677ef17a9",
+      "locally_modified": false
+    },
+    {
+      "path": "util.py",
+      "upstream_sha256": "b4345eb9c24a0f320d12ee95d290a5eb2a47aed32e8bd7790b6fbb69839fec50",
+      "bytes": 14598,
+      "local_sha256": "b4345eb9c24a0f320d12ee95d290a5eb2a47aed32e8bd7790b6fbb69839fec50",
+      "locally_modified": false
+    },
+    {
+      "path": "version.py",
+      "upstream_sha256": "b54207d29219f3e8ecb9937cf7e5cd9bc045c5d0843d95f4d69df866c0779674",
+      "bytes": 65,
+      "local_sha256": "b54207d29219f3e8ecb9937cf7e5cd9bc045c5d0843d95f4d69df866c0779674",
+      "locally_modified": false
+    }
+  ],
+  "patch": "MORQEX scalar 1D cubic/PCHIP derivative order conversion; marker in __init__; no other source edits"
+}
