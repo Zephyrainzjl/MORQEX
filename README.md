@@ -2,9 +2,17 @@
 
 面向复杂微结构的能量一致跨尺度电化学—力学研究框架。原工作名MORPH，经用户授权更名为 **MORQEX**；公开检索暂未发现同名计算框架，不作名称独占保证。
 
-当前 **0.0.6：完整DFN、集总热反馈与能量导出的力学闭合**。PyBaMM26.3.1纯Python源码已迁入src并修复固定版本的插值导数转换；接入完整放电与三次CC-CV可逆循环。微结构采用GEMsim平均浓度SVE闭合，球内非均匀应力单独表示，尚非任意微结构全三维热电化学参照。参数凸化、膨胀缩放、失败分支和未过门槛均显式记录，见 [DFN热—力说明](docs/DFN_THERMOMECHANICS.md)。旧稀疏二次模型见 [规模升级说明](docs/SPARSE_SCALING.md)，其加速结果不能推广到DFN。
+当前 **0.0.7：有状态微结构 ⇄ DFN双向热—电化学—力学闭合**。真实几何的非均匀固相FV/区域状态替换径向颗粒；同源Tet4能量反馈化学势/反应，按需恢复局部场。包含变流逐步演算、完整放电/三次CC-CV循环、局部BV闭合上界、检查点与嵌套状态连续富集。见 [数学、接口与限制](docs/MICROSTRUCTURE_DFN.md)。17个工况、149测试通过限定数值检查，**不等于论文验收**：16区正极应力L2约10.45%、P99归一化RMS约34.60%，尾部精度未过；凸化OCP/Ω×0.1与合成SVE不是材料标定结果。
 
-当前测试HTML在外部 `morph_workspace/reports/MORQEX_DFN_report.html`，总入口为`MORQEX_test_report.html`，单文件离线打开，包含真实曲线、逐步终止条件、JUnit、负结果和内嵌证据下载。旧0.0.5归档为`MORQEX_0.0.5_report.html`；源码只保留生成/检查脚本。
+当前交互HTML在外部 `morph_workspace/reports/MORQEX_microstructure_report.html`，总入口为`MORQEX_test_report.html`；可以切换时间/位置/微结构/电极，恢复浓度、应力、力学化学势，并核对双向反应端口。含真实曲线、误差、资源、失败和证据下载。0.0.6独立参照/实验报告保留为`MORQEX_DFN_report.html`，旧0.0.5为`MORQEX_0.0.5_report.html`；源码只保留生成/检查脚本。
+
+实际实时变流演算（从本目录启动，所有输出自动外置）：
+
+```bash
+python scripts/run_local.py --label micro_live -- /home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python /home/zephyrain/lw/MORQEX/scripts/run_microstructure_live.py
+```
+
+加`--interactive`后逐行输入JSON：`{"action":"advance","dt":20,"current_A":5}`、`{"action":"recover","domain":"negative","x_index":1}`、`{"action":"checkpoint"}`。默认demo先放电再给充电脉冲，避免在初始接近满充时触及上限。暖步进约6–11ms是当前小模型实测，不是硬实时承诺；冷编译/富集单列。HTML滑块重放已求轨迹，新负载由Python核重新求解。
 
 源码：`/home/zephyrain/lw/MORQEX`。所有数据、测试输出、编译产物、安装环境、权重和缓存：`/home/zephyrain/lw/morph_workspace`。独立Git仓库，不修改、不依赖ZynJoule。
 

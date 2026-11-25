@@ -1,5 +1,24 @@
 # MORQEX恢复入口
 
+## 当前0.0.7（优先于下方历史快照）
+
+2026-11-25，分支`research/microstructure-dfn-ports`，稳定回退`b15db24`。实际非均匀微结构与DFN已单体耦合，见[推导与范围](docs/MICROSTRUCTURE_DFN.md)。新模块`microstructure_{operator,cache,dfn,parameters,validation,runtime}.py`。原径向状态被替换，在线只有区域状态及小算子，细场按需载入；不是平均SOC唯一逆映射。
+
+- DFN电势/ce/T与宏观应变驱动微结构图扩散和可达界面BV；同源FEM H导出µel、区域BV汇总回DFN，热方程使用一致功率/熵耦合。几何决定体积分数、界面面积及离子/电子有效输运。面不连通固体的角棱接触不绑节点。
+- 17个正式工况过本轮守恒/内能/熵/耗散/电荷/循环协议检查。完整4³固相42状态参照1C到2.5V用时3088.5887s，独立状态内能残差7.92e-10、熵8.59e-9、库存1.89e-15。3³完整18状态参照通过三次15步骤CC-CV循环，区域状态步间跳变<1e-15。尚非全孔隙三维电解液参照。
+- 几何16区对42状态参照：电压RMSE17.42mV、负/正极应力L2 4.38%/10.45%，P99归一化RMS 3.14%/34.60%。24区正极仍8.12%/23.98%，尾部精度未过。力学探针16区负极更好、正极P99更差，不能宣称普遍优于几何基。3³八区循环同物理时间电压RMSE57.34mV，含切换时间误差。
+- 12³直接区域离线（N1134→r16）与DFN完整放电成功，不构造N²H；未取得其全阶参照，不能据此宣称误差/加速。固定4³16区与12³16区微分状态数同为112，宏观在线结构与N解耦，恢复成本另算。
+- 真实变流运行核：20s暖步进6.46–10.86ms，首步含编译0.361s；完整小场暖恢复约0.02ms（缓存已热），冷载入另列。4→12嵌套富集构建1.12s，内能/熵跳差1.82e-12J/2.22e-16J/K；检查点重启核对。不是硬实时保证。
+- 反应端口MVT/Cauchy上界只覆盖同Pa处细/区机械化学势造成的瞬时BV差；默认查询不载入细数组。经验细FV缺陷另标，不能冒充非线性轨迹证书。附30随机输入单元对照和六个实际运行点覆盖。
+- 149测试通过。`run_microstructure_suite.py`支持源码hash匹配恢复；`study_microstructure_runtime.py`验证变流/重启/富集；`run_microstructure_live.py`提供JSONL实际演算与外置场输出。
+- HTML `reports/MORQEX_microstructure_report.html`（总入口同内容）含真实双向场查看器、完整曲线、误差/负结果/资源。`check_microstructure_report.py`验证证据hash并执行360个QuickJS控件组合；不是完整浏览器渲染资格。旧0.0.6报告保持。
+- 参数：凸化OKane2022（负极最大改动21.43mV），Ω×0.1，合成热膨胀/隔膜。OCP同表压缩至454/137节点，电压误差≤20µV、正曲率解析核对，斜率网格误差≤5%。原4001节点42状态DFN编译超RSS，失败保留，未提高预算。
+- 新研究候选是功率/能量对偶非均匀DFN闭合+局部反应上界+状态连续富集；预计算、聚类、静态凝聚、端口ROM均已有先例，D原创仍空。需孔隙全参照/CT与RVE、材料校准、先进NTFA/EHM、全程认证和尾部精度，才能达论文门禁。
+
+独立0.0.7 wheel已在`venvs/morqex_micro`安装，移除源码导入路径后60s耦合/状态能量/局部场验证通过，无上游PyBaMM发行包；证据`reports/microstructure_installed_wheel.json`。正式suite最大采样组RSS1365.2MiB。
+
+恢复先看`reports/microstructure_suite.json`、`microstructure_summary.json`及各latest；数值源变更须重跑相关case。保持原ZynJoule/预训练不动、单核/GPU隐藏及原RSS上限。
+
 更新：2026-11-25。软件0.0.6，分支 `research/dfn-coupled-cycling`。完整DFN放电、三次CC-CV循环、集总热反馈与能量导出的平均浓度SVE/球力学已接入；**尚未达到论文验收、任意微结构三维热参照或三项原创性验证**。本轮见 [DFN热—力范围](docs/DFN_THERMOMECHANICS.md)，以下0.0.5段落保留为历史快照。
 
 ## 0.0.6恢复与当前证据

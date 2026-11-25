@@ -1,5 +1,7 @@
 # Phase I：文献检索、数学谱系与竞争方法
 
+2026-11-25增量：登记新增B17/B18，总数51，28方法能力表保持。重新核对[B08原文](https://onlinelibrary.wiley.com/doi/10.1002/nme.70313)，VCH/POD微尺度ODE闭合已有直接先例，示例限电解液离子输运。[B17作者存储库全文](https://eprints.whiterose.ac.uk/id/eprint/224261/1/Tredenick_2025_J._Electrochem._Soc._172_030503.pdf)为JES172(3):030503，2025-03-05，CT解析—DFN桥接已发表。[B18作者机构记录](https://researchportal.bath.ac.uk/en/publications/a-computationally-efficient-reduced-order-electrochemical-model-i/)为Energy366:142781，含应力SPMe、热/厚度及实验验证；卷期日期2026-11-30在检索日之后，按已可访问机构摘要/元数据纳入，未称完整阅读全文或本地复现。本轮方法假设限可观测微结构能量/功率端口、局部反应闭合误差与连续富集。现有投影、凝聚、响应预计算属A/B，D仍空。
+
 检索日：2026-11-24；项目由原 MORPH 工作名调整为 MORQEX。状态：**首轮系统检索与竞争方法梳理完成；最终创新性认定未通过，若干关键全文/复现仍待完成。** 不是穷尽全部数据库的系统综述，也没有把摘要阅读标为全文复现。
 
 ## 证据与检索协议
