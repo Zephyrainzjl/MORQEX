@@ -1,5 +1,16 @@
 # MORQEX
 
+## TOP-DAMAGE 2S 有限变形参考
+
+新增 MFEM 4.10 超弹性编译接口，支持乘法各向异性化学变形、解析应力/切线、
+力学化学势、不可逆 AT2 接受步和矩阵自由 AMG-MINRES。独立制造解细化及
+295 项回归通过；这不是材料标定、真实裂缝拓扑或长期寿命的全部验收。
+`configs/top_damage_finite_cycle.toml` 选择该路线，原小变形默认值保留。
+详细 API 与运行入口见 [API.md](API.md)。所有构建/结果仍在外部工作区。
+
+本地运行限制：单核、nice 15、进程树 RSS 3 GiB；启动保留至少 8 GiB 可用内存；
+GPU 默认关闭。运行必须经 `scripts/run_local.py`。
+
 面向复杂电极微结构与 DFN 的电化学、力学、热及退化跨尺度研究框架。独立于 ZynJoule；GEMsim 全部 274 个源码文件与 PyBaMM 26.3.1 的 355 个源码文件已集成到 `src`，不依赖外部 GEMsim checkout。迁移记录和许可证保留。
 
 当前分支 `research/top-damage` 在既有节点级 CBD、多模式绑定及平面锂金属半电池基础上增加退化参考；原 `research/nodewise-cbd16` 分支保留。开发中的接口、数值通过、材料标定和论文验收分别记录，不宣称已达到顶刊验收或支持任意物理组合。

@@ -36,6 +36,8 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
                 len(c['records']),f"{r['mean_active_damage']:.6f}",f"{max(a['max_principal_stress_P99_MPa'] for a in c['records']):.2f}",
                 f"{r['next_feedback']['electronic_conductivity_S_m']:.6f}",f"{max(a['inventory_relative_defect'] for a in c['records']):.2e}",format(c['validation']['maximum_cell_total_strain_frobenius'],'.2%') if c.get('validation') else '待核验'] )+'</tr>'
         page='''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MORQEX 三维疲劳工况对照</title><style>body{margin:0;background:#0b1220;color:#dce9f5;font:16px/1.7 system-ui}main{max-width:1460px;margin:auto;padding:25px}h1{color:#64d8cd}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #30425a;padding:9px}.note{background:#292638;border-left:4px solid #e5b15a;padding:16px}select{font:inherit;background:#172b42;color:white;padding:10px}a{color:#6ce0d1}iframe{width:100%;height:1700px;border:1px solid #344b65;margin-top:18px}</style><main><h1>MORQEX / TOP-DAMAGE：实际三维工况对照</h1><p>32³ 体素，8 个大颗粒，孔隙率 34.96%。所有场来自实际接受的计算状态。为降低本地内存占用，每次仅加载一个工况的三维场。</p><p class="note">当前为数值候选闭环，尚未通过物理裂缝开度、侵液、颗粒失联及论文验收。不能将损伤阈值图当作真实孔隙；完整窗口算例的局部小应变筛查未通过，不能视为物理参考解。各工况页明确标注协议、材料假设和已接受步。</p><table><tr><th>工况</th><th>已保存状态</th><th>末态平均损伤</th><th>过程最大 P99 主应力 / MPa</th><th>末态电导 / S m⁻¹</th><th>最大锂守恒误差</th><th>最大局部总应变</th></tr>'''+rows+'''</table><p><label>查看工况 <select id="case">'''+options+'''</select></label> · <a id="direct" href="'''+links[0][0]+'''">单独打开完整交互页</a></p><iframe id="fields" title="逐步三维场" src="'''+links[0][0]+'''"></iframe></main><script>document.getElementById('case').onchange=e=>{document.getElementById('fields').src=e.target.value;document.getElementById('direct').href=e.target.value};document.body.dataset.comparison='true';</script></html>'''
+        page=page.replace('32³ 体素，8 个大颗粒，孔隙率 34.96%。','结构尺寸、颗粒数和孔隙率见各工况页。')
+        page=page.replace('完整窗口算例的局部小应变筛查未通过，不能视为物理参考解。','各工况分别报告小变形适用性或有限变形雅可比检查，均不自动构成材料标定。')
         from morqex.visualization.report_font import embed_font
         font=ws.path('data/report_font');page=embed_font(page,font/'NotoSansCJKsc-Regular.otf',(font/'LICENSE').read_text())
         target=ws.path('reports',output_name or 'MORQEX_TOP_DAMAGE_dense_cycles.html');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(page)
@@ -66,7 +68,7 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
                 fields={'damage':d,'increment':d-initial_damage,'sto':c/cmax,
                     'principal':np.linalg.eigvalsh(np.einsum('...k,kij->...ij',stress,MANDEL_BASIS))[...,-1]/1e6,
                     'hydrostatic':stress[...,:3].mean(axis=-1)/1e6,'fatigue':f['voxel/fatigue_J_m3'][:]/1e6}
-                strain,_=recovery.fields(f['displacement_m'][:])
+                strain,_=recovery.fields(f['displacement_m'][:],finite=manifest.get('mechanics_model')=='finite-strain')
                 fields['strain_percent']=100*np.linalg.norm(strain,axis=(-2,-1))
                 # Increment is decoded as d-d0 in the browser, avoiding duplicate display storage.
                 encoded={key:_encoded(value) for key,value in fields.items() if key!='increment'}
@@ -115,13 +117,16 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
     start=page.index('<div class="note">');end=page.index('</div>',start)+6
     page=page[:start]+'''<div class="note"><b>候选模型，尚未通过物理拓扑与论文验收。</b>这是 2 次、每半循环 30% 名义容量的 CC/CC 部分深度协议，不是全电压窗口容量衰减测试。NMC811 电化学参数与数值力学/疲劳参数分别记录；有明确初始预裂纹。局部二次损伤电导律未经裂缝开度/接触标定；没有将高损伤体素删除为孔隙，也没有验证裂纹侵液和颗粒失联。径向浓度映射只用于本组等粒径球形颗粒及所选正极节点。图中的场变化不能直接作为实际材料寿命结论。</div>'''+page[end:]
     audit=cases[0].get('validation')
-    if audit and not audit['small_strain_screen_passed']:
+    if audit and audit['small_strain_screen_passed'] is False:
         warning='<div class="note"><b>小应变适用性筛查未通过。</b>全过程最大单元总应变 Frobenius 范数为 '+format(audit['maximum_cell_total_strain_frobenius'],'.2%')+'，超过本研究采用的 2% 保守筛查线。此筛查不是严格误差界；应检查 CBD/裂尖有限变形与网格收敛，不能将方程残差通过视作材料预测通过。</div>'
         page=page.replace('<div class="views">',warning+'<div class="views">',1)
     if cases[0]['manifest']['config'].get('protocol')=='voltage-window':
         page=page.replace('这是 2 次、每半循环 30% 名义容量的 CC/CC 部分深度协议，不是全电压窗口容量衰减测试。','这是先预充、再按上下截止电压进行的 CC/CC 协议，没有 CV 阶段；实际完成状态见记录。短循环不能确立容量衰减规律。不同倍率的容量差异含极化和截止电压影响，不能直接归因于退化。')
     controls='''<div class="controls"><label>工况 <select id="case"></select></label><label>场 <select id="physical"><option value="increment">损伤增量 Δd</option><option value="damage">总相场 d</option><option value="sto">局部嵌锂分数</option><option value="principal">最大主应力 / MPa</option><option value="hydrostatic">静水应力 / MPa</option><option value="fatigue">疲劳历史 / MJ m⁻³</option><option value="strain_percent">体素平均总应变范数 / %（含 CBD）</option><option value="geometry">颗粒 / 晶粒几何</option></select></label><label>接受步 <input id="accepted" type="range" min="0"><span id="frameText"></span></label></div><p id="fieldlegend"></p>'''
     page=page.replace('<div class="views">',controls+'<div class="views">',1)
+    if cases[0]['manifest'].get('mechanics_model')=='finite-strain':
+        page=page.replace('体素平均总应变范数 / %（含 CBD）','Green–Lagrange 应变范数 / %（含 CBD）')
+        page=page.replace('<div class="views">','<div class="note">有限变形参考：乘法化学变形、MFEM 超弹性解析切线；应力为 Cauchy，应变为 Green–Lagrange，统计使用参考体积。原始 HDF5 保存 F、化学 F、第一 Piola 应力及力学化学势。正雅可比通过不等于裂面接触、材料标定或寿命验证通过。</div><div class="views">',1)
     dashboard='''<section class="panel"><h2>实际计算记录与协议</h2><pre id="state" style="padding:20px;white-space:pre-wrap"></pre><a id="hdf5" style="padding:20px">下载当前完整 HDF5 场</a><div class="views"><canvas id="voltage"></canvas><canvas id="evolution"></canvas></div></section>'''
     page=page.replace('<table><thead>',dashboard+'<table><thead>',1)
     links_start=page.index('<p><a href="initial.h5">');links_end=page.index('</p>',links_start)+4

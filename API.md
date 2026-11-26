@@ -2676,6 +2676,28 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `CoupledRecipe.prepare(self, workspace, parameters, name)`
 - `CoupledRecipe.model(self, paths, parameters)`
 
+### TOP-DAMAGE 2S finite-strain reference
+
+`morqex.top_damage.hyperelastic` exposes:
+
+- `build_hyperelastic(NativeConfig, Workspace)`: compile a small C++ adapter against the existing hash-verified vendored MFEM library; no upstream rebuild.
+- `HyperelasticBackend.evaluate(F, chemical_F, shear, bulk, degradation=1, tangent=True)`: reference energy, undegraded tensile driving energy, first Piola stress and consistent 9×9 tangent.
+- `Hyperelasticity(mesh, backend, young_Pa, poisson, boundary='kubc', linear_solver='direct')`: Tet4 total-Lagrangian equilibrium; `matrix-free-amg-minres` avoids global tangent assembly.
+- `Hyperelasticity.solve(chemical_F, degradation, macro_F=..., force=..., initial_displacement=...)`: full 3×3 macro deformation or dead nominal loads. Rejects inverted elements and changed geometry.
+- `chemical_potential(P, F, chemical_F, derivative_chemical_F)`: elastic derivative at fixed F and fixed moduli; concentration-dependent modulus derivatives are not silently supplied.
+- `finite_staggered_step(...)`: fixed accepted fatigue history during alternating minimization; commits positive fatigue variation once on convergence.
+
+The finite energy uses MFEM's isochoric Neo-Hookean form with a tensile/compressive volumetric split. It is not the logarithmic-volume DOLFINx demo energy. Elastic moduli remain isotropic; chemical deformation may be anisotropic. Contact, wetting and physical crack topology require separate models. A converged positive-J solution is not automatically a calibrated CBD prediction.
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+$PY scripts/run_local.py --label finite_build -- $PY -m morqex.top_damage build-hyperelastic /home/zephyrain/lw/MORQEX/configs/top_damage_native.toml
+$PY scripts/run_local.py --label finite_refinement -- $PY /home/zephyrain/lw/MORQEX/scripts/run_top_damage_finite_validation.py --levels 4 8 16 --output finite_B0_refined
+$PY scripts/run_local.py --label finite_cycle -- $PY -m morqex.top_damage dense-cycle /home/zephyrain/lw/MORQEX/configs/top_damage_finite_cycle.toml --environment gentle --steps 1 --output finite_gentle_v1
+```
+
+Repeat the last command to advance bounded accepted steps. Reusing an output with changed physical-source identity is rejected. Finite checkpoints additionally contain `finite/deformation_gradient`, `chemical_deformation_gradient`, `first_piola_Pa`, `cauchy_stress_Pa`, and `mechanical_chemical_potential_J_mol`; displayed strain is Green–Lagrange. This current cycle candidate retains the explicitly restricted radial concentration and diffuse conductivity closure, not physical pore creation.
+
 ### [morqex.workspace](src/morqex/workspace.py)
 
 - `Workspace()`

@@ -1,0 +1,24 @@
+schema_version = 1
+[cycle]
+mechanics_model = "finite-strain"
+protocol = "voltage-window"
+geometry = "dense_large_particles_32_g4"
+host = "NMC811"
+cycles = 1
+increments_per_half_cycle = 8
+depth_fraction_nominal_capacity = 0.30
+temperature_K = 298.15
+active_young_Pa = 93e9
+cbd_young_Pa = 1e9
+poisson = 0.3
+active_Gc_J_m2 = 10.0
+cbd_Gc_J_m2 = 10000.0
+length_m = 1e-6
+chemical_strain_per_stoichiometry = [0.012, 0.012, 0.040]
+active_conductivity_S_m = 10.0
+cbd_conductivity_S_m = 100.0
+transport_residual = 1e-5
+stagger_tolerance = 1e-6
+precrack_radius_m = 1e-6
+# Fixed-reference finite-strain candidate; not calibrated NMC811/CBD fatigue.
+# Same geometry/protocol as the small-strain comparison; no physical pore opening.

@@ -42,3 +42,9 @@ def test_affine_displacement_recovery_preserves_tensor_and_coordinates(tmp_path)
     z,y,x=np.meshgrid((np.arange(2)+.5)*1e-6,(np.arange(3)+.5)*2e-6,(np.arange(4)+.5)*3e-6,indexing='ij')
     exact=np.stack((x,y,z),axis=-1)@gradient.T+offset
     np.testing.assert_allclose(u,exact,rtol=1e-14,atol=1e-22)
+    angle=.6;Q=np.array([[np.cos(angle),-np.sin(angle),0],[np.sin(angle),np.cos(angle),0],[0,0,1.]])
+    rotation=mesh.points@(Q-np.eye(3)).T
+    finite,_=recovery.fields(rotation,finite=True)
+    np.testing.assert_allclose(finite,0,atol=1e-14)
+    linear,_=recovery.fields(rotation)
+    assert np.max(np.abs(linear))>.1

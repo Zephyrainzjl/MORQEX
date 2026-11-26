@@ -2,13 +2,13 @@
 [resources]
 cpu_threads = 1
 nice = 15
-address_space_mib = 3072
-resident_memory_mib = 1536
+address_space_mib = 6144
+resident_memory_mib = 3072
 wall_seconds = 180
 cpu_seconds = 120
 run_disk_mib = 128
 file_size_mib = 64
-minimum_available_memory_mib = 4096
+minimum_available_memory_mib = 8192
 maximum_load_per_cpu = 0.75
 gpu_enabled = false
 

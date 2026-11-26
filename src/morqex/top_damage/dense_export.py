@@ -47,13 +47,14 @@ def export_dense_history(directory):
     """Export every accepted state and temporal collections next to its HDF5."""
     directory = Path(directory)
     manifest = json.loads((directory/'manifest.json').read_text())
+    finite=manifest.get('mechanics_model')=='finite-strain'
     data = PolycrystalData.load_hdf5(directory/'initial_geometry.h5')
     recovery = DisplacementRecovery(directory,data.structure.labels.shape)
     with h5py.File(directory/'mesh.h5', 'r') as f:
         nodes, cells = len(f['points_m']), len(f['tetrahedra'])
     xroot = ET.Element('Xdmf', Version='3.0')
     temporal = ET.SubElement(ET.SubElement(xroot, 'Domain'), 'Grid',
-        Name='Accepted small-strain states', GridType='Collection', CollectionType='Temporal')
+        Name='Accepted '+('finite-strain' if finite else 'small-strain')+' states', GridType='Collection', CollectionType='Temporal')
     proot = ET.Element('VTKFile', type='Collection', version='0.1', byte_order='LittleEndian')
     collection = ET.SubElement(proot, 'Collection')
     records = []
@@ -67,8 +68,14 @@ def export_dense_history(directory):
             stress = np.einsum('...k,kij->...ij', fields['stress_Mandel_Pa'], MANDEL_BASIS)
             fields['stress_tensor_Pa'] = stress.reshape(*data.structure.labels.shape, 9)
             fields['maximum_principal_stress_Pa'] = np.linalg.eigvalsh(stress)[..., -1]
-            strain, displacement = recovery.fields(f['displacement_m'][:])
+            strain, displacement = recovery.fields(f['displacement_m'][:],finite=finite)
             fields['total_strain_tensor'] = strain.reshape(*data.structure.labels.shape,9)
+            if finite:
+                fields['Green_Lagrange_strain_tensor']=fields['total_strain_tensor']
+                F=f['finite/deformation_gradient'][:]
+                fields['deformation_gradient']=recovery.average(F).reshape(*data.structure.labels.shape,9)
+                fields['deformation_jacobian']=recovery.average(np.linalg.det(F))
+                fields['mechanical_chemical_potential_J_mol']=recovery.average(f['finite/mechanical_chemical_potential_J_mol'][:])
             fields['displacement_m'] = displacement
             write_field_vti(path.with_suffix('.vti'), data.structure.labels.shape,
                             data.structure.spacing_zyx_m, data.structure.origin_zyx_m, fields)
@@ -87,6 +94,10 @@ def export_dense_history(directory):
             attribute = ET.SubElement(grid, 'Attribute', Name=name, Center=center, AttributeType=kind)
             ET.SubElement(attribute, 'DataItem', Format='HDF', Dimensions=dimensions,
                 NumberType='Int' if name=='phase_labels' else 'Float', **({} if name=='phase_labels' else {'Precision':'8'})).text = reference
+        if finite:
+            for name in ('deformation_gradient','chemical_deformation_gradient','first_piola_Pa','cauchy_stress_Pa'):
+                a=ET.SubElement(grid,'Attribute',Name=name,Center='Cell',AttributeType='Tensor')
+                ET.SubElement(a,'DataItem',Format='HDF',Dimensions=f'{cells} 3 3',NumberType='Float',Precision='8').text=path.name+':/finite/'+name
         records.append({'step':r['step'], 'time_s':r['time_s'], 'vti':path.with_suffix('.vti').name})
     if not records:
         raise ValueError('No accepted states to export')
@@ -98,6 +109,7 @@ def export_dense_history(directory):
         'voxel_fields':'FP64, full reference lattice; no downsampling',
         'mechanical_geometry':'Original Tet4 connectivity, FP64 displacement for optional scale-1 warp',
         'physical_topology_qualified':False,
+        'strain_measure':'Green-Lagrange' if finite else 'infinitesimal',
         'scope':'Diffuse damage and threshold components are diagnostics, not reconstructed physical crack pores.'}
     (directory/'export_manifest.json').write_text(json.dumps(report, indent=2))
     return report

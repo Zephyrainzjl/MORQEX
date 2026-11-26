@@ -8,6 +8,8 @@ import numpy as np
 def verify_dense_history(directory):
     directory = Path(directory)
     manifest = json.loads((directory/'manifest.json').read_text())
+    finite=manifest.get('mechanics_model')=='finite-strain'
+    minimum_jacobian=1.
     previous = None
     maximum = {'lithium_defect':0., 'state_jump':0., 'mechanics_residual':0.,
                'damage_kkt':0., 'transport_residual':0., 'transport_energy_defect':0.,
@@ -31,7 +33,13 @@ def verify_dense_history(directory):
             if not all(np.isfinite(a).all() for a in (fatigue,u,f['voxel/concentration_mol_m3'][:],f['voxel/stress_Mandel_Pa'][:])):
                 raise ValueError('Nonfinite physical field')
             grad_u = np.einsum('eai,eaj->eij',u[cells],gradients)
-            strain = (grad_u+np.swapaxes(grad_u,1,2))*.5
+            if finite:
+                F=np.eye(3)+grad_u;J=np.linalg.det(F)
+                minimum_jacobian=min(minimum_jacobian,float(J.min()))
+                if np.any(J<=0):raise ValueError('Finite-strain positive determinant failed')
+                if not np.allclose(F,f['finite/deformation_gradient'][:],atol=1e-12,rtol=1e-12):raise ValueError('Stored deformation gradient disagrees with displacement')
+                strain=.5*(np.swapaxes(F,1,2)@F-np.eye(3))
+            else:strain = (grad_u+np.swapaxes(grad_u,1,2))*.5
             maximum_strain = max(maximum_strain,float(np.linalg.norm(strain,axis=(1,2)).max()))
             norm = np.linalg.norm(strain,axis=(1,2))
             for p, stats in phase_strain.items():
@@ -75,7 +83,9 @@ def verify_dense_history(directory):
         'protocol_complete':manifest.get('protocol_complete',False),'maximum_errors':maximum,
         'maximum_cell_total_strain_frobenius':maximum_strain,
         'phase_total_strain':phase_strain,
-        'small_strain_screen_passed':maximum_strain<=.02,
+        'small_strain_screen_passed':None if finite else maximum_strain<=.02,
+        'strain_measure':'Green-Lagrange' if finite else 'infinitesimal symmetric displacement gradient',
+        'minimum_deformation_jacobian':minimum_jacobian if finite else None,
         'small_strain_screen_definition':'Conservative diagnostic max ||sym grad u||_F <= 0.02; not a rigorous error bound. Phase fractions are Tet4 volume fractions on this uniform voxel split.',
         'physical_topology_qualified':False,'material_validation_passed':False,
         'scope':'Discrete consistency only; not mesh/time convergence or calibrated crack geometry.'}

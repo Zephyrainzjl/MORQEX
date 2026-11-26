@@ -48,6 +48,9 @@ def main(argv=None):
     build = sub.add_parser('build', help='Compile/resume a bounded MFEM backend slice from TOML')
     build.add_argument('config')
     build.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    finite_build = sub.add_parser('build-hyperelastic', help='Build finite-strain adapter against the verified MFEM library')
+    finite_build.add_argument('config')
+    finite_build.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
     reference = sub.add_parser('reference', help='Bounded 3D mechanical specimen run, not DFN lifetime')
     reference.add_argument('config')
     reference.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
@@ -59,6 +62,11 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'build-hyperelastic':
+        if not args.workspace:p.error('An external workspace is required')
+        from .backend import NativeConfig
+        from .hyperelastic import build_hyperelastic
+        print(json.dumps(build_hyperelastic(NativeConfig.from_toml(args.config),Workspace(args.workspace)),indent=2))
     elif args.action == 'dense-report':
         if not args.workspace:p.error('An external workspace is required')
         from .backend import require_local_budget

@@ -21,9 +21,13 @@ class DisplacementRecovery:
         result=np.divide(result,self.weights[:,None],out=np.zeros_like(result),where=self.weights[:,None]>0)
         return result.reshape(*self.shape,*np.asarray(values).shape[1:])
 
-    def fields(self, displacement):
+    def fields(self, displacement, *, finite=False):
         u=np.asarray(displacement,float)
         if u.shape!=self.points.shape or not np.isfinite(u).all():raise ValueError('Finite XYZ nodal displacements required')
         grad=np.einsum('eai,eaj->eij',u[self.cells],self.gradients)
-        strain=.5*(grad+np.swapaxes(grad,1,2))
+        if finite:
+            F=np.eye(3)+grad
+            if np.any(np.linalg.det(F)<=0):raise ValueError('Inverted finite-strain element')
+            strain=.5*(np.swapaxes(F,1,2)@F-np.eye(3))
+        else:strain=.5*(grad+np.swapaxes(grad,1,2))
         return self.average(strain),self.average(u[self.cells].mean(axis=1))
