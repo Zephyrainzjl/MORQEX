@@ -9,7 +9,7 @@ SI units: psi and alpha [J/m^3], Gc [J/m^2], ell [m], d dimensionless.
 """
 from dataclasses import dataclass
 import numpy as np
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, cg, LinearOperator
 
 
 def _field(value, size, name, positive=False):
@@ -64,13 +64,14 @@ class DamageSolution:
     objective_change_J: float
 
 
-def solve_box_quadratic(A, b, lower, *, tolerance=1e-10, max_iterations=100):
+def solve_box_quadratic(A, b, lower, *, tolerance=1e-10, max_iterations=100, linear_solver='direct'):
     """Primal-dual active set for a strictly convex FE damage quadratic.
 
     Stopping uses the diagonally scaled projected KKT residual; a failure is
     explicit. There is no unconstrained solve followed by an accepted clipping.
     """
     lower = np.asarray(lower, float)
+    if linear_solver not in ('direct','jacobi-cg'):raise ValueError('Unknown damage linear solver')
     if lower.shape != b.shape or not np.isfinite(lower).all() or np.any((lower < 0) | (lower > 1)):
         raise ValueError('Damage lower bound must lie in [0, 1]')
     if not np.isfinite(tolerance) or not 0 < tolerance < 1:
@@ -87,7 +88,14 @@ def solve_box_quadratic(A, b, lower, *, tolerance=1e-10, max_iterations=100):
         free = ~(low | high)
         x[low] = lower[low]; x[high] = 1.
         if np.any(free):
-            x[free] = spsolve(A[free][:, free].tocsc(), b[free]-A[free][:, ~free]@x[~free])
+            matrix=A[free][:,free].tocsr();rhs=b[free]-A[free][:,~free]@x[~free]
+            if linear_solver=='direct':x[free]=spsolve(matrix.tocsc(),rhs)
+            else:
+                diagonal_free=matrix.diagonal()
+                preconditioner=LinearOperator(matrix.shape,matvec=lambda v:v/diagonal_free,dtype=float)
+                solution,info=cg(matrix,rhs,x0=x[free],M=preconditioner,rtol=min(tolerance*.01,1e-12),atol=0.,maxiter=3000)
+                if info!=0:raise RuntimeError('Damage CG failed; no trial state accepted')
+                x[free]=solution
         residual = x-np.clip(x-(A@x-b)/diagonal, lower, 1.)
         norm = float(np.max(np.abs(residual)))
         if np.isfinite(norm) and norm <= tolerance:
@@ -106,7 +114,9 @@ class AT2Damage:
     the gradient integral, retaining its weak-form spatial variation. Natural
     no-flux damage BC; prescribed precracks are lower_bound=1 nodes.
     """
-    def __init__(self, mesh, backend, fracture_toughness_J_m2, length_m, residual_stiffness=1e-5):
+    def __init__(self, mesh, backend, fracture_toughness_J_m2, length_m, residual_stiffness=1e-5, *, linear_solver='direct'):
+        if linear_solver not in ('direct','jacobi-cg'):raise ValueError('Unknown damage linear solver')
+        self.linear_solver=linear_solver
         self.mesh, self.backend = mesh, backend
         self.Gc = _field(fracture_toughness_J_m2, len(mesh.cells), 'Gc', True)
         self.ell = _field(length_m, len(mesh.cells), 'ell', True)
@@ -152,7 +162,7 @@ class AT2Damage:
     def solve(self, tensile_energy_J_m3, lower_bound, toughness_factor=1., *, tolerance=1e-10):
         lower_bound = self._damage(lower_bound)
         A, b = self.assemble(tensile_energy_J_m3, toughness_factor)
-        d, residual, iterations = solve_box_quadratic(A, b, lower_bound, tolerance=tolerance)
+        d, residual, iterations = solve_box_quadratic(A, b, lower_bound, tolerance=tolerance,linear_solver=self.linear_solver)
         elastic, fracture = self.energies(d, tensile_energy_J_m3, toughness_factor)
         old_energy = sum(self.energies(lower_bound, tensile_energy_J_m3, toughness_factor))
         change = elastic+fracture-old_energy

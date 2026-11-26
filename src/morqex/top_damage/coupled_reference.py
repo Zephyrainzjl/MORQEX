@@ -8,7 +8,7 @@ Split baseline: Amor, Marigo, Maurini (2009), doi:10.1016/j.jmps.2009.04.011.
 from dataclasses import dataclass
 import numpy as np
 from scipy.sparse import coo_matrix
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, cg
 from morqex.mechanics.reference import ElasticitySolver, MechanicalSolveError
 from .phase_field import _field, FatigueHistory
 
@@ -31,7 +31,9 @@ class SplitState:
 
 
 class SplitElasticity:
-    def __init__(self, damage_model, young_Pa, poisson, *, boundary='kubc'):
+    def __init__(self, damage_model, young_Pa, poisson, *, boundary='kubc', linear_solver='direct'):
+        if linear_solver not in ('direct','amg-cg'):raise ValueError('Unknown split-mechanics linear solver')
+        self.linear_solver=linear_solver;self.linear_iterations=[]
         self.damage_model=damage_model; self.mesh=damage_model.mesh
         n=len(self.mesh.cells)
         self.young=_field(young_Pa,n,'Young modulus',True)
@@ -46,6 +48,17 @@ class SplitElasticity:
         indices=6*np.arange(n)[:,None]+np.arange(6)
         self.rows=np.broadcast_to(indices[:,:,None],(n,6,6)).ravel()
         self.cols=np.broadcast_to(indices[:,None,:],(n,6,6)).ravel()
+        self.preconditioner=None
+        if linear_solver=='amg-cg' and self.P.shape[1]:
+            import pyamg
+            from morqex.mechanics.constraints import _rigid
+            rigid=_rigid(self.mesh.points,float(np.max(np.ptp(self.mesh.points,axis=0)))).reshape(-1,6)
+            candidates=np.asarray(self.P.T@rigid)
+            self.multilevel=pyamg.smoothed_aggregation_solver((self.base.Kr/self.base.scale).tocsr(),
+                B=candidates,symmetry='symmetric',max_coarse=48,
+                presmoother=('gauss_seidel',{'sweep':'symmetric'}),
+                postsmoother=('gauss_seidel',{'sweep':'symmetric'}))
+            self.preconditioner=self.multilevel.aspreconditioner()
 
     def constitutive(self, elastic_strain, degradation):
         e=np.asarray(elastic_strain,float)
@@ -96,7 +109,15 @@ class SplitElasticity:
             weighted=(volumes[:,None,None]*C).ravel()
             block=coo_matrix((weighted,(self.rows,self.cols)),shape=(6*n,6*n)).tocsr()
             tangent=(self.P.T@self.D.T@block@self.D@self.P).tocsc()
-            delta=spsolve(tangent,-reduced)
+            if self.linear_solver=='direct':delta=spsolve(tangent,-reduced)
+            else:
+                iterations=[0]
+                def count(_):iterations[0]+=1
+                scaled=tangent/self.base.scale;rhs=-reduced/self.base.scale
+                delta,info=cg(scaled,rhs,M=self.preconditioner,rtol=min(tolerance*.01,1e-11),atol=0.,maxiter=4000,callback=count)
+                self.linear_iterations.append(iterations[0])
+                relative=float(np.linalg.norm(scaled@delta-rhs)/max(np.linalg.norm(rhs),np.finfo(float).tiny))
+                if info!=0 or relative>max(tolerance*.1,5e-11):raise MechanicalSolveError(f'AMG-CG failed true residual gate: {info}, {relative}')
             if not np.isfinite(delta).all():raise MechanicalSolveError('Singular split tangent')
             direction=np.asarray(self.P@delta);slope=float(reduced@delta)
             if slope>=0:raise MechanicalSolveError('Split Newton direction is not descending')
@@ -125,7 +146,7 @@ class CoupledStep:
 
 def staggered_step(mechanics, accepted_damage, accepted_history, eigenstrain=0., *,
                    macro_strain=None, force=None, fatigue=True, threshold_J_m3=None,
-                   tolerance=1e-8, max_iterations=100):
+                   tolerance=1e-8, max_iterations=100, initial_displacement=None):
     """One accepted load endpoint, immutable rollback, lagged fatigue update.
 
     Hold accepted fatigue toughness fixed during alternating minimization.
@@ -137,7 +158,7 @@ def staggered_step(mechanics, accepted_damage, accepted_history, eigenstrain=0.,
     if len(accepted_history.accumulated_J_m3)!=len(model.mesh.cells):raise ValueError('History/mesh mismatch')
     threshold=model.Gc/(12*model.ell) if threshold_J_m3 is None else threshold_J_m3
     factor=accepted_history.toughness_factor(threshold) if fatigue else np.ones(len(model.mesh.cells))
-    lower=model._damage(accepted_damage).copy();d=lower.copy();u=None;trace=[]
+    lower=model._damage(accepted_damage).copy();d=lower.copy();u=initial_displacement;trace=[]
     for iteration in range(1,max_iterations+1):
         state=mechanics.solve(d,eigenstrain,macro_strain=macro_strain,force=force,initial_displacement=u)
         energy=state.potential_energy_J+model.energies(d,state.tensile_energy_J_m3,factor)[1]

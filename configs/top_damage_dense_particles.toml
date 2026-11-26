@@ -1,0 +1,14 @@
+schema_version = 1
+[microstructure]
+name = "dense_large_particles_32_g4"
+shape_zyx = [32, 32, 32]
+spacing_m = 0.5e-6
+particle_count = 8
+radius_voxels = 7.45
+radius_cv = 0.0
+minimum_gap_voxels = 1.05
+cbd_fraction = 0.23
+grains_per_particle = 4
+seed = 104
+grain_seed = 20261126
+# Numerical dense morphology, not a calibrated manufacturing recipe.

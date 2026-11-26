@@ -8,13 +8,17 @@ from morqex.workspace import Workspace
 def status():
     return {
         'framework': 'MORQEX / TOP-DAMAGE',
-        'stage': 'B foundation: compiled AT2 reference; full battery fatigue closure remains unqualified',
+        'stage': 'B/E candidate: full-grid fatigue and conservative DFN port; physical topology remains unqualified',
         'implemented': ['explicit physical contact graphs', 'fixed-material conservative repartition',
                         'operator dependency identities', 'MORQEX ComponentSpec registry',
                         'vendored MFEM source and TOML build API', 'irreversible AT2 subproblem',
                         'variational isotropic split mechanics', 'accepted-step fatigue history',
                         'HDF5 restart and VTU/HTML mechanical specimen output',
-                        'tracked 3D particle/grain geometry and TOML voxel inspection'],
+                        'tracked 3D particle/grain geometry and TOML voxel inspection',
+                        'AMG equilibrium and active-set CG with direct-reference checks',
+                        'conservative Li-metal DFN with persistent state and cutoff reversal',
+                        '32-cubed diffuse-fatigue/effective-conductivity feedback candidate',
+                        'accepted-state VTI/XDMF time series and bounded-memory HTML'],
         'not_qualified': ['polycrystal fatigue reference', 'phase-field-to-aperture topology update',
                           'dynamic tensor homogenization with fracture', 'topology-changing DFN restart',
                           'full long-cycle closure', 'cycle-jump error control', 'GPU fatigue backend'],
@@ -30,6 +34,17 @@ def main(argv=None):
     geometry = sub.add_parser('geometry', help='Generate tracked initial polycrystals and full voxel HTML/HDF5/VTI')
     geometry.add_argument('config')
     geometry.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    dense = sub.add_parser('dense-cycle', help='Experimental full-grid diffuse-fatigue/DFN candidate; physical topology remains gated')
+    dense.add_argument('config')
+    dense.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    dense.add_argument('--environment', choices=['gentle','fast','released'], default='gentle')
+    dense.add_argument('--steps', type=int, default=1)
+    dense.add_argument('--output')
+    dense_report = sub.add_parser('dense-report', help='Check accepted histories, optionally export VTI/XDMF, and publish HTML')
+    dense_report.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    dense_report.add_argument('--cases', nargs='+', default=['gentle_voltage_v3','fast_voltage_v3','released_voltage_v3'])
+    dense_report.add_argument('--output', default='MORQEX_TOP_DAMAGE_voltage_cycles.html')
+    dense_report.add_argument('--export', action='store_true')
     build = sub.add_parser('build', help='Compile/resume a bounded MFEM backend slice from TOML')
     build.add_argument('config')
     build.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
@@ -44,6 +59,26 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'dense-report':
+        if not args.workspace:p.error('An external workspace is required')
+        from .backend import require_local_budget
+        from .verify_dense_history import verify_dense_history
+        from .dense_export import export_dense_history
+        from .dense_report import build_dense_report
+        require_local_budget();ws=Workspace(args.workspace);audits=[]
+        for name in args.cases:
+            folder=ws.path('results/top_damage/dense_cycles',name)
+            audits.append(verify_dense_history(folder))
+            (folder/'numerical_validation.json').write_text(json.dumps(audits[-1],indent=2))
+            if args.export:export_dense_history(folder)
+        report=build_dense_report(ws,args.cases,output_name=args.output)
+        audit_path=report.with_suffix('.validation.json')
+        audit_path.write_text(json.dumps(audits,indent=2))
+        print(json.dumps({'report':str(report),'validation':str(audit_path),'cases':audits},indent=2))
+    elif args.action == 'dense-cycle':
+        if not args.workspace:p.error('An external workspace is required')
+        from .dense_cycle import run_dense_cycle
+        print(json.dumps(run_dense_cycle(args.config,Workspace(args.workspace),environment=args.environment,steps=args.steps,output=args.output),indent=2))
     elif args.action == 'geometry':
         if not args.workspace:
             p.error('An external workspace is required')

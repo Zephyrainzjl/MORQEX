@@ -20,7 +20,7 @@ transport = ["taufactor"]
 gpu = ["cupy-cuda12x>=14.0", "pyamg>=5.3"]
 view = ["pyvista", "plotly"]
 report = ["fonttools>=4.50"]
-top-damage = ["h5py==3.15.1", "ninja==1.13.0"]
+top-damage = ["h5py==3.15.1", "ninja==1.13.0", "pyamg==5.3.0"]
 statistics = ["aabbtree>=2.5", "pyquaternion>=0.9.5", "lsq-ellipse>=2.0", "xmltodict>=0.12"]
 statistical-meshing = ["meshpy>=2022.1,<2026", "pygmsh>=7.1", "pyvoro-rimoli>=1.4.1"]
 

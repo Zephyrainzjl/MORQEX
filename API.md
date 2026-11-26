@@ -4,6 +4,35 @@
 
 ## 当前算例：6 节点 / 32³ CBD 正极 / 平面 Li
 
+### TOP-DAMAGE 较密颗粒、完整电压窗口与场导出
+
+该路线复用原 MORQEX 和已编译 MFEM 后端。先安装 `top-damage` 与 `dfn` 依赖；所有数值命令均由资源运行器启动。
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+$PY scripts/run_local.py --label dense_geometry -- $PY -m morqex.top_damage geometry /home/zephyrain/lw/MORQEX/configs/top_damage_dense_particles.toml
+# 单次最多两个接受步；同配置/工况/源码身份自动从最后完整断点续算。
+$PY scripts/run_local.py --label dense_cycle -- $PY -m morqex.top_damage dense-cycle /home/zephyrain/lw/MORQEX/configs/top_damage_voltage_cycle.toml --environment gentle --steps 2 --output gentle_voltage_v3
+# 三种工况依次推进，绝不同时运行；任一失败立即停止。
+$PY scripts/run_top_damage_dense_study.py --config /home/zephyrain/lw/MORQEX/configs/top_damage_voltage_cycle.toml --suffix voltage_v3 --steps 2
+# 核对全部历史、导出完整场并生成 HTML。
+$PY scripts/run_local.py --label dense_report -- $PY -m morqex.top_damage dense-report --export
+```
+
+`--environment gentle/fast/released` 分别是 0.5C 全外边界零位移、2C 全外边界零位移、0.5C 零牵引并去除刚体模态。这里的约束不是原六节点电芯固定厚度条件；两条路线不能混称。`[cycle] protocol="voltage-window"` 执行预充至上截止、放电至下截止、回充至上截止；`cycles` 不包括预充，没有 CV 阶段。`increments_per_half_cycle` 决定试步 `dt=3600/C/n`，实际截止由 DFN 事件定位。`requested_steps` 是该模式的安全步数上限，不是已经接受步数。`partial-depth` 是固定部分容量 CC/CC，不能用于声称全窗口容量衰减。
+
+`EpochDFN` 位于 `morqex.top_damage.epoch_dfn`。`advance(dt,current_A,DFNFeedback(...))` 保留微分状态并重初始化代数状态；`restore_state(time_s,state,inputs)` 在同模型/离散布局下恢复。端口量为有效电子电导 S/m、电解液几何输运效率、反应比例及平均力学化学势 J/mol。Li 金属端使用精确 FVM 物种通量 `i/F`，保留内部面通量；锂库存采用 `M(t)-M(0)-Q(t)3600/F`。不能把这个端口直接用作几何变化后的锂状态重映射。
+
+`effective_conductivity(field,spacing_zyx_m,axis=2)` 位于 `voxel_conductivity`，求解全体积标量 FVM、真实零导相和浮动分量；返回等效导率、单位加载电势、集流体可达掩码及残差/能量检查。返回电势是均匀化单位载荷场，不是运行电池的局部电势。当前还不是完整非对角输运张量。
+
+`SplitElasticity(...,linear_solver="amg-cg")` 复用完整刚度 AMG 预条件器，每次重新装配实际损伤切线并验证真实残差。`AT2Damage(...,linear_solver="jacobi-cg")` 保留不可逆活跃集/KKT；默认直接法仍保留。加速路线与相同离散直接解独立对照；没有给出未经公平测量的整电池加速倍数。
+
+结果在 `results/top_damage/dense_cycles/<output>`：每步 HDF5 含完整节点位移/d、单元疲劳历史、全部体素字段、DFN 状态和 I/V/Q/t；`mesh.h5` 与 `initial_geometry.h5` 共享几何。`dense-report --cases NAME ... --output NAME.html --export` 生成完整 FP64 VTI/PVD、引用 HDF5 的 XDMF 时间序列及历史验证 JSON。ParaView 打开 `voxel_history.pvd` 看体素场，打开 `mechanics_history.xdmf` 看 FEM 节点位移/相场；Warp By Vector 的物理位移放大系数为 1。网格连接没有被伪造修改，高 d 阈值只是诊断，不是已验证裂缝孔隙。
+
+`verify_dense_history(directory)` 检查实际电流积分、反馈端口连续衔接、损伤/疲劳不可逆、固定材料体积、残差和状态连续性；另报告按相的总应变最大值/P99及超过 2% 筛查线的体积分数。2% 是保守工程筛查，不能称为严格误差界。当前三个完整窗口算例的小应变筛查均未通过，主要来自 CBD，故数值协议完成不等于物理参考合格。
+
+HTML 为低内存对照首页与单工况页，默认一次加载一个工况。场显示副本为 FP32，数值计算/HDF5/VTI 保留 FP64。色标在同一工况的全部时刻固定；不同工况可能不同，跨工况定量比较请使用数值表。窗口完成后显示的容量差异包含倍率极化/截止影响，不能当作长期容量衰减。当前仅一轮完整窗口与此前两次部分深度循环，未验证千循环、真实裂缝侵液、颗粒失联、一般微结构扩散、热损伤或 NMC/LFP 多材料疲劳标定。
+
 ### TOP-DAMAGE 子框架：源码编译与三维参考
 
 初始大颗粒几何从同一入口生成：
