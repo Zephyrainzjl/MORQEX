@@ -148,7 +148,11 @@ def run_dense_cycle(config_path,workspace,*,environment='gentle',steps=1,output=
             'Thresholded components diagnose damage; no material or lithium is deleted, no new electrolyte pore is fabricated.',
             'Lagged mean chemical-potential port; resolved stress-driven diffusion and spatial DFN feedback remain unqualified.',
             'Short numerical cycling does not constitute calibrated long-term life prediction.']}
-    manifest_path.write_text(json.dumps(manifest,indent=2))
+    # A trial must not erase the last accepted progress record. If interrupted,
+    # the previous manifest and immutable accepted HDF5 states remain usable.
+    if not manifest_path.exists():
+        pending_manifest=manifest_path.with_suffix('.pending')
+        pending_manifest.write_text(json.dumps(manifest,indent=2));pending_manifest.replace(manifest_path)
     for step in range(previous+1,min(total+1,previous+1+steps)):
         if cfg.protocol=='voltage-window' and completed>=cfg.cycles:break
         tick=time.perf_counter()
@@ -235,6 +239,9 @@ def run_dense_cycle(config_path,workspace,*,environment='gentle',steps=1,output=
                           finite_total_newton_iterations=sum(s['newton_iterations'] for s in mechanics.solve_diagnostics),
                           finite_roundoff_merit_acceptances=sum(s['roundoff_merit_acceptances'] for s in mechanics.solve_diagnostics),
                           finite_line_search_backtracks=sum(s['backtracks'] for s in mechanics.solve_diagnostics))
+            record.update(equilibrium_residual_N=state.equilibrium_residual_N,
+                          equilibrium_force_scale_N=state.equilibrium_force_scale_N,
+                          equilibrium_normalization='fixed chemical/macro lift plus applied and initial-trial force norm')
         nodal=d[mesh.cells];grad=np.einsum('ei,eij->ej',nodal,mesh.gradients)
         d2=(nodal.sum(axis=1)**2+(nodal**2).sum(axis=1))/20
         record['crack_surface_functional_m2']=float(mesh.volumes@(.5*d2/cfg.length_m+.5*cfg.length_m*np.sum(grad**2,axis=1)))
@@ -260,4 +267,6 @@ def run_dense_cycle(config_path,workspace,*,environment='gentle',steps=1,output=
         print(json.dumps(record),flush=True)
     manifest.update(last_accepted_step=previous,completed_cycles=completed,
         protocol_complete=(previous==total if cfg.protocol=='partial-depth' else completed>=cfg.cycles),wall_seconds=time.perf_counter()-started)
-    manifest_path.write_text(json.dumps(manifest,indent=2));return manifest|{'directory':str(directory)}
+    pending_manifest=manifest_path.with_suffix('.pending')
+    pending_manifest.write_text(json.dumps(manifest,indent=2));pending_manifest.replace(manifest_path)
+    return manifest|{'directory':str(directory)}

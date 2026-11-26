@@ -28,16 +28,19 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
             'all_numerical_protocols_complete':all(s['all_numerical_protocols_complete'] for s in summaries),
             'physical_topology_qualified':False,'publication_qualified':False}
         names={'gentle':'0.5C / 约束边界','fast':'2C / 约束边界','released':'0.5C / 自由边界'}
-        options=''.join('<option value="'+url+'">'+names.get(name.split('_')[0],name)+'</option>' for url,name in links)
+        labels_by_case={c['name']:names.get(c['manifest'].get('environment'),c['name']) for c in summary['cases']}
+        options=''.join('<option value="'+url+'">'+labels_by_case.get(name,name)+'</option>' for url,name in links)
         rows=''
         for c in summary['cases']:
             r=c['records'][-1]
-            rows+='<tr>'+''.join('<td>'+str(v)+'</td>' for v in [names.get(c['name'].split('_')[0],c['name']),
+            rows+='<tr>'+''.join('<td>'+str(v)+'</td>' for v in [labels_by_case[c['name']],
                 len(c['records']),f"{r['mean_active_damage']:.6f}",f"{max(a['max_principal_stress_P99_MPa'] for a in c['records']):.2f}",
                 f"{r['next_feedback']['electronic_conductivity_S_m']:.6f}",f"{max(a['inventory_relative_defect'] for a in c['records']):.2e}",format(c['validation']['maximum_cell_total_strain_frobenius'],'.2%') if c.get('validation') else '待核验'] )+'</tr>'
         page='''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MORQEX 三维疲劳工况对照</title><style>body{margin:0;background:#0b1220;color:#dce9f5;font:16px/1.7 system-ui}main{max-width:1460px;margin:auto;padding:25px}h1{color:#64d8cd}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #30425a;padding:9px}.note{background:#292638;border-left:4px solid #e5b15a;padding:16px}select{font:inherit;background:#172b42;color:white;padding:10px}a{color:#6ce0d1}iframe{width:100%;height:1700px;border:1px solid #344b65;margin-top:18px}</style><main><h1>MORQEX / TOP-DAMAGE：实际三维工况对照</h1><p>32³ 体素，8 个大颗粒，孔隙率 34.96%。所有场来自实际接受的计算状态。为降低本地内存占用，每次仅加载一个工况的三维场。</p><p class="note">当前为数值候选闭环，尚未通过物理裂缝开度、侵液、颗粒失联及论文验收。不能将损伤阈值图当作真实孔隙；完整窗口算例的局部小应变筛查未通过，不能视为物理参考解。各工况页明确标注协议、材料假设和已接受步。</p><table><tr><th>工况</th><th>已保存状态</th><th>末态平均损伤</th><th>过程最大 P99 主应力 / MPa</th><th>末态电导 / S m⁻¹</th><th>最大锂守恒误差</th><th>最大局部总应变</th></tr>'''+rows+'''</table><p><label>查看工况 <select id="case">'''+options+'''</select></label> · <a id="direct" href="'''+links[0][0]+'''">单独打开完整交互页</a></p><iframe id="fields" title="逐步三维场" src="'''+links[0][0]+'''"></iframe></main><script>document.getElementById('case').onchange=e=>{document.getElementById('fields').src=e.target.value;document.getElementById('direct').href=e.target.value};document.body.dataset.comparison='true';</script></html>'''
         page=page.replace('32³ 体素，8 个大颗粒，孔隙率 34.96%。','结构尺寸、颗粒数和孔隙率见各工况页。')
         page=page.replace('完整窗口算例的局部小应变筛查未通过，不能视为物理参考解。','各工况分别报告小变形适用性或有限变形雅可比检查，均不自动构成材料标定。')
+        page=page.replace('<table>','<div class="table-scroll"><table>').replace('</table>','</table></div>')
+        page=page.replace('</style>','*{box-sizing:border-box}.table-scroll{overflow:auto}main{min-width:0}iframe{display:block;max-width:100%}a,footer{overflow-wrap:anywhere}@media(max-width:650px){main{padding:14px}h1{font-size:24px}select{max-width:100%}}</style>')
         from morqex.visualization.report_font import embed_font
         font=ws.path('data/report_font');page=embed_font(page,font/'NotoSansCJKsc-Regular.otf',(font/'LICENSE').read_text())
         target=ws.path('reports',output_name or 'MORQEX_TOP_DAMAGE_dense_cycles.html');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(page)
@@ -114,6 +117,8 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
     page=page.replace('少量大颗粒，看清内部晶粒与 CBD','较密大颗粒：DFN 驱动的三维疲劳候选计算')
     page=page.replace('这里展示真实生成的三维体素及其编号。旋转视角、剖开颗粒，或隐藏 CBD 检查内部结构；没有将体素重新画成光滑球面。',
         '同一 32³ 初始结构，比较倍率和机械约束。下方每一帧均来自实际接受的 DFN—三维力学—AT2 疲劳求解，不是动画插值。相场、浓度、应力和疲劳历史可逐步剖切。')
+    page=page.replace('同一 32³ 初始结构','同一 '+'×'.join(map(str,geometry.structure.labels.shape[::-1]))+' 初始结构')
+    page=page.replace('</style>','.panel{min-width:0}pre,footer,a{overflow-wrap:anywhere}td{overflow-wrap:anywhere}</style>')
     start=page.index('<div class="note">');end=page.index('</div>',start)+6
     page=page[:start]+'''<div class="note"><b>候选模型，尚未通过物理拓扑与论文验收。</b>这是 2 次、每半循环 30% 名义容量的 CC/CC 部分深度协议，不是全电压窗口容量衰减测试。NMC811 电化学参数与数值力学/疲劳参数分别记录；有明确初始预裂纹。局部二次损伤电导律未经裂缝开度/接触标定；没有将高损伤体素删除为孔隙，也没有验证裂纹侵液和颗粒失联。径向浓度映射只用于本组等粒径球形颗粒及所选正极节点。图中的场变化不能直接作为实际材料寿命结论。</div>'''+page[end:]
     audit=cases[0].get('validation')
@@ -133,13 +138,13 @@ def build_dense_report(workspace,case_names=('gentle_v2','fast_v2','released_v2'
     page=page[:links_start]+'''<p>完整 FP64 节点位移/相场、四面体网格、体素场及 DFN 状态均保存在各工况结果目录。页面显示副本为 FP32，不参与计算或误差验收。</p>'''+page[links_end:]
     extension='''<script>
 const oldColor=color;let currentFields={},initialD=null;
-const titles=Object.fromEntries(DATA.cases.map(c=>[c.name,({gentle:'0.5C · 外边界约束',fast:'2C · 外边界约束',released:'0.5C · 自由外边界'})[c.name.split('_')[0]]||c.name]));
+const titles=Object.fromEntries(DATA.cases.map(c=>[c.name,({gentle:'0.5C · 外边界约束',fast:'2C · 外边界约束',released:'0.5C · 自由外边界'})[c.manifest.environment]||c.name]));
 $('case').innerHTML=DATA.cases.map((c,i)=>`<option value="${i}">${titles[c.name]||c.name}</option>`).join('');
 function decode(s){const a=atob(s),u=new Uint8Array(a.length);for(let i=0;i<a.length;i++)u[i]=a.charCodeAt(i);return new Float32Array(u.buffer)}
 color=function(i,shade=1){const field=$('physical').value;if(field==='geometry')return oldColor(i,shade);if(kind(i)!=='active'&&(field==='sto'||field==='increment'))return `hsl(209 13% ${54*shade}%)`;let value=field==='increment'?currentFields.damage[i]-initialD[i]:currentFields[field][i],lo=DATA.bounds[field][0],hi=DATA.bounds[field][1],v=Math.max(0,Math.min(1,(value-lo)/(hi-lo||1)));return `hsl(${235-235*v} 80% ${(36+20*v)*shade}%)`};
 function curve(id,series,title){let [ctx,w,h]=canvas(id);ctx.font='13px MORQEXReportCJK,system-ui';ctx.fillStyle='#b9cadc';ctx.fillText(title,18,25);let xs=series.flatMap(s=>s.x),ys=series.flatMap(s=>s.y);if(!xs.length)return;let xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);const X=x=>55+(w-85)*(x-xmin)/(xmax-xmin||1),Y=y=>h-50-(h-100)*(y-ymin)/(ymax-ymin||1);ctx.strokeStyle='#536781';ctx.strokeRect(55,50,w-85,h-100);series.forEach((s,k)=>{ctx.strokeStyle=['#54d7c7','#f4bc67','#8c9dff'][k%3];ctx.beginPath();s.x.forEach((x,j)=>j?ctx.lineTo(X(x),Y(s.y[j])):ctx.moveTo(X(x),Y(s.y[j])));ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillText(s.name,65,70+k*20)});ctx.fillStyle='#b9cadc';ctx.fillText(ymax.toPrecision(4),4,50);ctx.fillText(ymin.toPrecision(4),4,h-50);ctx.fillText(xmax.toPrecision(4),w-65,h-25)}
 function selectFrame(reset=false){const c=DATA.cases[+$('case').value];$('accepted').max=c.frames.length-1;if(reset)$('accepted').value=c.frames.length-1;const f=c.frames[+$('accepted').value],r=f.record;initialD=decode(c.frames[0].fields.damage);currentFields=Object.fromEntries(Object.entries(f.fields).map(([k,v])=>[k,decode(v)]));$('frameText').textContent=`${r.step}/${c.frames.length-1}（已保存） · ${r.time_s.toFixed(0)} s`;let field=$('physical').value;$('fieldlegend').textContent=field==='geometry'?'原始材料/颗粒/晶粒编号':`当前工况全部时刻采用相同色标：${DATA.bounds[field][0].toPrecision(5)} … ${DATA.bounds[field][1].toPrecision(5)}；场值为体素体积平均。`;$('state').textContent=JSON.stringify({environment:titles[c.name],protocol_complete:c.manifest.protocol_complete,step:r.step,time_s:r.time_s,cycle:r.mechanical_cycle,phase:r.protocol_phase,completed_cycles:r.completed_cycles,voltage_V:r.voltage_V,mean_active_damage:r.mean_active_damage,P99_principal_MPa:r.max_principal_stress_P99_MPa,electronic_conductivity_S_m:r.next_feedback.electronic_conductivity_S_m,mechanical_potential_J_mol:r.next_feedback.mechanical_potential_J_mol,lithium_error:r.inventory_relative_defect,mechanics_residual:r.equilibrium_residual,damage_KKT:r.damage_kkt,diagnostic_components:r.diagnostic_intact_components,capacities:c.capacities},null,2);$('hdf5').href=f.file;mesh();draw();curve('voltage',[{name:'电压 / V 对时间 / s',x:c.curves.flatMap(p=>p.time_s),y:c.curves.flatMap(p=>p.voltage_V)}],'求解得到的充放电电压');curve('evolution',DATA.cases.map(a=>({name:titles[a.name]||a.name,x:a.frames.map(f=>f.record.time_s),y:a.frames.map(f=>f.record.mean_active_damage)})),'活性材料平均损伤对时间 / s');document.body.dataset.accepted=r.step;document.body.dataset.environment=c.name;}
-$('case').onchange=()=>selectFrame(true);$('accepted').oninput=()=>selectFrame();$('physical').onchange=()=>selectFrame();$('cut').value=24;$('plane').value=23;selectFrame(true);if(document.fonts)document.fonts.ready.then(()=>selectFrame());
+$('case').onchange=()=>selectFrame(true);$('accepted').oninput=()=>selectFrame();$('physical').onchange=()=>selectFrame();$('cut').value=Math.max(1,Math.round(.75*nz));$('plane').value=Math.max(0,Math.round(.75*nz)-1);selectFrame(true);if(document.fonts)document.fonts.ready.then(()=>selectFrame());
 </script>'''
     page=page.replace('</html>',extension+'</html>')
     font=ws.path('data/report_font')

@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <stdexcept>
 
-extern "C" int mq_hyperelastic_abi() { return 1; }
+extern "C" int mq_hyperelastic_abi() { return 2; }
 extern "C" int mq_neo_batch(int n, const double *F, const double *A,
                             const double *mu, const double *K, const double *g,
                             double *energy, double *plus, double *P,
@@ -51,4 +51,31 @@ extern "C" int mq_neo_batch(int n, const double *F, const double *A,
     if(error && error_size>0) std::snprintf(error,error_size,"%s",e.what());
     return 1;
   }
+}
+// Serial FP64 Tet4 tangent action. C is MFEM's consistent dP/dF tensor.
+// No element matrices, global sparse tangent or parallel worker pool.
+extern "C" int mq_tet_hvp(int n, int ndof, const long long *dofs,
+                           const double *gradient, const double *C,
+                           const double *volume, const double *v, double *out) {
+  if (n<1 || ndof<1) return 1;
+  std::fill(out,out+ndof,0.0);
+  for(int e=0;e<n;++e) {
+    const long long *index=dofs+12*e;
+    const double *B=gradient+12*e;
+    const double *T=C+81*e;
+    double dF[9]={},dP[9]={};
+    for(int a=0;a<4;++a) for(int i=0;i<3;++i) {
+      const long long row=index[3*a+i];
+      if(row<0 || row>=ndof) return 2;
+      const double value=v[row];
+      for(int j=0;j<3;++j) dF[3*i+j]+=value*B[3*a+j];
+    }
+    for(int i=0;i<9;++i) for(int j=0;j<9;++j) dP[i]+=T[9*i+j]*dF[j];
+    for(int a=0;a<4;++a) for(int i=0;i<3;++i) {
+      double force=0.0;
+      for(int j=0;j<3;++j) force+=dP[3*i+j]*B[3*a+j];
+      out[index[3*a+i]]+=volume[e]*force;
+    }
+  }
+  return 0;
 }

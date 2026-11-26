@@ -4,7 +4,7 @@
 
 新增 MFEM 4.10 超弹性编译接口，支持乘法各向异性化学变形、解析应力/切线、
 力学化学势、不可逆 AT2 接受步和矩阵自由 AMG-MINRES。独立制造解细化及
-295 项回归通过；这不是材料标定、真实裂缝拓扑或长期寿命的全部验收。
+独立回归测试已通过；这不是材料标定、真实裂缝拓扑或长期寿命的全部验收。
 `configs/top_damage_finite_cycle.toml` 选择该路线，原小变形默认值保留。
 详细 API 与运行入口见 [API.md](API.md)。所有构建/结果仍在外部工作区。
 
@@ -36,7 +36,7 @@ TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`resea
 /home/zephyrain/lw/morph_workspace        # 数据、环境、编译、算子、结果、HTML
 ```
 
-数值步骤均经运行器执行。默认单逻辑 CPU、单线程、nice +15、RSS 1.5 GiB、任务 180 秒、禁用 GPU。显式 `--gpu` 才允许 GPU：进程显存预算 3 GiB，保留空闲显存 4 GiB，协作占空比 20%，资源超限中止。占空比是主动节流策略，不是硬件配额；不修改全局 GPU 设置或其他作业。
+数值步骤均经运行器执行。默认单逻辑 CPU、单线程、nice +15、RSS 3 GiB、单任务墙钟 660 秒、禁用 GPU。显式 `--gpu` 才允许 GPU：进程显存预算 8 GiB，保留空闲显存 4 GiB，协作占空比 20%，资源超限中止。若其他作业占用导致预算与余量无法同时满足，则不启动 GPU。占空比是主动节流策略，不是硬件配额；不修改全局 GPU 设置或其他作业。
 
 ```bash
 cd /home/zephyrain/lw/MORQEX

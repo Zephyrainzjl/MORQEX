@@ -68,10 +68,31 @@ class HyperelasticBackend:
         if m['identity']!=identity or m['state']!='complete' or _sha(m['library'])!=m['library_sha256'] or _sha(m['dependency'])!=m['dependency_sha256']:
             raise ValueError('Missing or modified finite-strain backend')
         self.lib=ct.CDLL(m['library']);self.lib.mq_hyperelastic_abi.restype=ct.c_int
-        if self.lib.mq_hyperelastic_abi()!=1:raise ValueError('Wrong finite-strain ABI')
+        if self.lib.mq_hyperelastic_abi()!=2:raise ValueError('Wrong finite-strain ABI')
         ptr=ct.POINTER(ct.c_double)
         self.lib.mq_neo_batch.argtypes=[ct.c_int]+[ptr]*9+[ct.c_char_p,ct.c_int]
         self.lib.mq_neo_batch.restype=ct.c_int
+        self.lib.mq_tet_hvp.argtypes=[ct.c_int,ct.c_int,ct.POINTER(ct.c_longlong)]+[ptr]*5
+        self.lib.mq_tet_hvp.restype=ct.c_int
+
+    def tangent_action(self, mesh, tangent):
+        """Compiled serial FP64 action; uses the same MFEM material tangent."""
+        dofs=np.ascontiguousarray(mesh.dofs,dtype=np.int64)
+        gradients=np.ascontiguousarray(mesh.gradients,dtype=float)
+        volumes=np.ascontiguousarray(mesh.volumes,dtype=float)
+        C=np.ascontiguousarray(tangent,dtype=float)
+        n=len(mesh.cells);nd=3*len(mesh.points)
+        if C.shape!=(n,9,9) or not np.isfinite(C).all():raise ValueError('Finite cell tangents required')
+        dp=lambda x:x.ctypes.data_as(ct.POINTER(ct.c_double))
+        def action(vector):
+            v=np.ascontiguousarray(vector,dtype=float).reshape(-1)
+            if v.shape!=(nd,) or not np.isfinite(v).all():raise ValueError('Finite compatible tangent vector required')
+            out=np.empty(nd)
+            code=self.lib.mq_tet_hvp(n,nd,dofs.ctypes.data_as(ct.POINTER(ct.c_longlong)),
+                dp(gradients),dp(C),dp(volumes),dp(v),dp(out))
+            if code:raise ValueError('Compiled Tet4 action rejected its dimensions')
+            return out
+        return action
 
     def evaluate(self, F, chemical_F, shear, bulk, degradation=1., *, tangent=True):
         require_local_budget()
@@ -124,6 +145,8 @@ class HyperelasticState:
     equilibrium_residual: float
     newton_iterations: int
     minimum_jacobian: float
+    equilibrium_residual_N: float
+    equilibrium_force_scale_N: float
 
 
 class Hyperelasticity:
@@ -134,7 +157,7 @@ class Hyperelasticity:
     maps are reused, not the old stiffness response or old stress fields.
     """
     def __init__(self, mesh, backend, young_Pa, poisson, *, boundary='kubc', linear_solver='direct'):
-        if linear_solver not in ('direct','minres','amg-minres','matrix-free-amg-minres'):raise ValueError('Unknown finite-strain linear solver')
+        if linear_solver not in ('direct','minres','amg-minres','matrix-free-amg-minres','numpy-matrix-free-amg-minres'):raise ValueError('Unknown finite-strain linear solver')
         self.mesh=mesh;self.backend=backend;self.linear_solver=linear_solver
         self._geometry_fingerprint=mesh.fingerprint
         n=len(mesh.cells);self.young=_field(young_Pa,n,'Young modulus',True)
@@ -147,7 +170,8 @@ class Hyperelasticity:
         self.P=self.base.P
         # B[e,iJ,ak]=delta_ik N_a,J; total F=I+B u.
         self.B=np.einsum('ik,eaJ->eiJak',np.eye(3),mesh.gradients).reshape(n,9,12)
-        self.matrix_free=linear_solver=='matrix-free-amg-minres'
+        self.matrix_free='matrix-free' in linear_solver
+        self.compiled_action=self.matrix_free and not linear_solver.startswith('numpy-')
         if not self.matrix_free:
             self.rows=np.broadcast_to(mesh.dofs[:,:,None],(n,12,12)).ravel()
             self.cols=np.broadcast_to(mesh.dofs[:,None,:],(n,12,12)).ravel()
@@ -179,6 +203,7 @@ class Hyperelasticity:
                     dp=np.einsum('eij,ej->ei',c,dv,optimize=True)
                     nodal=np.einsum('eij,ei,e->ej',self.B,dp,self.mesh.volumes,optimize=True)
                     out=np.zeros(len(u));np.add.at(out,self.mesh.dofs.ravel(),nodal.ravel());return out
+                if self.compiled_action:action=self.backend.tangent_action(self.mesh,c)
                 A=LinearOperator((len(u),len(u)),matvec=action,rmatvec=action,dtype=float)
             else:
                 localA=np.einsum('eia,eij,ejb,e->eab',self.B,c,self.B,self.mesh.volumes,optimize=True)
@@ -202,6 +227,12 @@ class Hyperelasticity:
             norm=np.asarray(self.P.power(2).sum(axis=0)).ravel()
             u+=self.P@(np.asarray(self.P.T@(initial-lift))/norm)
         force_scale=self.young.max()*np.max(np.ptp(self.mesh.points,axis=0))**2
+        # A pure traction problem has internal(u) -> 0 at equilibrium. Dividing
+        # by that shrinking vector falsely demands near-zero/near-zero accuracy.
+        # Freeze the norm using the chemical/macro lift and actual applied load;
+        # include the first trial force when unloading from a warm start.
+        _,lift_force,*_=self.assemble(lift,chemical_F,degradation,tangent=False)
+        load_scale=max(np.linalg.norm(lift_force),np.linalg.norm(external),force_scale*1e-9)
         # EvalW subtracts O(modulus) invariants to obtain the much smaller
         # strain energy. Near equilibrium, Armijo alone can reject a Newton
         # correction whose force residual is already at roundoff. This is an
@@ -213,18 +244,21 @@ class Hyperelasticity:
         for iteration in range(max_iterations+1):
             energy,internal,A,F,p,plus=self.assemble(u,chemical_F,degradation)
             r=internal-external;rr=np.asarray(self.P.T@r)
-            scale=max(np.linalg.norm(internal),np.linalg.norm(external),force_scale*1e-9)
+            if iteration==0:load_scale=max(load_scale,np.linalg.norm(internal))
+            scale=load_scale
             residual=float(np.linalg.norm(rr)/scale)
             physical=float(np.linalg.norm(self.base.constraint.equilibrium_projection.T@r)/scale)
             potential=energy-float(external@u)
-            trace.append({'iteration':iteration,'residual':residual,'potential_J':potential})
+            trace.append({'iteration':iteration,'residual':residual,'potential_J':potential,
+                          'residual_N':float(np.linalg.norm(rr)),'force_scale_N':float(scale)})
             if residual<=tolerance:
                 if physical>max(tolerance,1e-7):raise MechanicalSolveError('Unbalanced nominal load on gauges')
                 self.solve_diagnostics.append({'newton_iterations':iteration,
                     'roundoff_merit_acceptances':fallback_count,'backtracks':backtracks,
                     'roundoff_energy_scale_J':roundoff_energy,'trace':trace})
                 J=np.linalg.det(F);sigma=(p@np.swapaxes(F,1,2))/J[:,None,None]
-                return HyperelasticState(u.reshape(-1,3),F,p,sigma,plus,energy,potential,r.reshape(-1,3),physical,iteration,float(J.min()))
+                return HyperelasticState(u.reshape(-1,3),F,p,sigma,plus,energy,potential,r.reshape(-1,3),physical,iteration,float(J.min()),
+                    float(np.linalg.norm(self.base.constraint.equilibrium_projection.T@r)),float(scale))
             if iteration==max_iterations:break
             if self.matrix_free:
                 reduced=LinearOperator((self.P.shape[1],)*2,matvec=lambda x:np.asarray(self.P.T@(A@(self.P@x))),dtype=float)

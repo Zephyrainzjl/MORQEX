@@ -144,6 +144,27 @@ def test_matrix_free_action_and_amg_match_sparse(backend):
     rng=np.random.default_rng(40);du=rng.normal(size=3*len(mesh.points))
     As=sparse.assemble(a.displacement_m,fc)[2];Af=fast.assemble(a.displacement_m,fc)[2]
     np.testing.assert_allclose(Af@du,As@du,rtol=1e-12,atol=1e-12)
+    baseline=Hyperelasticity(mesh,backend,young,.3,linear_solver='numpy-matrix-free-amg-minres')
+    An=baseline.assemble(a.displacement_m,fc)[2]
+    np.testing.assert_allclose(Af@du,An@du,rtol=1e-12,atol=1e-12)
+
+
+def test_free_heterogeneous_body_uses_fixed_physical_force_scale(backend):
+    mesh=cube(3);young=np.where(mesh.centers[:,0]<.5,100.,2.)
+    m=Hyperelasticity(mesh,backend,young,.3,boundary='neumann',linear_solver='matrix-free-amg-minres')
+    fc=np.broadcast_to(np.eye(3),(len(mesh.cells),3,3)).copy()
+    fc[mesh.centers[:,0]<.5,0,0]+= .03
+    state=m.solve(fc,tolerance=1e-9)
+    assert state.equilibrium_residual_N<=1e-9*state.equilibrium_force_scale_N
+    assert state.equilibrium_residual<1e-9 and state.newton_iterations<12
+    trace=m.solve_diagnostics[-1]['trace']
+    assert len({r['force_scale_N'] for r in trace})==1
+    np.testing.assert_allclose(state.reaction_N.sum(axis=0),0,atol=1e-12)
+    moment=np.cross(mesh.points+state.displacement_m,state.reaction_N).sum(axis=0)
+    np.testing.assert_allclose(moment,0,atol=1e-12)
+    # Unbalanced nominal traction must not be hidden in rigid-mode gauges.
+    force=np.zeros_like(state.reaction_N);force[-1,0]=.01
+    with pytest.raises(RuntimeError):m.solve(fc,force=force,tolerance=1e-9)
 
 
 def test_finite_fatigue_acceptance_and_unloading(backend):

@@ -16,11 +16,11 @@ gpu_enabled = false
 
 [gpu]
 device = 0
-maximum_process_memory_mib = 3072
+maximum_process_memory_mib = 8192
 minimum_free_memory_mib = 4096
 maximum_start_utilization_percent = 40
 duty_cycle = 0.20
-pool_memory_mib = 2560
+pool_memory_mib = 7168
 
 [research]
 seed = 20261124
