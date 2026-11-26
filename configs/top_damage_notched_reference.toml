@@ -1,0 +1,26 @@
+schema_version = 1
+[native]
+provider = "vendored"
+build_type = "Release"
+jobs = 1
+slice_seconds = 55
+precision = "float64"
+device = "cpu"
+
+[reference]
+name = "notched_3d_at2_reference"
+# Numerical specimen, NOT a calibrated NMC electrode or a DFN cycle.
+shape_zyx = [2, 8, 8]
+spacing_m = 1.0e-6
+young_Pa = 93.0e9
+poisson = 0.3
+fracture_toughness_J_m2 = 10.0
+length_m = 2.0e-6
+residual_stiffness = 1.0e-5
+maximum_yy_strain = 0.004
+notch_fraction = 0.375
+cycles = 3
+increments_per_cycle = 8
+fatigue = true
+stagger_tolerance = 1.0e-8
+max_stagger_iterations = 100

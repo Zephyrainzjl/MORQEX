@@ -1,0 +1,8 @@
+schema_version = 1
+[native]
+provider = "pymfem-wheel"
+build_type = "Release"
+jobs = 1
+slice_seconds = 55
+precision = "float64"
+device = "cpu"

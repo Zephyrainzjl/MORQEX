@@ -22,3 +22,17 @@ PyBaMM26.3.1来源为官方PyPI发行对应的纯Python包，固定上游链接h
 公开 CT 来源为 NLR Battery Microstructure Library；使用五个提供的 NMC532 体积，活性相来自影像，CBD 为来源作者重构。每份下载 URL、SHA、体素间距、相和重构假设随外部 manifest 保存；不把它们称为五种电化学材料或完整制造电极片。
 
 MicroStructPy 1.6.1 固定提交 6fa72185d5fc6ac9fb6b01f8cecce1f29e4f2339，MIT；完整文本源码在私有命名空间，NumPy 2 与可选 Gmsh 导入改动逐文件记录。Micro_Reconstruction 固定提交 0dda2705932fb7d0f4264fd1f22bc94f0daf7e3e，完整 MATLAB/R 文本保留，二进制数据外置。父项目无顶层许可证，嵌套 pulpDistr 的 MIT 不覆盖父项目；仅本机私有集成。未安装 MATLAB/R 的环境不声称已执行或复现其原生重构算法。
+MFEM 4.10
+Upstream: https://github.com/mfem/mfem (tag v4.10)
+Source: src/morqex/vendor/mfem
+License: BSD-3-Clause, copyright Lawrence Livermore National Security, LLC.
+Original LICENSE and NOTICE are retained. Library sources and build inputs are
+unmodified. Root example datasets, images, Markdown and CI metadata are omitted from
+the source tree; small upstream unit-test fixtures are retained unchanged.
+The original archive remains in the external workspace.
+File and archive hashes plus exclusions: src/morqex/vendor/mfem/provenance.json.
+The MORQEX adapter is separate code in src/morqex/top_damage/native.
+Optional independent binary comparison uses the MFEM library distributed in
+PyMFEM 4.10.0.1 (BSD-3-Clause, Princeton Plasma Physics Laboratory); installed
+license remains in external site-packages/mfem-4.10.0.1.dist-info/licenses.
+Neither MFEM nor the cited fatigue/AT2 methods are claimed as MORQEX inventions.

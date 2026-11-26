@@ -27,16 +27,47 @@ def memory_info():
             for line in Path("/proc/meminfo").read_text().splitlines()}
 
 
-def group_rss(pgid):
-    total = 0
-    for p in Path("/proc").iterdir():
-        if not p.name.isdigit():
-            continue
+def job_processes(pgid, tracked=None):
+    """Include compiler/browser descendants that create their own groups.
+
+    Remember (pid,starttime) so reparented children are still budgeted without
+    accidentally treating a later process reusing a PID as part of this job.
+    """
+    tracked = {} if tracked is None else tracked
+    records = {}
+    for p in Path('/proc').iterdir():
+        if not p.name.isdigit(): continue
         try:
-            if os.getpgid(int(p.name)) == pgid:
-                for line in (p / "status").read_text().splitlines():
-                    if line.startswith("VmRSS:"):
-                        total += int(line.split()[1]) * 1024
+            fields = (p/'stat').read_text().rsplit(')', 1)[1].split()
+            records[int(p.name)] = (int(fields[1]), int(fields[2]), int(fields[19]))
+        except (OSError, ValueError, IndexError): continue
+    selected = {pid for pid, (_, group, start) in records.items()
+                if group == pgid or tracked.get(pid) == start}
+    selected.add(pgid)
+    while True:
+        children = {pid for pid, (parent, _, _) in records.items() if parent in selected}
+        if children <= selected: break
+        selected |= children
+    selected &= records.keys()
+    tracked.update({pid: records[pid][2] for pid in selected})
+    return selected
+
+
+def kill_job(pgid, tracked=None):
+    members = job_processes(pgid, tracked)
+    for pid in sorted(members - {pgid}) + ([pgid] if pgid in members else []):
+        try: os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError: pass
+
+
+def group_rss(pgid, tracked=None):
+    total = 0
+    for pid in job_processes(pgid, tracked):
+        p = Path('/proc') / str(pid)
+        try:
+            for line in (p / "status").read_text().splitlines():
+                if line.startswith("VmRSS:"):
+                    total += int(line.split()[1]) * 1024
         except (OSError, ProcessLookupError):
             pass
     return total
@@ -131,6 +162,7 @@ def main():
     peak = 0
     gpu_peak=0;gpu_checked=0.
     proc = None
+    tracked_processes = {}
     try:
         with (run / "stdout.txt").open("w") as out, (run / "stderr.txt").open("w") as err:
             proc = subprocess.Popen(command, cwd=run, env=env, stdout=out, stderr=err,
@@ -140,7 +172,7 @@ def main():
             except FileNotFoundError:
                 pass
             while proc.poll() is None:
-                rss = group_rss(proc.pid)
+                rss = group_rss(proc.pid, tracked_processes)
                 peak = max(peak, rss)
                 disk = sum(p.stat().st_size for p in run.rglob("*") if p.is_file())
                 if time.monotonic() - started > cfg["wall_seconds"]:
@@ -161,7 +193,7 @@ def main():
                     if sample['process_mib']>gpu['maximum_process_memory_mib']:reason='GPU process memory limit'
                     elif sample['free_mib']<gpu['minimum_free_memory_mib']:reason='GPU memory reserve'
                 if reason:
-                    os.killpg(proc.pid, signal.SIGKILL)
+                    kill_job(proc.pid, tracked_processes)
                     break
                 time.sleep(0.25)
             proc.wait()
@@ -171,10 +203,11 @@ def main():
         if proc is not None:
             # Also reap orphan subprocesses left after the main command exits.
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
+                kill_job(proc.pid, tracked_processes)
             except ProcessLookupError:
                 pass
         manifest.update(wall_seconds=time.monotonic()-started, peak_group_rss_bytes_sampled=peak,
+                        rss_accounting='process group plus tracked descendants, including reparented compiler processes',
                         peak_gpu_process_mib_sampled=gpu_peak,
                         exit_code=None if proc is None else proc.returncode, stopped_because=reason)
         manifest['source_changed_during_run']=tree(ROOT)[0]!=frozen_source['tree_sha256']

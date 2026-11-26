@@ -4,9 +4,48 @@
 
 ## 当前算例：6 节点 / 32³ CBD 正极 / 平面 Li
 
-### TOP-DAMAGE 子框架（Phase A 基础接口）
+### TOP-DAMAGE 子框架：源码编译与三维参考
 
-入口统一在 MORQEX 内；旧固定结构模块不变。当前没有合格的长期疲劳 `run`/`resume`，不能把接口测试当成循环寿命预测。
+入口统一在 MORQEX 内；旧固定结构模块不变。已实现 MFEM 源码后端和三维力学—AT2 参考；当前没有合格的长期电池疲劳 `run`，不能把机械试件的循环测试当成充放电寿命预测。
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+# 一条命令自动续编；每个编译片段仍由run_local施加单核/内存/时间限制。
+$PY scripts/compile_top_damage.py configs/top_damage_native.toml
+# 每次最多55秒编译；返回pending时重复同一命令，保留已完成的目标文件。
+$PY scripts/run_local.py --label top_damage_build -- $PY -m morqex.top_damage build /home/zephyrain/lw/MORQEX/configs/top_damage_native.toml
+# 仅在build返回complete后调用；默认配置为三维缺口试件，不是DFN。
+$PY scripts/run_local.py --label top_damage_reference -- $PY -m morqex.top_damage reference /home/zephyrain/lw/MORQEX/configs/top_damage_notched_reference.toml --steps 8
+# 每次接受步保存checkpoint，重复续算到TOML指定的加载协议完成。
+$PY scripts/run_local.py --label top_damage_reference_resume -- $PY -m morqex.top_damage reference /home/zephyrain/lw/MORQEX/configs/top_damage_notched_reference.toml --steps 8 --resume
+```
+
+`[native]` 指定 `provider="vendored"`（本地源码）或 `"pymfem-wheel"`（可选独立预编译库对照，需要 `mfem==4.10.0.1`）；当前只资格验证 `Release/jobs=1/float64/cpu`。两种库必须在不同进程交叉比较，避免同名共享库被加载器隐式复用。MFEM 库源码、示例程序和上游测试源文件位于 `src/morqex/vendor/mfem`；数据和原始完整发行归档在外部工作区。`provenance.json` 记录纳入及省略文件、逐文件哈希和归档哈希，保留 BSD-3 的 LICENSE/NOTICE。
+
+`[reference]` 提供 ZYX 网格、米制间距、E/nu、Gc、ell、残余刚度、缺口长度、yy应变幅值、循环数、每循环增量数和迭代门槛。全部外边界为仿射 KUBC；横向应变为零，不是侧面自由拉伸试验。默认参数是数值试件；没有经过高镍正极材料标定。`ell` 是相场长度，不是物理裂缝开度。
+
+```python
+# 数值API须从 scripts/run_local.py 启动的研究脚本内调用。
+from morqex.top_damage import NativeConfig, build_backend, MFEMScalarBackend
+from morqex.top_damage import AT2Damage, FatigueHistory, SplitElasticity, staggered_step
+from morqex import Workspace
+ws = Workspace('/home/zephyrain/lw/morph_workspace')
+cfg = NativeConfig.from_toml('/home/zephyrain/lw/MORQEX/configs/top_damage_native.toml')
+build_result = build_backend(cfg, ws)  # pending/complete；不会隐式升级计算资源
+backend = MFEMScalarBackend(cfg, ws)   # 未编译、陈旧或修改过的库会被拒绝
+# mesh 为既有 morqex.mechanics.TetMesh；完整旋转3x3输运张量可用于标量弱式。
+# A,b = backend.assemble(mesh, reaction_per_cell, diffusion_tensor_per_cell, source_per_cell)
+# damage = AT2Damage(mesh, backend, fracture_toughness_J_m2=10., length_m=2e-6)
+# mechanical = SplitElasticity(damage, young_Pa=93e9, poisson=.3, boundary='kubc')
+# result = staggered_step(mechanical, accepted_d, accepted_history, eigenstrain=cell_mandel_strain,
+#                        macro_strain=macro_mandel_strain, fatigue=True)
+```
+
+`AT2Damage` 用约束活跃集求解 `d_old<=d<=1`，报告投影 KKT 残差；不同于事后裁剪。`SplitElasticity` 采用各向同性体积/偏分裂，允许非均匀各向异性本征应变，但尚不支持一般各向异性断裂刚度。输出应力为单元体积平均。`FatigueHistory.trial(alpha)` 不修改旧状态；`staggered_step` 冻结已接受疲劳韧度，收敛后仅提交一次历史，需独立的加载路径细化验证。
+
+`[reference] cache_forms=true` 可选择 `CachedP1ScalarBackend`：只缓存固定网格积分几何及稀疏装配映射，每次使用新的驱动能和疲劳韧度重装配。启用时先与编译MFEM独立交叉检查，缓存不代表冻结已损伤算子，也不是降阶。比较脚本 `scripts/validate_top_damage_reference.py` 和 `scripts/study_top_damage_path.py` 分别记录装配开销、缓存成本、同协议场误差及求解时间；单独报告输出I/O，不能把装配速度当作整电池加速倍数。
+
+每个接受步在外部 `results/top_damage/<run>/` 写 `step_XXXXX.h5`、`step_XXXXX.vtu` 和实时更新的 `index.html`。HTML 可选步、Z切片和损伤/应力/疲劳字段；VTU保留完整三维节点和单元场。`--resume` 校验配置、网格、算法代码和编译后端身份，不允许静默混用旧状态。`--output` 可指定工作区结果子目录名；原路径存在时必须明确续算。
 
 ```bash
 $PY scripts/run_local.py --label top_damage_audit -- $PY /home/zephyrain/lw/MORQEX/scripts/audit_top_damage.py
@@ -35,7 +74,7 @@ registry = TopDamageRegistry().register("state-transfer",
 
 `OperatorStamp(geometry,topology,materials,boundary,discretization,backend)` 的六个输入必须为规范内容的 SHA256，`require_same(current)` 拒绝陈旧算子。拓扑键须包含各物理通道接触与电导，材料键包含晶粒取向和历史相关物性；旧缓存尚未自动迁移到该契约。
 
-新注册类型为 `fatigue/topology-update/homogenizer/cycle-stepper/state-transfer`，使用原有 `ComponentSpec`，无插件自动导入。注册本身不代表算法通过验证。完整字段、候选公式、许可证和验收条件在外部 11 份报告；文献能力矩阵为 `literature/top_damage_matrix.json`。HDF5 epoch、完整相场、动态 DFN 和周期跳跃是下一阶段任务，当前不提供伪实现。
+新注册类型为 `fatigue/topology-update/homogenizer/cycle-stepper/state-transfer`，使用原有 `ComponentSpec`，无插件自动导入。注册本身不代表算法通过验证。完整字段、候选公式、许可证和验收条件在外部 11 份报告；文献能力矩阵为 `literature/top_damage_matrix.json`。多晶电化学疲劳、物理开度/拓扑、动态 DFN 和周期跳跃仍须逐项验收。
 
 ```bash
 # 在下文资源运行器设置的外部工作目录中执行；默认生成真实 56 颗粒几何

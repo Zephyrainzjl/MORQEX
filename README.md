@@ -2,13 +2,15 @@
 
 面向复杂电极微结构与 DFN 的电化学、力学、热及退化跨尺度研究框架。独立于 ZynJoule；GEMsim 全部 274 个源码文件与 PyBaMM 26.3.1 的 355 个源码文件已集成到 `src`，不依赖外部 GEMsim checkout。迁移记录和许可证保留。
 
-当前分支 `research/nodewise-cbd16` 正在升级节点级 CBD、多模式绑定及平面锂金属半电池；上一稳定版本为 0.0.9。开发中的接口、数值通过、材料标定和论文验收分别记录，不宣称已达到顶刊验收或支持任意物理组合。
+当前分支 `research/top-damage` 在既有节点级 CBD、多模式绑定及平面锂金属半电池基础上增加退化参考；原 `research/nodewise-cbd16` 分支保留。开发中的接口、数值通过、材料标定和论文验收分别记录，不宣称已达到顶刊验收或支持任意物理组合。
 
 最新算例为 **6 个正极厚度节点，每节点真实 32³ 体素、56 个近球形颗粒，负极采用平面锂金属且没有负极颗粒**。共享模板模式复用不可变算子，节点状态独立。120 秒电化学—力学—均温双向反馈已完成，守恒与能量测试已通过；报告为外部 `reports/MORQEX_sphere32_Li_short.html`。本轮完整界面参考未启用退化；32³ 两轮完整循环尚未通过 CPU 预算，不将部分放电冒充循环结果。64 状态浓度闭合尚需模式/网格收敛，守恒残差不代表工程预测误差。
 
 ## 使用
 
 TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`research/top-damage`）。当前完成首轮审计、13 项文献初筛、物理/数学方案和接触网络、保库存分区转移、算子失效检测接口；尚未完成疲劳裂纹与长期循环闭环。`python -m morqex.top_damage status` 返回真实资格范围；`morqex top-damage` 使用同一入口。研究记录与全部 11 份阶段文档位于外部 `morph_workspace/research_archive/top_damage`，可读报告为 `reports/MORQEX_TOP_DAMAGE_phase_A.html`。该子框架不使用神经网络，旧求解器保持不变。
+
+新增 MFEM 4.10 可编译库源码（`src/morqex/vendor/mfem`，BSD-3），以 TOML 驱动 CMake/Ninja 编译，通过 MORQEX 的 C++17/ctypes API 调用。`top-damage build` 支持单核限时断点编译；`top-damage reference` 运行三维力学—不可逆 AT2—疲劳历史参考，逐接受步生成 HDF5、ParaView VTU 与可切换步/切片的 HTML。具体命令见 [API](API.md)。这条新增路线目前是机械试件资格验证，尚不等于多晶正极—拓扑演化—动态 DFN 的长期闭环；不输出假定的容量衰减曲线。
 
 完整接口、单位、操作步骤与适用范围见 [API.md](API.md)。源码仅保留 README 和 API 两份 Markdown；历史理论、计划、日志和旧接口说明完整归档到源码外 `morph_workspace/research_archive`。文献表保留在 [literature](literature)，第三方说明见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
 
