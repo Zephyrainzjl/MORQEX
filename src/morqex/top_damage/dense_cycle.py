@@ -231,7 +231,10 @@ def run_dense_cycle(config_path,workspace,*,environment='gentle',steps=1,output=
         if cfg.protocol=='voltage-window':record['mechanical_cycle']=float(completed)+(.5 if phase=='charge' else 0.)
         if finite:
             record.update(mechanics_model=cfg.mechanics_model,minimum_jacobian=state.minimum_jacobian,
-                          finite_newton_iterations=state.newton_iterations)
+                          finite_newton_iterations=state.newton_iterations,
+                          finite_total_newton_iterations=sum(s['newton_iterations'] for s in mechanics.solve_diagnostics),
+                          finite_roundoff_merit_acceptances=sum(s['roundoff_merit_acceptances'] for s in mechanics.solve_diagnostics),
+                          finite_line_search_backtracks=sum(s['backtracks'] for s in mechanics.solve_diagnostics))
         nodal=d[mesh.cells];grad=np.einsum('ei,eij->ej',nodal,mesh.gradients)
         d2=(nodal.sum(axis=1)**2+(nodal**2).sum(axis=1))/20
         record['crack_surface_functional_m2']=float(mesh.volumes@(.5*d2/cfg.length_m+.5*cfg.length_m*np.sum(grad**2,axis=1)))

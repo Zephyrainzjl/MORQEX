@@ -4,8 +4,10 @@ cpu_threads = 1
 nice = 15
 address_space_mib = 6144
 resident_memory_mib = 3072
-wall_seconds = 180
-cpu_seconds = 120
+# One low-priority CPU remains the concurrency cap. A difficult accepted
+# nonlinear increment may need longer without increasing machine load.
+wall_seconds = 660
+cpu_seconds = 600
 run_disk_mib = 128
 file_size_mib = 64
 minimum_available_memory_mib = 8192

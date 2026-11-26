@@ -151,7 +151,7 @@ class Hyperelasticity:
         if not self.matrix_free:
             self.rows=np.broadcast_to(mesh.dofs[:,:,None],(n,12,12)).ravel()
             self.cols=np.broadcast_to(mesh.dofs[:,None,:],(n,12,12)).ravel()
-        self.preconditioner=None;self.linear_iterations=[]
+        self.preconditioner=None;self.linear_iterations=[];self.solve_diagnostics=[]
         if 'amg' in linear_solver and self.P.shape[1]:
             import pyamg
             from morqex.mechanics.constraints import _rigid
@@ -202,6 +202,14 @@ class Hyperelasticity:
             norm=np.asarray(self.P.power(2).sum(axis=0)).ravel()
             u+=self.P@(np.asarray(self.P.T@(initial-lift))/norm)
         force_scale=self.young.max()*np.max(np.ptp(self.mesh.points,axis=0))**2
+        # EvalW subtracts O(modulus) invariants to obtain the much smaller
+        # strain energy. Near equilibrium, Armijo alone can reject a Newton
+        # correction whose force residual is already at roundoff. This is an
+        # arithmetic noise scale, NOT a physical error bound or a relaxed
+        # equilibrium tolerance. Require residual decrease as a second merit
+        # only when predicted work is below this scale.
+        roundoff_energy=64*np.finfo(float).eps*float(self.mesh.volumes@(self.shear+self.bulk))
+        fallback_count=0;backtracks=0;trace=[]
         for iteration in range(max_iterations+1):
             energy,internal,A,F,p,plus=self.assemble(u,chemical_F,degradation)
             r=internal-external;rr=np.asarray(self.P.T@r)
@@ -209,8 +217,12 @@ class Hyperelasticity:
             residual=float(np.linalg.norm(rr)/scale)
             physical=float(np.linalg.norm(self.base.constraint.equilibrium_projection.T@r)/scale)
             potential=energy-float(external@u)
+            trace.append({'iteration':iteration,'residual':residual,'potential_J':potential})
             if residual<=tolerance:
                 if physical>max(tolerance,1e-7):raise MechanicalSolveError('Unbalanced nominal load on gauges')
+                self.solve_diagnostics.append({'newton_iterations':iteration,
+                    'roundoff_merit_acceptances':fallback_count,'backtracks':backtracks,
+                    'roundoff_energy_scale_J':roundoff_energy,'trace':trace})
                 J=np.linalg.det(F);sigma=(p@np.swapaxes(F,1,2))/J[:,None,None]
                 return HyperelasticState(u.reshape(-1,3),F,p,sigma,plus,energy,potential,r.reshape(-1,3),physical,iteration,float(J.min()))
             if iteration==max_iterations:break
@@ -237,12 +249,17 @@ class Hyperelasticity:
             for _ in range(35):
                 trial=u+step*direction
                 try:
-                    new_energy,*_=self.assemble(trial,chemical_F,degradation,tangent=False)
+                    new_energy,new_force,*_=self.assemble(trial,chemical_F,degradation,tangent=False)
                 except ValueError:
                     step*=.5;continue
                 new_potential=new_energy-float(external@trial)
                 if new_potential<=potential+1e-4*step*slope+1e-13*max(abs(potential),force_scale*np.max(np.ptp(self.mesh.points,axis=0))*1e-8):
                     u=trial;break
+                if abs(step*slope)<=roundoff_energy and new_potential<=potential+roundoff_energy:
+                    trial_residual=np.linalg.norm(self.P.T@(new_force-external))
+                    if trial_residual<(1-1e-4*step)*np.linalg.norm(rr):
+                        fallback_count+=1;u=trial;break
+                backtracks+=1
                 step*=.5
             else:raise MechanicalSolveError('Finite-strain positive-J line search failed')
         raise MechanicalSolveError('Finite-strain Newton did not converge; accepted state unchanged')

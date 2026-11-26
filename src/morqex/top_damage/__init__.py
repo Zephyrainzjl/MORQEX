@@ -11,9 +11,12 @@ from .coupled_reference import SplitElasticity, staggered_step
 from .polycrystal import PolycrystalData, partition_grains
 from .morphology import PolycrystalSpec, create_polycrystal
 from .hyperelastic import HyperelasticBackend, Hyperelasticity, build_hyperelastic, finite_staggered_step
+from .periodic_transport import PeriodicTransportResult, periodic_transport
+from .crack_opening import OpeningResult, reconstruct_opening
 
 __all__ = ['ConductingNetwork', 'OperatorStamp', 'TopDamageRegistry',
            'PartitionTransfer', 'TransferResult', 'NativeConfig', 'MFEMScalarBackend',
            'build_backend', 'AT2Damage', 'FatigueHistory', 'SplitElasticity', 'staggered_step',
            'PolycrystalData', 'partition_grains', 'PolycrystalSpec', 'create_polycrystal',
-           'HyperelasticBackend','Hyperelasticity','build_hyperelastic','finite_staggered_step']
+           'HyperelasticBackend','Hyperelasticity','build_hyperelastic','finite_staggered_step',
+           'PeriodicTransportResult','periodic_transport','OpeningResult','reconstruct_opening']

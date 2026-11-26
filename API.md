@@ -2702,3 +2702,12 @@ Repeat the last command to advance bounded accepted steps. Reusing an output wit
 
 - `Workspace()`
 - `Workspace.path(self, *parts: str)`
+
+### TOP-DAMAGE topology candidates and periodic transport
+
+- `periodic_transport(field, spacing_zyx_m, tolerance=1e-10)`: three periodic finite-volume correctors with one shared AMG preconditioner. Returns an immutable **XYZ 3×3 tensor**, corrector fields, full conservation residuals and a flux/energy check. True zero phases and floating components are retained. The input is a local scalar constitutive field; this does not infer particle diffusivity, anisotropic local tensors or crack aperture. Periodic effective tensors must not be confused with the insulated-side finite-block measurement from `effective_conductivity`.
+- `reconstruct_opening(points_m, displacement_m, centres_m, normals, inner_distance_m=..., outer_distance_m=..., tangential_radius_m=..., sample_damage=..., weights=...)`: two-sided affine displacement extrapolation on **explicitly supplied crack patches**. Includes finite-rotation covariance, positive aperture, signed gap, tangential slip, support conditioning and fit diagnostics. `result.require_usable()` rejects unresolved fits. Negative signed gap is preserved; this is not a solved contact constraint. The caller must supply the relevant material neighbourhood, crack surface and support convergence study. No automatic damage-to-pore conversion or wetting is performed.
+
+The displacement-plane idea is prior art (Babaoğlu, Kaynar & Göktepe, CMAME 458, 119016, DOI [10.1016/j.cma.2026.119016](https://doi.org/10.1016/j.cma.2026.119016)). The present independent 3D local fit does not reproduce that paper's complete spline/path-detection algorithm. Its kernel tests are not physical battery aperture qualification.
+
+The finite-strain Newton solver records `solve_diagnostics`. A near-equilibrium residual-decrease merit avoids rejecting a valid force correction solely because strain-energy differences fall below the floating-point invariant-subtraction scale. The requested equilibrium tolerance is unchanged; this arithmetic scale is not a rigorous physical error bound.

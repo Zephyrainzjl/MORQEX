@@ -117,6 +117,23 @@ def test_free_chemical_expansion_is_zero_stress(backend):
     assert np.max(np.abs(s.cauchy_stress_Pa))<1e-7
 
 
+def test_micrometre_gigapascal_equilibrium_and_scaling(backend):
+    """Energy cancellation must not block an accurate force correction."""
+    n=3;small=TetMesh.from_volume(Volume(np.ones((n,n,n),np.uint8),spacing=(1e-6/n,)*3))
+    normalized=cube(n)
+    young=1+92*(normalized.centers[:,0]>.5)
+    fc=np.broadcast_to(np.eye(3),(len(small.cells),3,3)).copy()
+    fc[:,0,0]+= .012*normalized.centers[:,2]
+    fc[:,1,1]-= .007*normalized.centers[:,0]
+    a=Hyperelasticity(normalized,backend,young,.3)
+    b=Hyperelasticity(small,backend,young*1e9,.3)
+    sa=a.solve(fc,tolerance=1e-9);sb=b.solve(fc,tolerance=1e-9)
+    assert sa.equilibrium_residual<1e-9 and sb.equilibrium_residual<1e-9
+    np.testing.assert_allclose(sb.displacement_m/1e-6,sa.displacement_m,rtol=1e-7,atol=1e-11)
+    np.testing.assert_allclose(sb.cauchy_stress_Pa/1e9,sa.cauchy_stress_Pa,rtol=1e-7,atol=1e-9)
+    assert sb.elastic_energy_J/1e-9==pytest.approx(sa.elastic_energy_J,rel=1e-9)
+
+
 def test_matrix_free_action_and_amg_match_sparse(backend):
     mesh=cube(3);young=np.where(mesh.centers[:,0]<.5,100.,20.)
     sparse=Hyperelasticity(mesh,backend,young,.3)
