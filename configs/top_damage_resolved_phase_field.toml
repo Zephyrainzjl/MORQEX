@@ -1,0 +1,21 @@
+schema_version = 1
+[phase_field]
+geometry = "results/top_damage/resolved_particles_reference/initial.h5"
+field = "results/top_damage/resolved_particles_reference/fields_00000.h5"
+output = "results/top_damage/resolved_particles_reference/mechanics_00000.h5"
+# For later times, specify previous=".../mechanics_00000.h5", the next input
+# field, and a new output. Histories and geometry must match exactly.
+[mechanics]
+cmax_mol_m3 = 49600.0
+reference_stoichiometry = 0.5
+active_young_Pa = 93e9
+cbd_young_Pa = 1e9
+poisson = 0.3
+active_Gc_J_m2 = 10.0
+cbd_Gc_J_m2 = 10000.0
+length_m = 1e-6
+precrack_radius_m = 1e-6
+chemical_strain_per_stoichiometry = [0.012, 0.012, 0.040]
+stagger_tolerance = 1e-6
+boundary = "kubc"
+# Synthetic verification parameters, not calibrated NMC532 fatigue data.

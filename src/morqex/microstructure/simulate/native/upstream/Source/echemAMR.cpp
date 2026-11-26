@@ -160,6 +160,10 @@ void echemAMR::InitData()
     {
         // restart from a checkpoint
         ReadCheckpointFile();
+        // MORQEX: restore geometry-dependent loading metadata as well as fields.
+        // These functions update parameters/global storage, not checkpoint DOFs.
+        init_volumes();
+        initialconditions(*h_prob_parm, *d_prob_parm);
     }
 
 }

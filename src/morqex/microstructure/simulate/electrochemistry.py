@@ -170,14 +170,25 @@ def audit_solver(directory):
         hits=re.findall(phase+r'\s*:\s*current[^\n]*?error\s*=\s*([\d.eE+\-]+)\s*%',text)
         if hits:errors[phase]=float(hits[-1])
     # Defaults match DischargeSettings. Read actual case tolerance overrides.
-    tolerance=1e-8
+    tolerance=1e-8;absolute_tolerance=1e-12
     inputs=directory/'inputs'
     if inputs.exists():
         hits=re.findall(r'^\s*echemamr.bv_nonlinear_reltol\s*=\s*([\d.eE+\-]+)',inputs.read_text(),re.M)
         if hits:tolerance=float(hits[-1])
-    failed=any(marker in text for marker in ('Failed to converge','amrex::Abort','SIGSEGV','SIGABRT'))
+        hits=re.findall(r'^\s*echemamr.bv_nonlinear_abstol\s*=\s*([\d.eE+\-]+)',inputs.read_text(),re.M)
+        if hits:absolute_tolerance=float(hits[-1])
+    failed=any(marker in text for marker in ('Failed to converge','Failing to converge','amrex::Abort','SIGSEGV','SIGABRT'))
+    # A later converged solve cannot conceal an earlier unconverged state.
+    starts=text.count('MORQEX BV BEGIN')
+    accepted=re.findall(r'MORQEX BV ACCEPT\s+(\S+)\s+(\S+)',text)
+    try:
+        all_accepted=starts>0 and starts==len(accepted) and all(
+            np.isfinite([float(r),float(a)]).all() and (float(r)<=tolerance or float(a)<=absolute_tolerance)
+            for r,a in accepted)
+    except ValueError:all_accepted=False
     return dict(status='solver failure' if failed else 'run completed',
-        nonlinear_convergence_confirmed=bool(last and last[0]<=tolerance and not failed),
+        nonlinear_convergence_confirmed=bool(all_accepted and not failed),
+        nonlinear_solves_started=starts,nonlinear_solves_accepted=len(accepted),
         last_nonlinear_relative_residual=last[0] if last else None,
         last_nonlinear_absolute_residual=last[1] if last else None,
         requested_nonlinear_relative_tolerance=tolerance,mass_error_percent=errors,

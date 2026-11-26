@@ -391,7 +391,14 @@ void initialconditions(ProbParm & h_prob_parm, ProbParm & d_prob_parm)
     amrex::Real Applied_current_density_anode = -Applied_current / (surfaceanodeside_currentcollector_activematerial + surfaceanodeside_currentcollector_CBDsolid); // [A.m-2]
     amrex::Real Applied_current_density_cathode = Applied_current / (surfacecathodeside_currentcollector_activematerial + surfacecathodeside_currentcollector_CBDsolid); // [A.m-2]
     // Update potential BC
-    echemAMR::host_global_storage->pot_bc_lo[0]=-Applied_current_density_cathode/electrochem::Ks_bulk_cathode(1, h_prob_parm);
+    // MORQEX: uniform normal potential gradient, normalized by actual collector
+    // conductance. Dividing by active-material conductivity alone imposes the
+    // wrong total current when the collector is covered by a different CBD.
+    const auto collector_conductance = surfacecathodeside_currentcollector_activematerial
+        * electrochem::Ks_bulk_cathode(1,h_prob_parm)
+        + surfacecathodeside_currentcollector_CBDsolid * electrochem::Ks_bulk_CBD(h_prob_parm);
+    if (!(collector_conductance>0)) amrex::Abort("MORQEX: no positive cathode collector conductance");
+    echemAMR::host_global_storage->pot_bc_lo[0]=-Applied_current/collector_conductance;
 
     // ELECTROCHEMICAL ACTIVE INTERFACE
     // Surface calculations
@@ -495,7 +502,7 @@ void initproblemdata(Box const& bx, Array4<Real> const& phi, GeometryData const&
                     } 
                     else 
                     { // Purely solid domain
-                        phi(i,j,k,CO_ID) = prob_parm->cs_a_to;
+                        phi(i,j,k,CO_ID) = 0.0; // MORQEX: dry inert CBD stores no intercalated Li
                         phi(i,j,k,POT_ID) = prob_parm->phis_a_to; // solid potential 
                     }       
                 } 
@@ -512,7 +519,7 @@ void initproblemdata(Box const& bx, Array4<Real> const& phi, GeometryData const&
                     else 
                     { 
                         // Purely solid domain
-                        phi(i,j,k,CO_ID) = prob_parm->cs_c_to;
+                        phi(i,j,k,CO_ID) = 0.0; // MORQEX: dry inert CBD stores no intercalated Li
                         phi(i,j,k,POT_ID) = prob_parm->phis_c_to; // solid potential 
                     }                     
                 }

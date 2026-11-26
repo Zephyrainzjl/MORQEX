@@ -2738,3 +2738,73 @@ $PY scripts/run_local.py --label region_probe -- $PY -m morqex.top_damage region
 This command prepares the regional DFN state, solves each configured microstructure node serially, projects finite-mechanics chemical potentials, advances a second DFN segment, runs a matched zero-feedback comparison, and creates the voxel-to-node HTML. `--stage prepare`, `--stage node --node 0`, `--stage feedback`, and `--stage report` provide bounded restart points. Repeating a completed stage reads its result. Configuration/source/geometry/checksum changes reject resume; select a new output identifier instead. `run_probe(RegionProbeConfig(...), workspace, stage=...)` provides the identical Python API.
 
 The TOML controls node/region counts, geometry, material host, temperature, time increment, C-rate, explicit CBD microporosity/ionic efficiency, chemical stretch, elastic/fracture constants and solver tolerance. This fixture uses pore/active/CBD labels 0/1/2 and fixed zero-macro-strain KUBC at each microdomain; it does **not** enforce a series-stack force condition. A 64-region request produced 66 connected regions on the supplied geometry; disconnected regional supports are split rather than silently merged. The supplied values are research sensitivity parameters, not a calibrated NMC fatigue card. Porous CBD here is an unresolved overlapping continuum, not CT-resolved liquid pores.
+
+## 解析三维电化学 → 有限变形/疲劳相场
+
+所有命令通过 `scripts/run_local.py`，单线程、低优先级；不在源码生成数据。
+以下 `PY` 指外部虚拟环境 Python，`ROOT` 指 MORQEX 源目录。
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+ROOT=/home/zephyrain/lw/MORQEX
+$PY $ROOT/scripts/run_local.py --label resolved_build -- $PY -m morqex.top_damage build-resolved $ROOT/configs/top_damage_resolved_hypre.toml
+```
+
+构建返回 `dependency_pending` 或 `pending` 时重复同一命令，直到 `complete`。
+每个 Ninja 步限一线程/55秒。固定 HYPRE 2.32.0 压缩包 SHA256 和源文件逐项校验，
+许可证保留；首次需网络。仅 CPU/FP64 被验证，不能把它当作 GPU 路径。
+
+```bash
+$PY $ROOT/scripts/run_local.py --label planar -- $PY $ROOT/benchmarks/validate_resolved_echem.py --output my_planar_check
+$PY $ROOT/scripts/run_local.py --label particles -- $PY $ROOT/benchmarks/validate_resolved_particles.py --output resolved_particles_reference
+$PY $ROOT/scripts/run_local.py --label phase -- $PY -m morqex.top_damage resolved-phase-field $ROOT/configs/top_damage_resolved_phase_field.toml
+# 也可对全部已存三维场执行历史链；已运行第0步则用 --start 1
+$PY $ROOT/scripts/run_local.py --label history -- $PY $ROOT/benchmarks/validate_resolved_phase_history.py results/top_damage/resolved_particles_reference --start 1
+```
+
+颗粒基准需要 `configs/top_damage_dense_particles.toml` 生成的父几何，
+通过 `top-damage geometry` 入口先生成。基准明确创建一个新的初始连通 CBD 结构，
+保留全部活性颗粒，记录初始闭孔/CBD 处理；该处理不是损伤演化规则。
+基准检查惰性 CBD 锂浓度为零、固相电流积分库存、电解液库存、逐次非线性残差，
+但还不证明微结构网格收敛或真实材料寿命。`--dt`、`--stop` 可指定数值验证窗口。
+`--warm-start` 复用电势迭代初值；`--linear-budget 0.1` 将外层物理残差容差的
+10% 分配给内层线性残差（单层网格的 l2/linf 换算），外层验收容差不变。
+这不是点态误差界，也不能消除显式反应—隐式扩散分裂的时间步限制。
+所有原生试步在进入 OCP/BV 前检查浓度可行性，越界即失败并保留前一检查点，
+禁止截断浓度来取得通过。大步失稳案例及拒绝验证见
+`benchmarks/validate_resolved_safeguards.py`；时间步场对照用
+`benchmarks/compare_resolved_time_steps.py coarse_result fine_result --output unique.json`。
+
+三维相场 TOML 的 `phase_field` 指定 `geometry`、`field`、`output` 和可选 `previous`。
+下一时刻必须提供上一接受态；同一几何、网格、材料/源码身份及严格递增时间被检查，
+已有输出禁止覆盖。`mechanics` 可指定弹性、断裂、化学膨胀、正则化长度、约束和浓度尺度。
+默认机械参数是合成验证参数，不等于实验标定。
+批量历史驱动每帧使用独立进程、保存 `mechanics_*.solver.log`；可用 `--steps 20`
+分批，再用 `--start 20` 续算，避免长期保留求解器导致内存累积。
+
+```python
+from morqex.top_damage.resolved_echem import ResolvedElectrochemistry
+from morqex.top_damage.resolved_phase_field import ResolvedMechanicsConfig, advance_resolved_phase_field
+backend = ResolvedElectrochemistry(workspace)
+# backend.run(volume, directory, phase_map, parameters, restart=checkpoint)
+# 原生正 Crate 表示充电，负值表示放电。必须显式提供时间步和停止时刻。
+# export_fields 由 AMReX 原生 reader 导出完整 FP64 ZYX 场，不做插值。
+record = advance_resolved_phase_field(geometry_h5, fields_h5, new_state_h5, workspace,
+    config=ResolvedMechanicsConfig(), previous=previous_state_h5)
+```
+
+场接口核对两种固相掩码、原点/间距/轴序、浓度可行性；当前有限元桥要求零原点，
+正极占据全横截面并位于 x 低端。独立体积积分检查体素→四面体锂库存。
+相场返回力学化学势，但**尚未将其反馈到原生三维扩散/BV**。
+原生三维限定单级、封闭电解液、阴极侧法向电势梯度和阳极侧基准电势边界，
+拒绝浮置电势分量、CBD 双连续体、浓度截断及不适用选项。一般 MORQEX DFN API
+仍独立存在，不能把两个已运行的分支称为全部耦合验收。
+原生重启检查原来的晶格间距、原点和相拓扑；改变微结构后必须另行实现保守状态
+映射，不能拿旧检查点覆盖新几何后继续称作动态拓扑求解。
+
+```bash
+$PY $ROOT/scripts/run_local.py --label fields --render -- $PY -m morqex.top_damage resolved-report results/top_damage/resolved_particles_reference --export
+```
+
+HTML 可切换时间、固相/液相浓度、电势、应力、损伤增量、疲劳和力学化学势，
+完整 HDF5/VTI/PVD/XDMF 均在输入结果目录。损伤场没有被自动改成孔隙。

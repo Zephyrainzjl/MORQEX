@@ -73,3 +73,20 @@ $PY scripts/run_local.py --label full_mechanics --gpu -- $PY /home/zephyrain/lw/
 报告在外部 `morph_workspace/reports`。0.0.9 稳定报告为 `MORQEX_crossscale_cathodes_report.html`；新结果依据自己的来源、配置、残差与误差验收，不借用旧 SVE 的通过状态。
 
 开发版本 `0.1.0.dev0` 的新报告：`morph_workspace/reports/MORQEX_full_volume_report.html`。五个完整 CT 共 80,308,348 体素；10 项完整体积输运已通过 1e-7 相对残差，43 个原生 DFN 放电/循环基线已通过协议检查。NMC1CAL 的 DFN (20,40) 对 (40,80) 网格电压 RMSE 为 0.1C 0.00531 mV、3C 0.13285 mV、5C 0.24834 mV；它们是同物理原生 DFN 离散对照，不是微结构跨尺度误差。完整 CT 多模态双向力学及退化尚需独立验收。
+
+### 已解析三维电化学与疲劳场（2026-11-26）
+
+`morqex.top_damage.resolved_echem` 统一调用源码集成的 echemAMR/AMReX，
+可选 HYPRE 由 TOML 下载校验和单核编译，源与二进制都在外部工作区。
+`resolved_phase_field` 将完整体素浓度保守传给有限变形/AT2，并显式传递疲劳历史。
+[实际三维场 HTML](/home/zephyrain/lw/morph_workspace/reports/MORQEX_resolved_3D_phase_field.html)
+包括全 32³ 正极、8 颗粒/32 晶粒、CBD、逐时刻浓度/电势/应力/损伤；显示增量可区分预置缺陷。
+
+本次原生三维基准包含 **2 秒细时间步验证和 40 秒/41 帧延长验证，不是完整循环或寿命预测**。
+40 秒案例全部体素状态已逐帧传入有限变形疲劳相场。时间步 2→1 秒的电压最大差
+0.112 mV、固相浓度演化量 L2 差 0.424%；这是时间离散间差异，不是实验精度。
+原生材料卡为
+NMC532；惰性 CBD、不变材料拓扑、等温、单级网格边界配置已核对。
+NMC811/LFP 的原生三维材料扩展、物理裂纹侵液、三维力学化学势反向反馈和长期
+循环误差尚未验收。已有 DFN 完整充放电及六节点双向探针是独立验收案例。
+构建、复现与三维相场 TOML 入口见 [API.md](API.md)。

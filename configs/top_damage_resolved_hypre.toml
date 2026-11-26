@@ -1,0 +1,7 @@
+schema_version = 1
+[resolved]
+device = "cpu"
+precision = "float64"
+jobs = 1
+slice_seconds = 55
+hypre = true

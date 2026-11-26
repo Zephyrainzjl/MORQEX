@@ -4,6 +4,7 @@
 #include <Transport.H>
 #include <Reactions.H>
 #include <bv_utils.H>
+#include <cmath>
 
 void echemAMR::solve_potential(Real current_time)
 {
@@ -20,6 +21,14 @@ void echemAMR::solve_potential(Real current_time)
     int max_fmg_iter = 0;
     int verbose = 1;
     int bottom_verbose = 0;
+    int morqex_potential_offset = 0;
+    Real morqex_linear_budget_fraction = 0.0;
+    amrex::ParmParse morqex_options("echemamr");
+    morqex_options.query("morqex_potential_offset",morqex_potential_offset);
+    morqex_options.query("morqex_linear_budget_fraction",morqex_linear_budget_fraction);
+    if (!std::isfinite(morqex_linear_budget_fraction) || morqex_linear_budget_fraction<0.0 ||
+        morqex_linear_budget_fraction>0.25 || (morqex_linear_budget_fraction>0.0 && finest_level!=0))
+        amrex::Abort("MORQEX: linear residual budgeting requires one level and fraction in [0,0.25]");
     Real ascalar = 0.0;
     Real bscalar = 1.0;
     int num_nonlinear_iters;
@@ -122,7 +131,10 @@ void echemAMR::solve_potential(Real current_time)
     }
 
 
+    const Real cathode_reference = phi_new[0].max(POT_ID,0,false);
     Vector<MultiFab> potential(finest_level+1);
+    Vector<MultiFab> potential_reference(finest_level+1);
+    Vector<MultiFab> fluctuation(finest_level+1);
     Vector<MultiFab> acoeff(finest_level+1);
     Vector<MultiFab> bcoeff(finest_level+1);
     Vector<Array<MultiFab, AMREX_SPACEDIM>> gradsoln(finest_level+1);
@@ -140,6 +152,8 @@ void echemAMR::solve_potential(Real current_time)
     for (int ilev = 0; ilev <= finest_level; ilev++)
     {
         potential[ilev].define(grids[ilev], dmap[ilev], 1, num_grow);
+        potential_reference[ilev].define(grids[ilev], dmap[ilev], 1, num_grow);
+        fluctuation[ilev].define(grids[ilev], dmap[ilev], 1, 0);
         acoeff[ilev].define(grids[ilev], dmap[ilev], 1, 0);
         bcoeff[ilev].define(grids[ilev], dmap[ilev], 1, 1);
         solution[ilev].define(grids[ilev], dmap[ilev], 1, 1);
@@ -159,7 +173,10 @@ void echemAMR::solve_potential(Real current_time)
         robin_f[ilev].define(grids[ilev], dmap[ilev], 1, 1);
     }
 
-    Real errnorm_1st_iter;
+    Real errnorm_1st_iter = 0.0;
+    // MORQEX: an exhausted nonlinear loop must never publish an accepted state.
+    if (num_nonlinear_iters < 1) amrex::Abort("MORQEX: positive potential iteration budget required");
+    if (buttler_vohlmer_flux) amrex::Print() << "MORQEX BV BEGIN time=" << current_time << "\n";
     
     MLABecLaplacian mlabec(Geom(0, finest_level), boxArray(0, finest_level), 
                            DistributionMap(0, finest_level), info);
@@ -216,6 +233,22 @@ void echemAMR::solve_potential(Real current_time)
             // Copy (FabArray<FAB>& dst, FabArray<FAB> const& src, int srccomp, 
             // int dstcomp, int numcomp, const IntVect& nghost)
             amrex::Copy(potential[ilev], Sborder, POT_ID, 0, 1, num_grow);
+            potential_reference[ilev].setVal(0.0);
+            if (morqex_potential_offset) {
+#if defined(C_AM_ID) && defined(C_CBD_ID)
+                for (MFIter mfi(Sborder);mfi.isValid();++mfi) {
+                    auto state=Sborder.const_array(mfi);
+                    auto ref=potential_reference[ilev].array(mfi);
+                    amrex::ParallelFor(amrex::grow(mfi.validbox(),num_grow),[=] AMREX_GPU_DEVICE(int i,int j,int k) {
+                        ref(i,j,k)=cathode_reference*(state(i,j,k,C_AM_ID)+state(i,j,k,C_CBD_ID));
+                    });
+                }
+#else
+                amrex::Abort("MORQEX offset requires the Microstructure phase definition");
+#endif
+                amrex::MultiFab::Subtract(potential[ilev],potential_reference[ilev],0,0,1,num_grow);
+                if (nl_it>0) amrex::MultiFab::Copy(potential[ilev],fluctuation[ilev],0,0,1,0);
+            }
 
             acoeff[ilev].setVal(1.0); //will be scaled by ascalar
             mlabec.setACoeffs(ilev, acoeff[ilev]);
@@ -273,8 +306,8 @@ void echemAMR::solve_potential(Real current_time)
                 face_bcoeff_res[idim].define(ba, bcoeff[ilev].DistributionMap(), 1, 0);
             }
             // true argument for harmonic averaging
-            amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff), bcoeff[ilev], geom[ilev], true);
-            amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff_res), bcoeff[ilev], geom[ilev], true);
+            amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff), bcoeff[ilev], geom[ilev], 1, true);
+            amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff_res), bcoeff[ilev], geom[ilev], 1, true);
             
             Array<MultiFab, AMREX_SPACEDIM> kdterm;
             for (int idim = 0; idim < AMREX_SPACEDIM; ++idim)
@@ -422,7 +455,7 @@ void echemAMR::solve_potential(Real current_time)
                                 explterms_arr(i, j, k) += jdash_bv * activ_func / mod_gradc * 
                                 (n_ls[0] * n_ls[1] * dphidt1 + n_ls[0] * n_ls[2] * dphidt2);
                                 kdterm_arr(i,j,k) *= (1.0-activ_func);
-                                explterms_arr_res(i, j, k) += kdterm_arr(i, j, k);
+
                             }
                         });
                     }
@@ -465,6 +498,12 @@ void echemAMR::solve_potential(Real current_time)
                         rhs_arr(i, j, k) += (kdterm_x(i, j, k) - kdterm_x(i + 1, j, k)) / dx[0] 
                         + (kdterm_y(i, j, k) - kdterm_y(i, j + 1, k)) / dx[1] +
                         (kdterm_z(i, j, k) - kdterm_z(i, j, k + 1)) / dx[2];
+
+                        // MORQEX: include electrolyte concentration-current flux in
+                        // the same physical residual, on every face (not only BV faces).
+                        rhs_arr_res(i,j,k) += (kdterm_x(i,j,k)-kdterm_x(i+1,j,k))/dx[0]
+                          + (kdterm_y(i,j,k)-kdterm_y(i,j+1,k))/dx[1]
+                          + (kdterm_z(i,j,k)-kdterm_z(i,j,k+1))/dx[2];
 
                         rhs_arr_res(i, j, k) += (term_x_res(i, j, k) - term_x_res(i + 1, j, k)) / dx[0] 
                         + (term_y_res(i, j, k) - term_y_res(i, j + 1, k)) / dx[1] +
@@ -535,6 +574,27 @@ void echemAMR::solve_potential(Real current_time)
                 }
             }
 
+            // Exact change of variable phi = psi + phi_ref. Transform both
+            // linearized and physical right-hand sides; no weak conductivity,
+            // changed gauge, altered BV law or relaxed stopping criterion.
+            if (morqex_potential_offset) {
+                for (MFIter mfi(rhs[ilev]);mfi.isValid();++mfi) {
+                    auto ref=potential_reference[ilev].const_array(mfi);
+                    auto f=rhs[ilev].array(mfi);auto fr=rhs_res[ilev].array(mfi);
+                    auto dx=geom[ilev].CellSizeArray();Real relaxation=ascalar;
+                    GpuArray<Array4<Real const>,AMREX_SPACEDIM> b{AMREX_D_DECL(face_bcoeff[0].const_array(mfi),face_bcoeff[1].const_array(mfi),face_bcoeff[2].const_array(mfi))};
+                    GpuArray<Array4<Real const>,AMREX_SPACEDIM> br{AMREX_D_DECL(face_bcoeff_res[0].const_array(mfi),face_bcoeff_res[1].const_array(mfi),face_bcoeff_res[2].const_array(mfi))};
+                    amrex::ParallelFor(mfi.validbox(),[=] AMREX_GPU_DEVICE(int i,int j,int k) {
+                        IntVect c(AMREX_D_DECL(i,j,k));
+                        f(c)-=relaxation*ref(c);
+                        for(int axis=0;axis<AMREX_SPACEDIM;++axis) {
+                            IntVect lo=c,hi=c;lo[axis]-=1;hi[axis]+=1;
+                            f(c)+=(b[axis](hi)*(ref(hi)-ref(c))-b[axis](c)*(ref(c)-ref(lo)))/(dx[axis]*dx[axis]);
+                            fr(c)+=(br[axis](hi)*(ref(hi)-ref(c))-br[axis](c)*(ref(c)-ref(lo)))/(dx[axis]*dx[axis]);
+                        }
+                    });
+                }
+            }
             // set b with diffusivities
             mlabec.setBCoeffs(ilev, amrex::GetArrOfConstPtrs(face_bcoeff));
             mlabec_res.setBCoeffs(ilev, amrex::GetArrOfConstPtrs(face_bcoeff_res));
@@ -544,85 +604,67 @@ void echemAMR::solve_potential(Real current_time)
             mlabec_res.setLevelBC(ilev, &(potential[ilev]), &(robin_a[ilev]), &(robin_b[ilev]), &(robin_f[ilev]));
         }
 
-        mlmg.solve(GetVecOfPtrs(solution), GetVecOfConstPtrs(rhs), tol_rel, tol_abs);
-        mlmg_res.apply(GetVecOfPtrs(residual),GetVecOfPtrs(solution));
-
-        //error norm calculation
-        // copy solution back to phi_new
-        if(buttler_vohlmer_flux)
-        {
-            Real abs_errnorm_all=0.0;
-            Real rel_errnorm_all=0.0;
-            for (int ilev = 0; ilev <= finest_level; ilev++)
-            {
-                amrex::MultiFab::Copy(err[ilev], phi_new[ilev], POT_ID, 0, 1, 0);
-                amrex::MultiFab::Subtract(err[ilev],solution[ilev], 0, 0, 1 ,0);
-                Real errnorm=err[ilev].norm2();
-
-                if(nl_it==0)
-                {
-                    errnorm_1st_iter=errnorm;
+        // Evaluate the actual current iterate, with BV fluxes and concentration
+        // current assembled from this SAME state. Never combine a new potential
+        // with old nonlinear reaction fluxes and call that the nonlinear residual.
+        if (buttler_vohlmer_flux) {
+            mlmg_res.apply(GetVecOfPtrs(residual),GetVecOfPtrs(potential));
+            Real total_nl_res = 0.0;
+            Real physical_source_norm = 0.0;
+            for (int ilev=0; ilev<=finest_level; ++ilev) {
+                amrex::MultiFab mask;
+                if (ilev<finest_level) {
+                    mask=makeFineMask(grids[ilev],dmap[ilev],grids[ilev+1],refRatio(ilev),1.0,0.0);
+                } else {
+                    mask.define(grids[ilev],dmap[ilev],1,0); mask.setVal(1.0);
                 }
-                Real rel_errnorm=errnorm/errnorm_1st_iter;
-                amrex::Print()<<"lev, iter, abs errnorm, rel errnorm:"<<ilev<<"\t"
-                <<nl_it<<"\t"<<errnorm<<"\t"<<rel_errnorm<<"\n";
-
-                abs_errnorm_all += errnorm;
-                rel_errnorm_all += rel_errnorm;
+                amrex::MultiFab::Subtract(residual[ilev],rhs_res[ilev],0,0,1,0);
+                amrex::MultiFab::Multiply(residual[ilev],mask,0,0,1,0);
+                total_nl_res += residual[ilev].norm2();
+                physical_source_norm += rhs_res[ilev].norm2();
             }
-
-            //            if(abs_errnorm_all < bv_nonlinear_abstol ||
-            //                    rel_errnorm_all < bv_nonlinear_reltol)
-            //            {
-            //                amrex::Print()<<"Converged with final error:"<<rel_errnorm_all
-            //                    <<"\t"<<abs_errnorm_all<<"\n";
-            //                break;
-            //            }
-        }
-
-        // copy solution back to phi_new
-        for (int ilev = 0; ilev <= finest_level; ilev++) {
-            amrex::MultiFab::Copy(phi_new[ilev], solution[ilev], 0, POT_ID, 1, 0);
-        }
-
-        Real total_nl_res = 0.0;
-        for (int ilev = 0; ilev <= finest_level; ilev++)
-        {
-            amrex::MultiFab level_mask;
-            if (ilev < finest_level) {
-                level_mask = makeFineMask(grids[ilev],dmap[ilev],
-                                          grids[ilev+1], amrex::IntVect(2), 1.0, 0.0);
-            } else {
-                level_mask.define(grids[ilev], dmap[ilev], 1, 0,
-                                  amrex::MFInfo());
-                level_mask.setVal(1);
+            if (!std::isfinite(total_nl_res) || !std::isfinite(physical_source_norm))
+                amrex::Abort("MORQEX: nonfinite BV residual");
+            if (nl_it==0) {
+                errnorm_1st_iter=amrex::max(total_nl_res,physical_source_norm);
+                amrex::Print()<<"MORQEX BV SCALE "<<errnorm_1st_iter<<"\n";
             }
-            amrex::MultiFab::Subtract(residual[ilev],rhs_res[ilev], 0, 0, 1 ,0);
-            amrex::MultiFab::Multiply(residual[ilev],level_mask, 0, 0, 1, 0);
-            Real nl_res = residual[ilev].norm2();
-            total_nl_res += nl_res;
+            const Real relative=errnorm_1st_iter>0 ? total_nl_res/errnorm_1st_iter : 0.0;
+            amrex::Print()<<"BV NON-LINEAR RESIDUAL (rel,abs): "<<relative<<' '<<total_nl_res<<"\n";
+            // At least one solve is needed to populate the field-gradient output.
+            if (nl_it>0 && (total_nl_res<bv_nonlinear_abstol || relative<bv_nonlinear_reltol)) {
+                for (int ilev=0;ilev<=finest_level;++ilev)
+                    amrex::MultiFab::Copy(solution[ilev],potential[ilev],0,0,1,0);
+                amrex::Print()<<"MORQEX BV ACCEPT "<<relative<<' '<<total_nl_res<<"\n";
+                break;
+            }
+            if (nl_it==num_nonlinear_iters-1)
+                amrex::Abort("MORQEX: BV nonlinear iteration budget exhausted without convergence");
+        }
+        Real inner_relative=tol_rel, inner_absolute=tol_abs;
+        if (buttler_vohlmer_flux && morqex_linear_budget_fraction>0.0) {
+            // On a single uniform grid ||r||_2 <= sqrt(N)*||r||_infinity.
+            // Allocate a fraction of the unchanged OUTER physical residual
+            // tolerance to the inner linear system. This avoids oversolving an
+            // absolute potential equation past floating-point cancellation.
+            // This is an accuracy budget, not an Eisenstat-Walker forcing law
+            // or a field-error bound. The next iterate's actual nonlinear
+            // residual is still rebuilt and independently accepted above.
+            const Real cells=static_cast<Real>(geom[0].Domain().numPts());
+            inner_relative=0.0;
+            inner_absolute=morqex_linear_budget_fraction *
+                amrex::max(bv_nonlinear_abstol,bv_nonlinear_reltol*errnorm_1st_iter)/std::sqrt(cells);
+            amrex::Print()<<"MORQEX LINEAR ABSOLUTE BUDGET "<<inner_absolute<<"\n";
+        }
+        mlmg.solve(GetVecOfPtrs(solution),GetVecOfConstPtrs(rhs),inner_relative,inner_absolute);
+        mlmg.getGradSolution(GetVecOfArrOfPtrs(gradsoln));
+        for (int ilev=0;ilev<=finest_level;++ilev) {
+            amrex::MultiFab::Copy(fluctuation[ilev],solution[ilev],0,0,1,0);
+            amrex::MultiFab::Copy(phi_new[ilev],solution[ilev],0,POT_ID,1,0);
+            if (morqex_potential_offset)
+                amrex::MultiFab::Add(phi_new[ilev],potential_reference[ilev],0,POT_ID,1,0);
         }
 
-        if(nl_it==0) {
-            errnorm_1st_iter=total_nl_res;
-        }
-
-        amrex::Print() <<"BV NON-LINEAR RESIDUAL (rel,abs): " <<  
-        total_nl_res/errnorm_1st_iter << ' ' << total_nl_res << std::endl;
-
-        if(total_nl_res < bv_nonlinear_abstol ||
-           total_nl_res/errnorm_1st_iter < bv_nonlinear_reltol)
-        {
-            amrex::Print()<<"Converged with final rel,abs error: "<< total_nl_res/errnorm_1st_iter
-            <<"\t"<< total_nl_res <<"\n";
-            mlmg.getGradSolution(GetVecOfArrOfPtrs(gradsoln));
-            break;
-        }
-
-        if(nl_it==num_nonlinear_iters-1)
-        {
-            mlmg.getGradSolution(GetVecOfArrOfPtrs(gradsoln));
-        }
     }
 
 
@@ -630,7 +672,18 @@ void echemAMR::solve_potential(Real current_time)
     for (int ilev = 0; ilev <= finest_level; ilev++)
     {
         amrex::MultiFab::Copy(phi_new[ilev], solution[ilev], 0, POT_ID, 1, 0);
-        //phi_new[ilev].copy(solution[ilev], 0, NVAR-1, 1);
+        if (morqex_potential_offset) {
+            amrex::MultiFab::Add(phi_new[ilev],potential_reference[ilev],0,POT_ID,1,0);
+            for (int axis=0;axis<AMREX_SPACEDIM;++axis)
+                for (MFIter mfi(gradsoln[ilev][axis]);mfi.isValid();++mfi) {
+                    auto g=gradsoln[ilev][axis].array(mfi);auto ref=potential_reference[ilev].const_array(mfi);
+                    Real h=geom[ilev].CellSize(axis);
+                    amrex::ParallelFor(mfi.validbox(),[=] AMREX_GPU_DEVICE(int i,int j,int k) {
+                        IntVect r(AMREX_D_DECL(i,j,k)),l=r;l[axis]-=1;
+                        g(i,j,k)+=(ref(r)-ref(l))/h;
+                    });
+                }
+        }
         const Array<const MultiFab*, AMREX_SPACEDIM> allgrad = {&gradsoln[ilev][0], 
             &gradsoln[ilev][1], &gradsoln[ilev][2]};
         average_face_to_cellcenter(phi_new[ilev], EFX_ID, allgrad);
@@ -789,7 +842,9 @@ void echemAMR::compute_current_density_at_level(
                                 gradc=(sborder_arr(lcell,captured_kd_conc_id)
                                                          -sborder_arr(lcellm1,captured_kd_conc_id))/dx[idim];
                             }
-                            j_arr[idim](face) += 0.5*(conductivity_arr(lcell)+conductivity_arr(rcell))*efield;
+                            // Match the harmonic face coefficient used by the potential operator.
+                            const Real kl=conductivity_arr(lcell),kr=conductivity_arr(rcell);
+                            j_arr[idim](face) += (kl>0 && kr>0 ? 2.0*kl*kr/(kl+kr) : 0.0)*efield;
 
                             amrex::Real kdstar = electrochem_transport::compute_kdstar_atface(i, j, k, idim,
                                                                                               sborder_arr, prob_lo, 

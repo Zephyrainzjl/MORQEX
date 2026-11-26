@@ -6,9 +6,15 @@ GEMsim来自用户指定私有仓库 `https://github.com/Zephyrainzjl/GEMsim.git
 
 GEMsim顶层未声明统一许可证；不据此推断可自由公开再分发。当前仅在用户本机私有项目中集成，不添加将上游全部重授权的LICENSE。原代码、署名和已有许可证保留。ZynJoule未作为运行依赖，未复制其整个包。
 
-原生echemAMR源码来源及许可证保留在`src/morqex/microstructure/simulate/native/upstream/{provenance.json,LICENSE}`，提交 `29fb99f450481c8e5f2e3f132b44ab14ee054871`。其CMake引用AMReX固定提交 `9ed35ab0e58462f951528462376cc379ba834826`；该依赖尚未构建。TetGen/ACVD/EDT等继承上游相应实现；部分历史源码提到的独立许可证文件未随GEMsim提供，发布前需补齐来源/授权，不假定统一许可。
+原生echemAMR源码来源及许可证保留在`src/morqex/microstructure/simulate/native/upstream/{provenance.json,LICENSE}`，提交 `29fb99f450481c8e5f2e3f132b44ab14ee054871`。其CMake引用AMReX固定提交 `9ed35ab0e58462f951528462376cc379ba834826`；该依赖已在外部工作区以单核 CPU FP64 编译，构建不等于全部物理验证。TetGen/ACVD/EDT等继承上游相应实现；部分历史源码提到的独立许可证文件未随GEMsim提供，发布前需补齐来源/授权，不假定统一许可。
 
 AI生成路线、NGSolve、PyBaMM和echemAMR的科学出处仍应在实际使用时引用原方法。源码存在、可导入、可编译和物理数值验证是四种不同状态。没有进行模型训练或宣称复现上游全部平台性能。
+
+2026-11-26 MORQEX echemAMR qualification change: potential solves now abort on
+nonfinite BV residuals or exhausted nonlinear iterations instead of copying the
+last unconverged iterate into the state. Zero residual normalization is defined,
+and per-solve begin/accept markers support complete trajectory auditing. This
+does not by itself certify the upstream constitutive equations.
 
 
 
@@ -38,3 +44,24 @@ license remains in external site-packages/mfem-4.10.0.1.dist-info/licenses.
 Neither MFEM nor the cited fatigue/AT2 methods are claimed as MORQEX inventions.
 
 PyBaMM solution.py local modification (2026-11-26): correctly concatenate mixed scalar and spatial-vector InputParameter values for solution postprocessing. Upstream BSD-3 license retained; original and modified hashes in provenance/pybamm_migration.json.
+
+2026-11-26 additional echemAMR numerical adaptations: conservative face-based
+lithium migration with closed electrolyte boundaries; same-state nonlinear
+residual including bulk concentration-current flux; synchronized end-state
+potential output and restart geometry metadata; actual collector conductance
+normalization; dry CBD has zero lithium storage/diffusivity; explicit ncomp=1
+in AMReX harmonic averaging calls (a Boolean in the fourth argument selected
+ncomp, leaving arithmetic averaging enabled). Potential solves use an exactly
+transformed phase reference offset to reduce floating-point cancellation.
+These changes are MORQEX adaptations, not claims about the published upstream
+results. Complete field readers retain AMReX's ZYX physical coordinates.
+Additional MORQEX guards reject inadmissible trial concentrations without
+clipping. Optional single-level inner linear residual budgeting leaves the
+outer physical nonlinear acceptance criterion unchanged; this is standard
+inexact-solve accuracy allocation, not a claim of a new Newton method.
+
+HYPRE 2.32.0, MIT license option, https://github.com/hypre-space/hypre/tree/v2.32.0
+Pinned download and source verification in top_damage/hypre_dependency.py.
+Original LICENSE-MIT and COPYRIGHT are preserved in the external source and
+installed notices; MPI/OpenMP/GPU disabled in this qualified CPU build.
+No HYPRE binary or download archive is stored inside MORQEX/src.

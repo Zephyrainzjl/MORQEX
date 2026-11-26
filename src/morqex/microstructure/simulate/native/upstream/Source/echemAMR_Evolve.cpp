@@ -22,7 +22,50 @@ void echemAMR::Evolve()
 
     Real cur_time = t_new[0];
     int last_plot_file_step = 0;
-    if(potential_solve_init)
+    // MORQEX opt-in reference: reported potentials and concentrations refer to
+    // the same accepted time. The upstream ordering otherwise reports phi(t_n)
+    // beside c(t_{n+1}). This remains a first-order partitioned time integrator.
+    int morqex_sync_potential = 0;
+    int morqex_conservative_migration = 0;
+    int morqex_strict_concentration_bounds = 0;
+    amrex::ParmParse morqex_options("echemamr");
+    morqex_options.query("morqex_sync_potential",morqex_sync_potential);
+    morqex_options.query("morqex_conservative_migration",morqex_conservative_migration);
+    morqex_options.query("morqex_strict_concentration_bounds",morqex_strict_concentration_bounds);
+    // Reject an inadmissible trial before OCP, exchange-current or logarithm
+    // evaluation. Do not clip concentrations and thereby destroy inventory.
+    auto check_concentrations = [&](Real at_time) {
+        if (!morqex_strict_concentration_bounds) return;
+#if defined(A_AM_ID) && defined(C_AM_ID) && defined(CO_ID)
+        for (int level=0; level<=finest_level; ++level) {
+            MultiFab valid(grids[level],dmap[level],1,0);
+            for (MFIter mfi(valid);mfi.isValid();++mfi) {
+                auto state=phi_new[level].const_array(mfi);auto flag=valid.array(mfi);
+                amrex::ParallelFor(mfi.validbox(),[=] AMREX_GPU_DEVICE(int i,int j,int k) {
+                    Real c=state(i,j,k,CO_ID);bool ok=false;
+                    if (state(i,j,k,A_AM_ID)>0.5)
+                        ok=c>0.0 && c<electrochem::Cs_max_anode(*localprobparm);
+                    else if (state(i,j,k,C_AM_ID)>0.5)
+                        ok=c>0.0 && c<electrochem::Cs_max_cathode(*localprobparm);
+                    else if (state(i,j,k,LS_ID)>0.5) ok=c>0.0 && c<std::numeric_limits<Real>::max();
+                    else ok=amrex::Math::abs(c)<1.e-10; // qualified dry CBD
+                    flag(i,j,k)=ok ? 1.0 : 0.0;
+                });
+            }
+            if (valid.min(0,0,false)<0.5)
+                amrex::Abort("MORQEX: concentration bounds violated; reject timestep without clipping");
+        }
+        amrex::Print()<<"MORQEX CONCENTRATION BOUNDS ACCEPT time="<<at_time<<"\n";
+#else
+        amrex::Abort("MORQEX concentration bounds require the Microstructure model");
+#endif
+    };
+    check_concentrations(cur_time);
+    if (morqex_conservative_migration && (max_level!=0 || !species_implicit_solve))
+        amrex::Abort("MORQEX conservative migration requires single-level implicit species");
+    if (morqex_sync_potential && (potential_solve!=1 || pot_solve_int!=1))
+        amrex::Abort("MORQEX synchronized output requires potential solve every step");
+    if(potential_solve_init || morqex_sync_potential)
     {
         solve_potential(cur_time);
     }
@@ -56,7 +99,7 @@ void echemAMR::Evolve()
         int iteration = 1;
 
         amrex::Real potsolve_time = -amrex::second();
-        if (potential_solve == 1 && step % pot_solve_int == 0)
+        if (potential_solve == 1 && step % pot_solve_int == 0 && !morqex_sync_potential)
         {
             solve_potential(cur_time);
         }
@@ -140,6 +183,8 @@ void echemAMR::Evolve()
                     const auto dx = geom[lev].CellSizeArray();
                     int lset_id = bv_levset_id;
                     int captured_kd_conc_id = kd_conc_id; //public variable
+                    const auto migration_lo = geom[lev].Domain().smallEnd();
+                    const auto migration_hi = geom[lev].Domain().bigEnd();
 
                     for (MFIter mfi(phi_new[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
                     {
@@ -173,10 +218,23 @@ void echemAMR::Evolve()
                                             Real tplus_l=electrochem_transport::get_tplus(lcell,sborder_arr,*localprobparm);
                                             Real tplus_r=electrochem_transport::get_tplus(rcell,sborder_arr,*localprobparm);
 
-                                            jbyF_dot_gradtplus+=(j_arr[idim](face)/FARADCONST)*(tplus_r-tplus_l)/dx[idim];
+                                            if (morqex_conservative_migration)
+                                            {
+                                                // A shared liquid-liquid face flux cancels pairwise.
+                                                // BV faces already carry TOTAL lithium flux j/F in
+                                                // compute_flux.H; adding migration there double counts it.
+                                                // Closed electrolyte boundaries have prescribed zero normal flux;
+                                                // do not infer it from one-sided interior potential differences.
+                                                if (face[idim]>migration_lo[idim] && face[idim]<=migration_hi[idim]
+                                                    && sborder_arr(lcell,lset_id)==1 && sborder_arr(rcell,lset_id)==1)
+                                                    jbyF_dot_gradtplus += (2*f-1)*0.5*(tplus_l+tplus_r)
+                                                        *j_arr[idim](face)/(FARADCONST*dx[idim]);
+                                            }
+                                            else
+                                                jbyF_dot_gradtplus+=(j_arr[idim](face)/FARADCONST)*(tplus_r-tplus_l)/dx[idim];
                                         }
                                     }
-                                    jbyF_dot_gradtplus*=0.5;
+                                    if (!morqex_conservative_migration) jbyF_dot_gradtplus*=0.5;
                                 }
 
                                 //dc/dt + del.N=0
@@ -228,6 +286,13 @@ void echemAMR::Evolve()
 
 
         cur_time += dt[0];
+
+        check_concentrations(cur_time);
+        if (morqex_sync_potential) {
+            const auto sync_start=amrex::second();
+            solve_potential(cur_time);
+            amrex::Print()<<"MORQEX end-state potential seconds: "<<amrex::second()-sync_start<<"\n";
+        }
 
         postprocess(cur_time, step+1, dt[0], echemAMR::host_global_storage);
 

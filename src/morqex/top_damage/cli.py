@@ -21,6 +21,7 @@ def status():
                         'MFEM finite-strain chemical elasticity and compiled FP64 tangent action',
                         'conservative regional DFN states with spatial mechanical-potential ports',
                         'TOML per-node finite-mechanics feedback probe and field visualization',
+                        'source-integrated resolved 3D echemAMR/HYPRE and exact field-to-fatigue bridge',
                         'accepted-state VTI/XDMF time series and bounded-memory HTML'],
         'not_qualified': ['polycrystal fatigue reference', 'phase-field-to-aperture topology update',
                           'dynamic tensor homogenization with fracture', 'topology-changing DFN restart',
@@ -34,6 +35,17 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog='morqex top-damage')
     sub = p.add_subparsers(dest='action', required=True)
     sub.add_parser('status')
+    resolved=sub.add_parser('build-resolved',help='Bounded source-integrated 3D echemAMR build; separate from DFN qualification')
+    resolved.add_argument('config')
+    resolved.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    resolved_pf=sub.add_parser('resolved-phase-field',help='TOML exact resolved field -> one accepted finite AT2 history state')
+    resolved_pf.add_argument('config')
+    resolved_pf.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    resolved_report=sub.add_parser('resolved-report',help='Actual full-voxel electrochemistry and finite-fatigue HTML')
+    resolved_report.add_argument('directory')
+    resolved_report.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    resolved_report.add_argument('--output',default='MORQEX_resolved_3D_phase_field.html')
+    resolved_report.add_argument('--export',action='store_true')
     region=sub.add_parser('region-probe',help='TOML full-voxel regional DFN -> finite mechanics -> spatial feedback probe')
     region.add_argument('config')
     region.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
@@ -70,6 +82,25 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'build-resolved':
+        if not args.workspace:p.error('An external workspace is required')
+        from .resolved_echem import build_resolved
+        print(json.dumps(build_resolved(args.config,Workspace(args.workspace)),indent=2))
+    elif args.action == 'resolved-phase-field':
+        if not args.workspace:p.error('An external workspace is required')
+        import tomllib
+        from pathlib import Path
+        from .resolved_phase_field import ResolvedMechanicsConfig,advance_resolved_phase_field
+        data=tomllib.loads(Path(args.config).read_text())
+        if set(data)!={'schema_version','phase_field','mechanics'} or data['schema_version']!=1:raise ValueError('Resolved phase-field TOML schema 1 required')
+        cfg=ResolvedMechanicsConfig(**data['mechanics']);a=data['phase_field'];ws=Workspace(args.workspace)
+        if set(a)-{'geometry','field','output','previous'}:raise ValueError('Unknown resolved field option')
+        print(json.dumps(advance_resolved_phase_field(ws.path(a['geometry']),ws.path(a['field']),ws.path(a['output']),ws,config=cfg,previous=ws.path(a['previous']) if a.get('previous') else None),indent=2))
+    elif args.action == 'resolved-report':
+        if not args.workspace:p.error('An external workspace is required')
+        from .resolved_report import build_resolved_report,export_resolved_history
+        if args.export:export_resolved_history(args.directory,Workspace(args.workspace))
+        print(json.dumps(build_resolved_report(args.directory,Workspace(args.workspace),output=args.output),indent=2))
     elif args.action == 'region-probe':
         if not args.workspace:p.error('An external workspace is required')
         from .region_probe import run_probe

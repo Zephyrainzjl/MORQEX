@@ -398,8 +398,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/electrochemistry.py",
-      "sha256": "3b82c0694981281913ddc01f5eb4d58b86b8053f47bc7ae7f69833da4afe4679",
-      "additional_local_adaptation": false
+      "sha256": "3eb8814e7d51e9cd945e38d41f4d185ccb54dbe2f598980c5dbcaa9baa41eb24",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/evolution.py",
@@ -418,8 +418,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/bindings.cpp",
-      "sha256": "c13e4fa6740f23cb465bef1fba07d2a2160c7821b3dc6d708c91efa3c2abd9be",
-      "additional_local_adaptation": false
+      "sha256": "d58ac7fa95395ffabe4fed2179c27dbec180389ba6a7b35a014ae6077302dc15",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/pyproject.toml",
@@ -448,8 +448,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR.cpp",
-      "sha256": "e5cf2bd9d4cd7f99418f86fd9509929b65ed2b0f3a3e17366214e11713b93380",
-      "additional_local_adaptation": false
+      "sha256": "ad4dfd85db3cc3cb30f16f62499ae3d17afd247a38e17bc3144b2737256f9735",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_BCFill.H",
@@ -458,8 +458,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_Evolve.cpp",
-      "sha256": "cd30d1813bab960038d030c40cdf9cd332698cc303155cbf15803320affcff10",
-      "additional_local_adaptation": false
+      "sha256": "1373c40b5ce8b92b69feb7e9b9266e6111ebf44c7deae65261eca7afc0cf44f1",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_GridWork.cpp",
@@ -483,13 +483,13 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_PotentialSolve.cpp",
-      "sha256": "c71f3dc5f33287ca6ee9ebe85d67241ad7b8d527948d173f36a4baab8fc34455",
-      "additional_local_adaptation": false
+      "sha256": "105af6fd1a55c240fb487b8d6cffb9c995ca1c0bb51cd38cecf8a6f65829968a",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_SpeciesSolve.cpp",
-      "sha256": "5659a4cc7222b2f650611a8bb067b308cd420ecce30d48abe4009041bbf6e3dd",
-      "additional_local_adaptation": false
+      "sha256": "aef5ea2262fd832765ae08b639f8254909b71e1cde7f02875ede04cb41a80431",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/Source/echemAMR_Tagging.H",
@@ -648,8 +648,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/models/Microstructure/Chemistry.H",
-      "sha256": "78b929b6caae51b723c4ebed3139c1430117532b8559284e4718842c631843b9",
-      "additional_local_adaptation": false
+      "sha256": "6a7a675f5ed5170bf91b6a1da0648bd1454416715083f2098d58a650d3c2d9ad",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/models/Microstructure/Chemistry.cpp",
@@ -678,8 +678,8 @@
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/models/Microstructure/Prob.H",
-      "sha256": "596b825e093bf684fc005c9cc79b578ffa64c65502980233d0be2135b15df4a7",
-      "additional_local_adaptation": false
+      "sha256": "4dc2a2608ea8441a8d35974947c45d555b8a2163386b00a6ffe794bd8ec3dde4",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/simulate/native/upstream/models/Microstructure/ProbParm.H",

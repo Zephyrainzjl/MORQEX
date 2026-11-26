@@ -588,7 +588,7 @@ void echemAMR::implicit_solve_species(Real current_time,Real dt,int spec_id,
             face_bcoeff[idim].define(ba, bcoeff[ilev].DistributionMap(), 1, 0);
         }
         // true argument for harmonic averaging
-        amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff), bcoeff[ilev], geom[ilev], true);
+        amrex::average_cellcenter_to_face(GetArrOfPtrs(face_bcoeff), bcoeff[ilev], geom[ilev], 1, true);
 
         if (bvspec[spec_id]==1 && buttler_vohlmer_flux)
         {

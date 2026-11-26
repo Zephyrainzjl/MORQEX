@@ -646,6 +646,9 @@ namespace electrochem
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real Ds_bulk_CBD(const ProbParm& prob_parm)
     {
+        // MORQEX: pure electronic CBD is not a lithium insertion phase.
+        // Harmonic face coefficients then impose zero solid-Li flux into CBD.
+        if (prob_parm.CBD_transport==0) return 0.0;
         if(prob_parm.zeroDmodel==1) {
             amrex::Real DsbulkCBD = 1.0e-16;
             return DsbulkCBD;
