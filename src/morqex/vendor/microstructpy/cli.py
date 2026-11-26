@@ -1,0 +1,1408 @@
+"""Command Line Interface.
+
+This module contains the command line interface (CLI) for MicroStructPy.
+The CLI primarily reads XML input files and creates a microstructure according
+to those inputs. It can also run demo input files.
+
+"""
+
+
+from __future__ import division
+from __future__ import print_function
+
+import argparse
+import collections
+import copy
+import glob
+import os
+import shutil
+import subprocess
+import sys
+
+import numpy as np
+import scipy.stats
+import xmltodict
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+from morqex.vendor.microstructpy import _misc
+from morqex.vendor.microstructpy import geometry
+from morqex.vendor.microstructpy import seeding
+from morqex.vendor.microstructpy import verification
+from morqex.vendor.microstructpy.meshing import PolyMesh
+from morqex.vendor.microstructpy.meshing import RasterMesh
+from morqex.vendor.microstructpy.meshing import TriMesh
+from morqex.vendor.microstructpy.meshing.trimesh import facet_check
+
+__author__ = 'Kenneth (Kip) Hart'
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Main Function                                                               #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def main():
+    """CLI calling function"""
+    parser_descr = 'Create a microstructure and unstructured grid using the'
+    parser_descr += ' MicroStructPy package. This is the command line'
+    parser_descr += ' interface (CLI) for the package. It reads either demo'
+    parser_descr += ' input files or user-created input files and generates:'
+    parser_descr += ' 1 A list of seed geometries,'
+    parser_descr += ' 2 A polygon/polyhedron mesh, and'
+    parser_descr += ' 3. A triangle/tetrahedron mesh.'
+    parser_descr += 'Additional outputs, such as plots, can be specified in'
+    parser_descr += ' the input file. Please read the input file section of'
+    parser_descr += ' the MicroStructPy documentation for more details.'
+    parser = argparse.ArgumentParser(description=parser_descr)
+
+    user_descr = 'user-created XML input files, separated by spaces'
+    parser.add_argument('user_files', metavar='u', type=str, nargs='*',
+                        default=[], help=user_descr)
+
+    demo_descr = 'demonstration names, separated by spaces '
+    demo_descr += ' (see documentation for list of available names)'
+    parser.add_argument('--demo', dest='demo_files', metavar='d', type=str,
+                        nargs='*', default=[], help=demo_descr)
+
+    args = parser.parse_args()
+
+    # run user-generated files
+    user_files = []
+    for pattern in args.user_files:
+        matches = glob.glob(pattern)
+        if not matches:
+            e_str = 'Error: no input file matches ' + repr(pattern) + '.'
+            print(e_str, file=sys.stderr)
+            sys.exit(1)
+        user_files.extend(matches)
+    for filename in set(user_files):
+        run_file(filename)
+
+    # run demo files
+    cli_path = os.path.dirname(__file__)
+    demo_path = os.path.normpath(os.path.join(cli_path, 'examples'))
+    demo_files = args.demo_files
+
+    if len(demo_files) == 1 and demo_files[0].lower().strip() == 'all':
+        xml_files = os.path.normpath(os.path.join(demo_path, '*.xml'))
+        xml_demos = [os.path.basename(f) for f in glob.glob(xml_files)]
+
+        py_files = os.path.normpath(os.path.join(demo_path, '*.py'))
+        py_demos = [os.path.basename(f) for f in glob.glob(py_files)]
+
+        demo_files = xml_demos + py_demos
+
+    for demo_basename in demo_files:
+        ex_file = os.path.join(demo_path, demo_basename)
+        ext = demo_basename.split('.')[-1]
+        if os.path.exists(ex_file) and (ext in ['py', 'xml']):
+            print('Running ' + repr(demo_basename))
+
+            local_filename = os.path.join('./', demo_basename)
+            needed_files = _misc.demo_needs.get(demo_basename, [])
+
+            for basename in [demo_basename] + needed_files:
+                filename = os.path.join(demo_path, basename)
+                try:
+                    shutil.move(filename, './')
+                except shutil.Error:
+                    pass
+                else:
+                    shutil.copy(basename, filename)
+
+            if ext == 'py':
+                subprocess.call(['python', local_filename])
+            elif ext == 'xml':
+                run_file(local_filename)
+            else:
+                pass
+
+        else:
+            p_str = 'Skipping file ' + repr(demo_basename) + ', since '
+            p_str += 'it is not a valid example filename.'
+            print(p_str)
+
+
+def run_file(filename):
+    """Run an input file
+
+    This function reads an input file and runs it through the standard
+    workflow.
+
+    Args:
+        filename (str): The name of an XML input file.
+
+    """
+    in_data = read_input(filename)
+    phases = in_data['material']
+    domain = in_data['domain']
+    kwargs = in_data['settings']
+    run(phases, domain, **kwargs)
+
+
+def read_input(filename):
+    """Convert input file to dictionary
+
+    This function reads an input file and parses it into a dictionary.
+
+    Args:
+        filename (str): The name of an XML input file.
+
+    Returns:
+        collections.OrderedDict: Dictionary of run inputs.
+
+    """
+    # Read in the file
+    file_path = os.path.dirname(filename)
+    file_dict = input2dict(filename)
+
+    assert 'input' in file_dict, 'Root <input> not found in input file.'
+    in_data = dict_convert(file_dict['input'], file_path)
+
+    k_args = ('material', 'domain')
+    for arg in k_args:
+        assert arg in in_data
+
+    # Get domain
+    domain_data = in_data['domain']
+    domain_shape = domain_data['shape']
+    domain_kwargs = {k: v for k, v in domain_data.items() if k != 'shape'}
+    # periodicity is a property of the run, not of the geometry
+    periodic = domain_kwargs.pop('periodic', None)
+    domain = geometry.factory(domain_shape, **domain_kwargs)
+    in_data['domain'] = domain
+
+    # Default settings
+    kwargs = in_data.get('settings', {})
+    if periodic is not None:
+        kwargs['periodic'] = periodic
+    run_dir = kwargs.get('directory', '.')
+    if not os.path.isabs(run_dir):
+        rel_path = os.path.join(file_path, run_dir)
+        kwargs['directory'] = os.path.expanduser(os.path.normpath(rel_path))
+    in_data['settings'] = kwargs
+    return in_data
+
+
+def input2dict(filename, root_tag='input'):
+    """Read input file into a dictionary
+
+    This function reads an input file and creates a dictionary of strings
+    contained within the file.
+
+    Args:
+        filename: Name of the input file.
+
+    Returns:
+        collections.OrderedDict: Dictionary of input strings.
+
+    """
+
+    # Read in the file
+    with open(filename, 'r') as file:
+        file_dict = xmltodict.parse(file.read())
+    tag = list(file_dict.keys())[0]
+    assert tag == root_tag, repr(tag) + ' != ' + repr(root_tag)
+
+    return _include_expand(file_dict, filename, root_tag)
+
+
+def _include_expand(inp, filename, key):
+    if inp is None or isinstance(inp, str):
+        return inp
+    if isinstance(inp, list):
+        return [_include_expand(inp_i, filename, key) for inp_i in inp]
+
+    file_path = os.path.dirname(filename)
+    exp_dict = collections.OrderedDict()
+    for inp_key, inp_val in inp.items():
+        if inp_key == 'include':
+            includes = inp_val
+            if not isinstance(includes, list):
+                includes = [includes]
+            for inc_filename in includes:
+                inc_fname = os.path.expanduser(inc_filename.strip())
+                if os.path.isabs(inc_fname):
+                    fname = inc_fname
+                else:
+                    fname = os.path.join(file_path, inc_fname)
+                inc_dict = input2dict(fname, key)
+                for inc_key, inc_val in inc_dict[key].items():
+                    _include_merge(exp_dict, inc_key, inc_val)
+        else:
+            exp_val = _include_expand(inp_val, filename, inp_key)
+            _include_merge(exp_dict, inp_key, exp_val)
+    return exp_dict
+
+
+def _include_merge(exp_dict, key, val):
+    """Add a value to the dictionary of an expanded input file.
+
+    When the same tag comes from an ``<include>`` and from the including
+    file (or from two includes), structured values (dictionaries and lists)
+    are concatenated into a list - the same as xmltodict does for repeated
+    tags - so that, for example, no ``<material>`` is discarded.
+    Scalar values are overridden by the later occurrence.
+    """
+    if key not in exp_dict:
+        exp_dict[key] = val
+        return
+
+    old_val = exp_dict[key]
+    repeated = (key == 'material' or isinstance(old_val, list) or
+                isinstance(val, list))
+    if repeated and isinstance(old_val, (dict, list)) and \
+            isinstance(val, (dict, list)):
+        old_list = old_val if isinstance(old_val, list) else [old_val]
+        new_list = val if isinstance(val, list) else [val]
+        exp_dict[key] = old_list + new_list
+    else:
+        exp_dict[key] = val
+
+
+_tri_exts = {'abaqus': '.inp', 'txt': '.txt', 'str': '.txt', 'tet/tri': '',
+             'vtk': '.vtk'}
+
+
+def _periodic_margin(periodic_margin, n_dim, max_volume, max_edge_length,
+                     seeds=None):
+    """Margin between the seeds and the periodic faces, from the settings.
+
+    ``'auto'`` is the smaller of half the target edge length of the mesh
+    (the maximum edge length if it is set, otherwise the edge of the
+    equilateral triangle (2D) or regular tetrahedron (3D) with the maximum
+    volume) and an eighth of the size of the smallest seed (its smallest
+    diameter or side): the smallest seed needs about four elements across
+    it, so the mesh cannot be coarser than a quarter of it, and a margin
+    larger than the seed could not be satisfied by the seed anyway.
+    """
+    if not isinstance(periodic_margin, str):
+        return float(periodic_margin)
+    key = periodic_margin.strip().lower()
+    if key in ('none', 'false', 'no', ''):
+        return 0.0
+    if key not in ('auto', 'fit', 'true'):
+        e_str = 'Cannot interpret periodic_margin ' + repr(periodic_margin)
+        e_str += ". Use a length or 'auto'."
+        raise ValueError(e_str)
+    h_val = float(max_edge_length)
+    if np.isfinite(max_volume):
+        if n_dim == 2:
+            h_val = min(h_val, np.sqrt(4 * max_volume / np.sqrt(3)))
+        else:
+            h_val = min(h_val, (6 * np.sqrt(2) * max_volume) ** (1.0 / 3))
+    if seeds:
+        h_val = min(h_val, 0.25 * min([_seed_size(s) for s in seeds]))
+    if not np.isfinite(h_val):
+        return 0.0
+    return 0.5 * h_val
+
+
+def _seed_size(seed):
+    """Smallest dimension of a seed: the smallest diameter of an ellipse
+    or ellipsoid, the shortest side of a box, the diameter of a circle or
+    sphere. Infinity if the geometry has none of these."""
+    geom = seed.geometry
+    if hasattr(geom, 'axes'):
+        return 2 * min(geom.axes)
+    if hasattr(geom, 'side_lengths'):
+        return min(geom.side_lengths)
+    if hasattr(geom, 'r'):
+        return 2 * geom.r
+    return getattr(geom, 'size', float('inf'))
+
+
+def run(phases, domain, verbose=False, restart=True, directory='.',
+        filetypes=None, rng_seeds=None, plot_axes=True, rtol='fit',
+        edge_opt=False, edge_opt_n_iter=100, mesher='Triangle/TetGen',
+        mesh_max_volume=float('inf'), mesh_min_angle=0,
+        mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
+        verify=False, color_by='material', colormap='viridis',
+        seeds_kwargs=None, poly_kwargs=None, tri_kwargs=None,
+        periodic=False, periodic_margin=0.0):
+    r"""Run MicroStructPy
+
+    This is the primary run function for the package. It performs these steps:
+
+        * Create a list of un-positioned seeds
+        * Position seeds in domain
+        * Create a polygon mesh from the seeds
+        * Create a triangle mesh from the polygon mesh
+        * (optional) Perform mesh verification
+
+    Args:
+        phases (list or dict): Single phase dictionary or list of multiple
+            phase dictionaries. See :ref:`phase_dict_guide` for more details.
+        domain (from :mod:`microstructpy.geometry`): The geometry of the
+            domain.
+        verbose (bool): *(optional)* Option to run in verbose mode.
+            Prints status updates to the terminal. Defaults to False.
+        restart (bool): *(optional)* Option to run in restart mode.
+            Saves caches at the end of each step and reads caches to restart
+            the analysis. Defaults to True.
+        directory (str): *(optional)* File path where outputs will be saved.
+            This path can either be relative to the current directory,
+            or an absolute path. Defaults to the current working directory.
+        filetypes (dict): *(optional)* Filetypes for the output files.
+            A dictionary containing many of the possible file types is::
+
+                filetypes = {'seeds': 'txt',
+                             'seeds_plot': ['eps',
+                                            'pdf',
+                                            'png',
+                                            'svg'],
+                             'poly': ['txt', 'ply', 'vtk'],
+                             'poly_plot': 'png',
+                             'tri': ['txt', 'abaqus', 'vtk'],
+                             'tri_plot': ['png', 'pdf'],
+                             'verify_plot': 'pdf'
+                             }
+
+            If an entry is not included in the dictionary, then that output
+            is not saved. Default is an empty dictionary. If *restart* is
+            True, then 'txt' is added to the 'seeds', 'poly', and 'tri' fields.
+        rng_seeds (dict): *(optional)* The random number generator (RNG) seeds.
+            The dictionary values should all be non-negative integers.
+            Specifically, RNG seeds should be convertible to NumPy `uint32`_.
+            An example dictionary is::
+
+                rng_seeds = {'fraction': 0,
+                             'phase': 134092,
+                             'position': 1,
+                             'size': 95,
+                             'aspect_ratio': 2,
+                             'orienation': 2
+                             }
+
+            If a seed is not specified, the default value is 0.
+        rtol (float or str): *(optional)* The relative overlap tolerance
+            between seeds. This parameter should be between 0 and 1.
+            The condition for two circles to overlap is:
+
+            .. math::
+
+                || x_2 - x_1 || + \text{rtol} \min(r_1, r_2) < r_1 + r_2
+
+            The default value is ``'fit'``, which uses the mean and variance
+            of the size distribution to estimate a value for rtol.
+        edge_opt (bool): *(optional)* This option will maximize the minimum
+            edge length in the PolyMesh. The seeds associated with the
+            shortest edge are displaced randomly to find improvement and
+            this process iterates until `n_iter` attempts have been made
+            for a given edge. In periodic domains with a `periodic_margin`,
+            the pieces of the cells at the periodic faces that are thinner
+            than the margin, and the corners of the cells at the faces
+            narrower than `mesh_min_angle`, are optimized too. Defaults to
+            False.
+        edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
+            edge (or thin piece) during optimization. Ignored if `edge_opt`
+            set to False. Defaults to 100.
+        mesher (str): {'raster' | 'Triangle/TetGen' | 'Triangle'  | 'TetGen' |
+            'gmsh'}
+            specify the mesh generator. Default is 'Triangle/TetGen'.
+        mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
+            of a mesh cell in the triangular mesh. Default is infinity,
+            which turns off the maximum volume quality setting.
+            Value should be strictly positive.
+        mesh_min_angle (float): *(optional)* The minimum interior angle,
+            in degrees,  of a cell in the triangular mesh. For 3D meshes,
+            this is the dihedral angle between faces of the tetrahedron.
+            Defaults to 0, which turns off the angle quality constraint.
+            Value should be in the range 0-60.
+        mesh_max_edge_length (float): *(optional)* The maximum edge length of
+            elements along grain boundaries: of the segments in 2D and of
+            the triangles on the facets in 3D.
+        mesh_size (float): The target size of the mesh elements. This
+            option is used with gmsh. Default is infinity, whihch turns off
+            this control.
+        plot_axes (bool): *(optional)* Option to show the axes in output plots.
+            When False, the plots are saved without axes and very tight
+            borders. Defaults to True.
+        verify (bool): *(optional)* Option to verify the output mesh against
+            the input phases. Defaults to False.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        seed_kwargs (dict): additional keyword arguments that will be passed to
+            :meth:`.SeedList.plot`.
+        poly_kwargs (dict): Additional keyword arguments that will be passed to
+            :meth:`.PolyMesh.plot_facets` in 2D and
+            :meth:`.PolyMesh.plot` in 3D.
+        tri_kwargs (dict): Additional keyword arguments that will be passed to
+            :meth:`.TriMesh.plot`.
+        periodic (bool, list, or str): *(optional)* Periodicity of the
+            microstructure: True for all axes, a list of booleans (one per
+            axis), or the names of the periodic axes such as ``'x'`` or
+            ``'xy'``. Seeds are placed, the domain is tessellated and the
+            mesh is generated so that opposite faces of the (rectangular)
+            domain match. The pairs of periodic nodes are stored in the
+            meshes. In the XML input, ``<periodic>`` is a field of
+            ``<domain>``. Defaults to False.
+        periodic_margin (float or str): *(optional)* Minimum distance
+            between the surface of a seed and a periodic face: a seed that
+            ends within this distance inside a face, or crosses a face by
+            less than this distance, is placed elsewhere, since it would
+            give elements much smaller than the target size of the mesh.
+            ``'auto'`` uses the smaller of half the target edge length of
+            the mesh (``mesh_max_edge_length`` or, from
+            ``mesh_max_volume``, the edge of the equilateral triangle or
+            regular tetrahedron of that volume) and an eighth of the size
+            of the smallest seed (its smallest diameter or side), since
+            the smallest seed needs about four elements across it and
+            cannot satisfy a margin larger than itself. With `edge_opt`,
+            the pieces of the cells at the periodic faces thinner than the
+            margin are thickened or removed by moving their seeds.
+            Defaults to 0 (no margin).
+
+    .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
+    .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
+    .. _`uint32`: https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html
+    """  # NOQA: E501
+    # ----------------------------------------------------------------------- #
+    # Condition Inputs                                                        #
+    # ----------------------------------------------------------------------- #
+    # Phases
+    # ------
+    if type(phases) is not list:
+        phases = [phases]
+
+    # Settings
+    # --------
+    # Work on copies of the dictionaries: the caller's arguments are never
+    # modified, so repeated calls with the same inputs give the same results.
+    filetypes = copy.deepcopy(filetypes) if filetypes is not None else {}
+    rng_seeds = copy.deepcopy(rng_seeds) if rng_seeds is not None else {}
+    seeds_kwargs = dict(seeds_kwargs) if seeds_kwargs is not None else {}
+    poly_kwargs = dict(poly_kwargs) if poly_kwargs is not None else {}
+    tri_kwargs = dict(tri_kwargs) if tri_kwargs is not None else {}
+
+    # filetypes
+    if restart:
+        for kw in ('seeds', 'poly', 'tri'):
+            if kw not in filetypes:
+                filetypes[kw] = 'txt'
+            elif isinstance(filetypes[kw], list):
+                if 'txt' not in filetypes[kw]:
+                    filetypes[kw].append('txt')
+            else:
+                filetypes[kw] = [filetypes[kw], 'txt']
+
+    # Check the triangular mesh output types before doing any work
+    tri_types = filetypes.get('tri', [])
+    if not isinstance(tri_types, list):
+        tri_types = [tri_types]
+    for tri_type in tri_types:
+        if tri_type not in _tri_exts:
+            e_str = 'Unsupported <tri> output type ' + repr(tri_type) + '. '
+            e_str += 'Supported types are: '
+            e_str += ', '.join([repr(t) for t in sorted(_tri_exts)]) + '.'
+            raise ValueError(e_str)
+
+    # mesher
+    raster = mesher.strip().lower() == 'raster'
+
+    if verbose:
+        print('Running MicroStructPy in verbose mode.')
+
+    # ----------------------------------------------------------------------- #
+    # Create Directory                                                        #
+    # ----------------------------------------------------------------------- #
+    if not os.path.exists(directory):
+        if verbose:
+            print('Creating run directory, ' + directory)
+        os.makedirs(directory)
+
+    # ----------------------------------------------------------------------- #
+    # Create Seeds                                                            #
+    # ----------------------------------------------------------------------- #
+    seed_basename = 'seeds.txt'
+    seed_filename = os.path.join(directory, seed_basename)
+    if restart and os.path.exists(seed_filename):
+        # Read seeds from file
+        if verbose:
+            print('Reading seeds from file.')
+            print('Seed file: ' + seed_filename)
+        seeds = seeding.SeedList.from_file(seed_filename)
+        seeds_created = False
+    else:
+        seeds_created = True
+        # Initialize seeds
+        if verbose:
+            print('Creating un-positioned list of seeds.')
+
+        seeds = _unpositioned_seeds(phases, domain, rng_seeds)
+
+    # the margin between the seeds (and their cells) and the periodic faces
+    margin = _periodic_margin(periodic_margin, domain.n_dim, mesh_max_volume,
+                              mesh_max_edge_length, seeds)
+    if seeds_created:
+        if verbose:
+            print('There are ' + str(len(seeds)) + ' seeds.')
+            print('Positioning seeds in domain.')
+
+        kw = 'position'
+        rng_seed = rng_seeds.get(kw, 0)
+        pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
+        seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose,
+                       periodic=periodic, periodic_margin=margin)
+
+    # Write seeds
+    seeds_types = filetypes.get('seeds', [])
+    if not isinstance(seeds_types, list):
+        seeds_types = [seeds_types]
+
+    def write_seeds(force=False):
+        for seeds_type in seeds_types:
+            fname = os.path.splitext(seed_filename)[0] + '.' + seeds_type
+            if force or seeds_created or not os.path.exists(fname):
+                seeds.write(fname, format=seeds_type)
+
+    write_seeds()
+
+    # ----------------------------------------------------------------------- #
+    # Plot Seeds                                                              #
+    # ----------------------------------------------------------------------- #
+    plot_types = filetypes.get('seeds_plot', ['png'])
+    if not plot_types:
+        plot_types = []
+    elif type(plot_types) is not list:
+        plot_types = [plot_types]
+
+    def plot_seed_files(force=False):
+        plot_files = []
+        for ext in plot_types:
+            fname = os.path.join(directory, 'seeds.' + str(ext))
+            if force or seeds_created or not os.path.exists(fname):
+                plot_files.append(fname)
+
+        if plot_files and verbose:
+            print('Plotting seeds.')
+
+        if plot_files:
+            plot_seeds(seeds, phases, domain, plot_files, plot_axes, color_by,
+                       colormap, **seeds_kwargs)
+
+    plot_seed_files()
+
+    # ----------------------------------------------------------------------- #
+    # Create Polygon Mesh                                                     #
+    # ----------------------------------------------------------------------- #
+    poly_basename = 'polymesh.txt'
+    poly_filename = os.path.join(directory, poly_basename)
+    if restart and os.path.exists(poly_filename) and not seeds_created:
+        # Read polygon mesh from file
+        if verbose:
+            print('Reading polygon mesh from file.')
+            print('Polygon mesh filename: ' + poly_filename)
+
+        pmesh = PolyMesh.from_file(poly_filename)
+        poly_created = False
+    else:
+        poly_created = True
+
+        # Create polygon mesh from seeds
+        if verbose:
+            print('Creating polygon mesh.')
+
+        pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
+                                    verbose, periodic=periodic,
+                                    periodic_margin=margin,
+                                    min_angle=mesh_min_angle)
+        if edge_opt:
+            # the optimization moved seeds: their files and plots are
+            # updated to the seeds that produce the polygon mesh
+            if verbose:
+                print('Updating the seeds moved by the edge optimization.')
+            write_seeds(force=True)
+            plot_seed_files(force=True)
+
+    # Write polymesh
+    poly_types = filetypes.get('poly', [])
+    if not isinstance(poly_types, list):
+        poly_types = [poly_types]
+
+    for poly_type in poly_types:
+        fname = os.path.splitext(poly_filename)[0] + '.' + poly_type
+        if poly_created or not os.path.exists(fname):
+            pmesh.write(fname, poly_type)
+
+    # ----------------------------------------------------------------------- #
+    # Plot Polygon Mesh                                                       #
+    # ----------------------------------------------------------------------- #
+    plot_types = filetypes.get('poly_plot', ['png'])
+    if not plot_types:
+        plot_types = []
+    elif type(plot_types) is not list:
+        plot_types = [plot_types]
+
+    plot_files = []
+    for ext in plot_types:
+        fname = os.path.join(directory, 'polymesh.' + str(ext))
+        if poly_created or not os.path.exists(fname):
+            plot_files.append(fname)
+
+    if plot_files and verbose:
+        print('Plotting polygon mesh.')
+
+    if plot_files:
+        plot_poly(pmesh, phases, plot_files, plot_axes, color_by, colormap,
+                  **poly_kwargs)
+
+    # ----------------------------------------------------------------------- #
+    # Create Triangular Mesh                                                  #
+    # ----------------------------------------------------------------------- #
+    if raster:
+        tri_basename = 'rastermesh.txt'
+    else:
+        tri_basename = 'trimesh.txt'
+    tri_filename = os.path.join(directory, tri_basename)
+
+    if restart and os.path.exists(tri_filename) and not poly_created:
+        # Read triangle mesh
+        if verbose:
+            if raster:
+                print('Reading raster mesh.')
+            else:
+                print('Reading triangular mesh.')
+            print('Mesh filename: ' + tri_filename)
+
+        tmesh = TriMesh.from_file(tri_filename)
+        tri_created = False
+    else:
+        tri_created = True
+        # Create triangular mesh
+        if verbose:
+            if raster:
+                print('Creating raster mesh.')
+            else:
+                print('Creating triangular mesh.')
+
+        if raster:
+            tmesh = RasterMesh.from_polymesh(pmesh, mesh_size, phases)
+        else:
+            tmesh = TriMesh.from_polymesh(pmesh, phases, mesher,
+                                          mesh_min_angle, mesh_max_volume,
+                                          mesh_max_edge_length, mesh_size)
+
+    # Write triangular mesh
+    for tri_type in tri_types:
+        fname = os.path.splitext(tri_filename)[0] + _tri_exts[tri_type]
+        if tri_created or not os.path.exists(fname):
+            tmesh.write(fname, tri_type, seeds, pmesh)
+
+    # ----------------------------------------------------------------------- #
+    # Plot Triangular Mesh                                                    #
+    # ----------------------------------------------------------------------- #
+    plot_types = filetypes.get('tri_plot', ['png'])
+    if not plot_types:
+        plot_types = []
+    elif type(plot_types) is not list:
+        plot_types = [plot_types]
+
+    plot_files = []
+    for ext in plot_types:
+        if raster:
+            bname = 'rastermesh'
+        else:
+            bname = 'trimesh'
+        fname = os.path.join(directory, bname + '.' + str(ext))
+        if tri_created or not os.path.exists(fname):
+            plot_files.append(fname)
+
+    if plot_files and verbose:
+        if raster:
+            print('Plotting raster mesh.')
+        else:
+            print('Plotting triangular mesh.')
+
+    if plot_files:
+        plot_tri(tmesh, phases, seeds, pmesh, plot_files, plot_axes, color_by,
+                 colormap, **tri_kwargs)
+
+    # ----------------------------------------------------------------------- #
+    # Perform Verification                                                    #
+    # ----------------------------------------------------------------------- #
+    if not verify:
+        if verbose:
+            print('Finished running MicroStructPy.')
+        return
+
+    if verbose:
+        print('Performing verification.')
+
+    # Set, create verification results directory
+    ver_dir = os.path.join(directory, 'verification')
+    if not os.path.exists(ver_dir):
+        os.makedirs(ver_dir)
+
+    # Set plot types
+    plottypes = filetypes.get('verify_plot', ['png'])
+    if type(plottypes) is not list:
+        plottypes = [plottypes]
+
+    # Verify volume fractions
+    vol_fracs = verification.volume_fractions(pmesh, len(phases))
+
+    vf_fname = os.path.join(ver_dir, 'volume_fractions.txt')
+    verification.write_volume_fractions(vol_fracs, phases, vf_fname)
+
+    fnames = [os.path.join(ver_dir, 'volume_fractions.' + ext) for
+              ext in plottypes]
+    verification.plot_volume_fractions(vol_fracs, phases, fnames)
+
+    # Screen out certain seeds on the boundaries
+    n_dim = domain.n_dim
+    default_shape = {2: 'circle', 3: 'sphere'}[n_dim]
+    verif_mask = np.full(len(seeds), True)
+    for neighbors in pmesh.facet_neighbors:
+        if min(neighbors) < 0:
+            cell_num = max(neighbors)
+            seed_num = pmesh.seed_numbers[cell_num]
+            phase_num = pmesh.phase_numbers[cell_num]
+            phase = phases[phase_num]
+            phase_geom = phase.get('shape', default_shape)
+            if phase_geom in ['square', 'rectangle']:
+                verif_mask[seed_num] = False
+
+    # Determine seeds of best fit
+    fit_seeds = verification.seeds_of_best_fit(seeds, phases, pmesh, tmesh)
+
+    filename = os.path.join(ver_dir, 'fit_seeds.txt')
+    fit_seeds.write(filename)
+
+    # Create distribution plots
+    verification.plot_distributions(fit_seeds, phases, ver_dir, plottypes,
+                                    pmesh, verif_mask)
+
+    # Write Maximum Likelihood Estimates
+    mle_phases = verification.mle_phases(fit_seeds, phases, pmesh, verif_mask)
+
+    mle_fname = os.path.join(ver_dir, 'mles.txt')
+    verification.write_mle_phases(phases, mle_phases, mle_fname)
+
+    # Write Error Statistics
+    error_stats = verification.error_stats(fit_seeds, seeds, phases, pmesh,
+                                           verif_mask)
+
+    err_fname = os.path.join(ver_dir, 'err_stats.txt')
+    verification.write_error_stats(error_stats, phases, err_fname)
+
+    if verbose:
+        print('Finished running MicrostructPy.')
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Created Unpositioned List of Seeds                                          #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def _unpositioned_seeds(phases, domain, rng_seeds=None):
+    if rng_seeds is None:
+        rng_seeds = {}
+    if domain.n_dim == 2:
+        dom_vol = domain.area
+    else:
+        dom_vol = domain.volume
+    return seeding.SeedList.from_info(phases, dom_vol, rng_seeds)
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Plot Seeds                                                                  #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
+               color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot seeds
+
+    This function creates formatted plots of a :class:`.SeedList`.
+
+    Args:
+        seeds (SeedList): Seed list to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        domain (from :mod:`microstructpy.geometry`): Domain geometry.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``seeds.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: additional keyword arguments that will be passed to
+            :meth:`.SeedList.plot`.
+
+    """
+    if not plot_files:
+        plot_files = ['seeds.png']
+
+    phase_names = []
+    given_names = False
+    for i, phase in enumerate(phases):
+        if 'name' in phase:
+            given_names = True
+        name = phase.get('name', 'Material ' + str(i + 1))
+        phase_names.append(name)
+
+    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
+    n_dim = seeds[0].geometry.n_dim
+
+    # Set up axes
+    plt.clf()
+    plt.close('all')
+    fig = plt.figure()
+    projection = {2: None, 3: Axes3D.name}[n_dim]
+    ax = fig.add_subplot(projection=projection, label='seeds')
+
+    if not plot_axes:
+        if n_dim == 2:
+            ax.set_axis_off()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+        else:
+            ax._axis3don = False
+
+    # Plot seeds
+    edge_kwargs.setdefault('edgecolors', {2: 'k', 3: None}[n_dim])
+    if given_names and color_by == 'material':
+        seeds.plot(material=phase_names, facecolors=seed_colors, loc=4,
+                   **edge_kwargs)
+    else:
+        seeds.plot(facecolors=seed_colors, **edge_kwargs)
+
+    # Crop to Domain
+    d_lims = domain.limits
+    if n_dim == 2:
+        plt.axis('square')
+        plt.xlim(d_lims[0])
+        plt.ylim(d_lims[1])
+    elif n_dim == 3:
+        plt.gca().set_xlim(d_lims[0])
+        plt.gca().set_ylim(d_lims[1])
+        plt.gca().set_zlim(d_lims[2])
+
+        _misc.axisEqual3D(plt.gca())
+
+    # Save plot
+    for fname in plot_files:
+        if n_dim == 3:
+            _misc.axisEqual3D(ax)
+            plt.subplots_adjust(left=0, bottom=.05, right=1, top=1,
+                                wspace=0, hspace=0)
+            plt.savefig(fname)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+
+    plt.close('all')
+
+
+def _seed_colors(seeds, phases, color_by='material', colormap='viridis'):
+    if color_by == 'material':
+        return [_phase_color(s.phase, phases) for s in seeds]
+    elif color_by == 'seed number':
+        n = len(seeds)
+        return [_cm_color(_cm_frac(i, n), colormap) for i in range(n)]
+    elif color_by == 'material number':
+        n = len(phases)
+        return [_cm_color(_cm_frac(s.phase, n), colormap) for s in seeds]
+
+
+def _phase_color(i, phases):
+    return phases[i].get('color', 'C' + str(i % 10))
+
+
+def _phase_color_by(i, phases, color_by='material', colormap='viridis'):
+    if color_by == 'material':
+        return phases[i].get('color', 'C' + str(i % 10))
+    elif color_by == 'material number':
+        n = len(phases)
+        return _cm_color(_cm_frac(i, n), colormap)
+
+
+def _cm_frac(i, n):
+    """Position of item i of n in the colormap, in [0, 1]"""
+    return i / max(n - 1, 1)
+
+
+def _cm_color(f, colormap='viridis'):
+    return plt.get_cmap(colormap)(f)
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Plot Polygon                                                                #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
+              color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot polygonal/polyhedral mesh
+
+    This function creates formatted plots of a :class:`.PolyMesh`.
+
+    Args:
+        pmesh (PolyMesh): Polygonal mesh to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``polymesh.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: Additional keyword arguments that will be passed to
+            :meth:`.PolyMesh.plot_facets` in 2D and
+            :meth:`.PolyMesh.plot` in 3D.
+
+    """
+    if not plot_files:
+        plot_files = ['polymesh.png']
+
+    n_dim = len(pmesh.points[0])
+
+    phase_colors = []
+    phase_names = []
+    given_names = False
+    for i, phase in enumerate(phases):
+        color = phase.get('color', 'C' + str(i % 10))
+        if 'name' in phase:
+            given_names = True
+        name = phase.get('name', 'Material ' + str(i + 1))
+        phase_colors.append(color)
+        phase_names.append(name)
+
+    # Set up axes
+    plt.clf()
+    plt.close('all')
+    fig = plt.figure()
+    projection = {2: None, 3: Axes3D.name}[n_dim]
+    ax = fig.add_subplot(projection=projection, label='poly')
+
+    if not plot_axes:
+        if n_dim == 2:
+            ax.set_axis_off()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+        else:
+            ax._axis3don = False
+
+    # Plot polygons
+    fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
+    if n_dim == 2:
+        if given_names and color_by == 'material':
+            pmesh.plot(facecolors=fcs, material=phase_names)
+        else:
+            pmesh.plot(facecolors=fcs)
+
+        # The edge color is applied per facet below, so remove both the
+        # plural and the singular matplotlib keywords from the pass-through.
+        edge_color = edge_kwargs.pop('edgecolors', (0, 0, 0, 1))
+        edge_color = edge_kwargs.pop('edgecolor', edge_color)
+        facet_colors = []
+        for neigh_pair in pmesh.facet_neighbors:
+            if facet_check(neigh_pair, pmesh, phases):
+                facet_colors.append(edge_color)  # black
+            else:
+                facet_colors.append('none')
+
+        edge_kwargs.setdefault('capstyle', 'round')
+        pmesh.plot_facets(color=facet_colors, index_by='facet', **edge_kwargs)
+    else:
+        edge_kwargs.setdefault('edgecolors', 'k')
+        if given_names and color_by == 'material':
+            pmesh.plot(facecolors=fcs, index_by='seed', material=phase_names,
+                       **edge_kwargs)
+        else:
+            pmesh.plot(facecolors=fcs, index_by='seed', **edge_kwargs)
+
+    # save plot
+    for fname in plot_files:
+        if n_dim == 3:
+            _misc.axisEqual3D(ax)
+            plt.subplots_adjust(left=0, bottom=.05, right=1, top=1,
+                                wspace=0, hspace=0)
+            plt.savefig(fname)
+        else:
+            plt.tight_layout()
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+    plt.close('all')
+
+
+def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
+    if n_dim == 2:
+        if color_by == 'material':
+            r_colors = [_phase_color(n, phases) for n in pmesh.phase_numbers]
+        elif color_by == 'seed number':
+            n = max(pmesh.seed_numbers) + 1
+            r_colors = [_cm_color(_cm_frac(s, n), colormap) for s in
+                        pmesh.seed_numbers]
+        elif color_by == 'material number':
+            n = len(phases)
+            r_colors = [_cm_color(_cm_frac(p, n), colormap) for p in
+                        pmesh.phase_numbers]
+        n_seeds = max(pmesh.seed_numbers) + 1
+        s_colors = ['none' for i in range(n_seeds)]
+        for seed_num, r_c in zip(pmesh.seed_numbers, r_colors):
+            s_colors[seed_num] = r_c
+        return s_colors
+    else:
+        s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
+        n = max(s2p.keys()) + 1
+        colors = []
+        for s in range(n):
+            if color_by == 'material':
+                phase_num = s2p[s]
+                color = _phase_color(phase_num, phases)
+            elif color_by == 'seed number':
+                color = _cm_color(_cm_frac(s, n), colormap)
+            elif color_by == 'material number':
+                n_phases = len(phases)
+                color = _cm_color(_cm_frac(s2p[s], n_phases), colormap)
+            else:
+                color = 'none'
+            colors.append(color)
+        return colors
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Plot Triangular Mesh                                                        #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
+             color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot seeds
+
+    This function creates formatted plots of a :class:`.TriMesh`.
+
+    Args:
+        tmesh (TriMesh): Triangular mesh to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        seeds (SeedList): List of seed geometries.
+        pmesh (PolyMesh): Polygonal mesh from which ``tmesh`` was generated.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``trimesh.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: Additional keyword arguments that will be passed to
+            :meth:`.TriMesh.plot`.
+
+    """
+    if not plot_files:
+        plot_files = ['trimesh.png']
+
+    n_dim = len(tmesh.points[0])
+
+    phase_colors = []
+    phase_names = []
+    given_names = False
+    for i, phase in enumerate(phases):
+        color = phase.get('color', 'C' + str(i % 10))
+        name = phase.get('name', 'Material ' + str(i + 1))
+        phase_colors.append(color)
+        phase_names.append(name)
+        if 'name' in phase:
+            given_names = True
+
+    # Set up axes
+    plt.clf()
+    plt.close('all')
+    fig = plt.figure()
+    projection = {2: None, 3: Axes3D.name}[n_dim]
+    ax = fig.add_subplot(projection=projection, label='tri')
+
+    if not plot_axes:
+        if n_dim == 2:
+            ax.set_axis_off()
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+        else:
+            ax._axis3don = False
+
+    # Determine which regions are visible
+    invis_regions = set(range(-6, 0))
+    vis_regions = _visible_regions(pmesh, phases)
+
+    # Determine facet colors based on visibility
+    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
+    facet_colors = []
+    facet_phases = []
+    for fn in pmesh.facet_neighbors:
+        r = _visible_neighbor(fn, vis_regions, invis_regions)
+        if r is None:
+            color = 'none'
+            phase = -1
+        else:
+            s = pmesh.seed_numbers[r]
+            color = seed_colors[s]
+            phase = seeds[s].phase
+        facet_colors.append(color)
+        facet_phases.append(phase)
+
+    # plot triangle mesh
+    edge_kwargs.setdefault('linewidths', {2: 0.5, 3: 0.1}[n_dim])
+    edge_kwargs.setdefault('edgecolors', 'k')
+    if color_by in ('material', 'material number'):
+        n = len(phases)
+        if n_dim == 2:
+            cs = seed_colors
+        else:
+            cs = facet_colors
+            cs.append('none')
+
+        cs = [_phase_color_by(i, phases, color_by, colormap) for i in range(n)]
+        cs.append('none')
+
+        old_e_att = np.copy(tmesh.element_attributes)
+        old_f_att = np.copy(tmesh.facet_attributes)
+        tmesh.element_attributes = [seeds[i].phase for i in old_e_att]
+        tmesh.facet_attributes = [facet_phases[a] for a in old_f_att]
+
+        if given_names:
+            tmesh.plot(facecolors=cs, index_by='attribute',
+                       material=phase_names, **edge_kwargs)
+        else:
+            tmesh.plot(facecolors=cs, index_by='attribute', **edge_kwargs)
+
+        tmesh.element_attributes = old_e_att
+        tmesh.facet_attributes = old_f_att
+    else:
+        fcs = {2: seed_colors, 3: facet_colors}[n_dim]
+        tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
+
+    # save plot
+    for fname in plot_files:
+        if n_dim == 3:
+            _misc.axisEqual3D(ax)
+            plt.subplots_adjust(left=0, bottom=.05, right=1, top=1,
+                                wspace=0, hspace=0)
+            plt.savefig(fname)
+        else:
+            plt.tight_layout()
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+
+    plt.close('all')
+
+
+def _visible_regions(pmesh, phases):
+    """Determine the regions visible from outside the domain
+
+    In 3D, the exterior facets are walked inward: a non-void region behind
+    a facet is visible, while the facets of a void region are added to the
+    front, since the regions behind a void can be seen through it.
+    Each facet is visited at most once, so the walk always terminates,
+    even when a void region touches the domain boundary.
+    In 2D, all regions are visible.
+
+    Args:
+        pmesh (PolyMesh): Polygonal/polyhedral mesh.
+        phases (list): List of phase dictionaries.
+
+    Returns:
+        set: Numbers of the visible regions.
+
+    """
+    n_dim = len(pmesh.points[0])
+    if n_dim < 3:
+        return set(range(len(pmesh.regions)))
+
+    vis_regions = set()
+    checked_regions = set()
+    front = set([i for i, fn in enumerate(pmesh.facet_neighbors)
+                 if min(fn) < 0])
+    visited = set(front)
+    while front:
+        new_front = set()
+        for f in front:
+            for n in pmesh.facet_neighbors[f]:
+                if n < 0 or n in checked_regions:
+                    continue
+                checked_regions.add(n)
+                p = pmesh.phase_numbers[n]
+                p_type = phases[p].get('material_type', 'solid')
+                if p_type in _misc.kw_void:
+                    new_front |= set(pmesh.regions[n]) - visited
+                else:
+                    vis_regions.add(n)
+        visited |= new_front
+        front = new_front
+    return vis_regions
+
+
+def _visible_neighbor(n_pair, vis, invis):
+    """Visible (non-void, non-wall) region on either side of a facet
+
+    Returns None if the facet is not plottable or neither neighbor
+    is a visible region.
+    """
+    if not _f_plottable(n_pair, vis, invis):
+        return None
+    for n in n_pair:
+        if n in vis:
+            return n
+    return None
+
+
+def _f_plottable(n_pair, vis, invis):
+    if set(n_pair) <= vis or set(n_pair) <= invis:
+        return False
+    return True
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Recursively Convert Dictionary Contents                                     #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def dict_convert(dictionary, filepath='.'):
+    """Convert dictionary from xmltodict_
+
+    The xmltodict_ ``parse`` method creates dictionaries with values that
+    are all strings, rather than strings, floats, ints, etc.
+    This function recursively searches the dictionary for string values and
+    attempts to convert the dictionary values.
+
+    If a dictionary contains the key ``dist_type``, it is assumed that
+    the corresponding name is a :mod:`scipy.stats` statistical distribution
+    and the remaining keys are inputs for that distribution,
+    with two exceptions.
+    First, if the value of ``dist_type`` is ``cdf``, then the remaining key
+    should be ``filename`` and its value should be the path to a CSV file,
+    where each row contains the (x, CDF) points along the CDF curve.
+    Second, if the value of ``dist_type`` is ``histogram`` (or its alias
+    ``pdf``), then the remaining key should also be ``filename`` and its value
+    should be the path to a CSV file.
+    For the histogram, the first row of this file should be the *n* bin
+    heights and the second row should be the *n+1* bin locations.
+
+    Additionally, if a key in the dictionary contains ``filename`` or
+    ``directory`` and the value associated with that key is a relative path,
+    then the filepath is converted from a relative to an absolute path using
+    the ``filepath`` input as the reference point.
+    This behavior can be switched off by setting ``filepath=False``.
+
+    Args:
+        dictionary (list, dict, or collections.OrderedDict): Dictionary or
+            dictionaries to be converted.
+        filepath (str): *(optional)* Reference path to resolve relative paths.
+
+    Returns:
+        list or collections.OrderedDict: A copy of the input where the string
+        values have been converted. If only one dict is passed into the
+        function, then an instance of :class:`collections.OrderedDict` is
+        returned.
+
+    .. _xmltodict: https://github.com/martinblech/xmltodict
+    """
+
+    # Convert lists
+    if isinstance(dictionary, list):
+        return [dict_convert(d, filepath) for d in dictionary]
+
+    # Convert strings
+    if isinstance(dictionary, str):
+        s = _misc.from_str(dictionary)
+        if isinstance(s, str) and ',' in s:
+            s = [_misc.from_str(ss) for ss in s.split(',')]
+        return s
+
+    # Convert Nones
+    if dictionary is None:
+        return {}
+
+    # Convert filepaths
+    for key in dictionary:
+        val = dictionary[key]
+        if any([s in key.lower() for s in ('filename', 'directory')]):
+            val = os.path.expanduser(val)
+            if not os.path.isabs(val) and filepath:
+                new_val = os.path.abspath(os.path.join(filepath, val))
+            else:
+                new_val = val
+            dictionary[key] = new_val
+
+    # Convert SciPy.stats distributions
+    if 'dist_type' in dictionary:
+        return _dist_convert(dictionary)
+
+    # Convert Dictionaries
+    new_dict = collections.OrderedDict()
+    for key in dictionary:
+        val = dictionary[key]
+        new_val = dict_convert(val, filepath)
+        new_dict[key] = new_val
+    return new_dict
+
+
+def _dist_convert(dist_dict):
+    """Convert distribution dictionary to distribution"""
+
+    dist_type = dist_dict['dist_type'].strip().lower()
+    params = {k: _misc.from_str(v) for k, v in dist_dict.items()}
+    del params['dist_type']
+
+    if dist_type == 'cdf':
+        cdf = _read_csv(params['filename'])
+
+        bin_bnds = [x for x, _ in cdf]
+        bin_cnts = [cdf[i + 1][1] - cdf[i][1] for i in range(len(cdf) - 1)]
+        return _rv_histogram(bin_cnts, bin_bnds, density=False)
+
+    elif dist_type in ('histogram', 'pdf'):
+        bin_hgts, bin_bnds = _read_csv(params['filename'])
+        return _rv_histogram(bin_hgts, bin_bnds, density=True)
+
+    else:
+        return scipy.stats.__dict__[dist_type](**params)
+
+
+def _read_csv(filename):
+    """Read the numbers in a CSV file, skipping blank lines"""
+    with open(filename, 'r') as file:
+        lines = [line for line in file if line.strip()]
+    return [[float(s) for s in line.split(',')] for line in lines]
+
+
+def _rv_histogram(bin_vals, bin_bnds, density):
+    """Histogram distribution from bin values and boundaries
+
+    The CDF increments of a ``cdf`` file are probability masses, so they
+    are passed with ``density=False``. Otherwise SciPy would re-weight the
+    bins by their widths whenever the bin boundaries are not evenly spaced.
+    The bin heights of a ``pdf``/``histogram`` file are densities.
+    """
+    hist = (list(bin_vals), list(bin_bnds))
+    try:
+        return scipy.stats.rv_histogram(hist, density=density)
+    except TypeError:
+        # SciPy < 1.11 has no density keyword and treats the values as
+        # densities, so masses are converted to densities beforehand.
+        if not density:
+            widths = np.diff(np.array(bin_bnds, dtype='float'))
+            hist = (list(np.array(bin_vals, dtype='float') / widths), hist[1])
+        return scipy.stats.rv_histogram(hist)
+
+
+if __name__ == '__main__':
+    main()

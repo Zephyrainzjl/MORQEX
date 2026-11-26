@@ -99,12 +99,14 @@ class MicrostructureOperator:
             'elastic_energy_density':.5*np.einsum('...i,ij,...j->...',q,self.H,q)}
 
     def metadata(self):
-        return {'micro_cells':self.full.n,'online_regions':self.dimension,'strategy':self.strategy,
+        record={'micro_cells':self.full.n,'online_regions':self.dimension,'strategy':self.strategy,
             'reference_concentration':self.full.reference,'reference_temperature_K':self.full.reference_T,
             'active_fraction':self.active_fraction,'reaction_area_m_inv':self.area_density,
             'geometry_fingerprint':self.full.fingerprint,'transport':self.full.transport,'material':self.full.material_record,
             'state_meaning':'intrinsic region concentration, mol/m3; no additional radial lithium states',
-            'restriction':'volume-weighted; R P=I; w_r^T R=w_full^T','localization':'piecewise-constant concentration and exact FEM response for that represented concentration'}
+            'restriction':'volume-weighted; R P=I; w_r^T R=w_full^T','localization':'piecewise-constant concentration and FEM response for that represented concentration'}
+        if hasattr(self,'transport_law'):record['transport_law']=self.transport_law
+        return record
 
 
     def transfer(self,new_operator,values):
@@ -141,7 +143,7 @@ class MicrostructureOperator:
 
 class MicrostructureElectrode:
     """Full active-voxel diffusion and fixed-C FEM energy on the SAME geometry."""
-    def __init__(self,structure,provider,parameters,domain,*,thermal_expansion=1e-5,cbd_young=1e9,topology=None,materials=None):
+    def __init__(self,structure,provider,parameters,domain,*,thermal_expansion=1e-5,cbd_young=1e9,topology=None,materials=None,defer_mechanics=False):
         if domain not in {'negative','positive'}:raise ValueError('Electrode domain required')
         self.structure=structure;self.volume=provider.to_volume(structure);self.domain=domain
         active=[p for p,k in structure.phase_kinds.items() if k=='active']
@@ -190,7 +192,9 @@ class MicrostructureElectrode:
         self.material_record['mechanical_contact']='face-connected solid; corner-only and edge-only components are not tied'
         tensor={p:isotropic_stiffness(young,nu) if p in active else isotropic_stiffness(cbd_young,.3) for p in solid}
         if materials is not None:tensor={p:materials.phases[p].elasticity for p in solid}
-        self.solver=ElasticitySolver(self.mesh,np.array([tensor[int(p)] for p in self.mesh.phases]),boundary='kubc')
+        from ..mechanics.reference import DeferredElasticity
+        backend=DeferredElasticity if defer_mechanics else ElasticitySolver
+        self.solver=backend(self.mesh,np.array([tensor[int(p)] for p in self.mesh.phases]),boundary='kubc')
         parent=np.full(self.volume.data.size,-1,dtype=int);parent[fv.voxel_ids]=np.arange(self.n)
         cell=parent[self.mesh.voxel_ids];selected=cell>=0
         self._element_cells=cell;self._selected=selected;self._omega=omega;self._alpha=thermal_expansion;self._full_response=None
@@ -226,7 +230,7 @@ class MicrostructureElectrode:
         idx=[0,*range(6,6+self.n+1)]
         return self.response.H[np.ix_(idx,idx)]
 
-    def partition(self,target,strategy='geometry'):
+    def partition_labels(self,target,strategy='geometry'):
         fv=self.diffusion
         if strategy not in {'geometry','mechanics'}:raise ValueError('Unknown partition strategy')
         if target<fv.n_components:raise ValueError('At least one region per disconnected diffusion component required')
@@ -254,7 +258,10 @@ class MicrostructureElectrode:
             groups.extend(group[labels==j] for j in (0,1))
         labels=np.empty(self.n,dtype=int)
         for k,g in enumerate(groups):labels[g]=k
-        return self.reduce(labels,strategy)
+        return labels
+
+    def partition(self,target,strategy='geometry'):
+        return self.reduce(self.partition_labels(target,strategy),strategy)
 
     def reduce(self,partition=None,strategy='full'):
         labels=np.arange(self.n) if partition is None else np.asarray(partition,dtype=int)

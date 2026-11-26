@@ -1,0 +1,478 @@
+{
+  "repository": "https://github.com/nagda95/Micro_Reconstruction",
+  "commit": "0dda2705932fb7d0f4264fd1f22bc94f0daf7e3e",
+  "archive_sha256": "3d0cda854e94852ade22949c67944744a2bfe19c7b9a4fd76889834e495d4a6e",
+  "files": [
+    {
+      "upstream": "README.md",
+      "integrated": "src/morqex/vendor/micro_reconstruction/upstream_source/README.txt",
+      "upstream_sha256": "e8073d97d0c1dc21e34b03311c877d6728b8f63381fb0164962c8467ce2f3a5e",
+      "local_sha256": "e8073d97d0c1dc21e34b03311c877d6728b8f63381fb0164962c8467ce2f3a5e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/Reconstruction_framework.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/Reconstruction_framework.m",
+      "upstream_sha256": "bd6df457723f5406d2ef9594b607e07f66c1bd058658191371a1d1f3e1df451a",
+      "local_sha256": "bd6df457723f5406d2ef9594b607e07f66c1bd058658191371a1d1f3e1df451a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Airetri.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Airetri.m",
+      "upstream_sha256": "e1c4f50823389fbd40600a928089ca2ef8bfae8aa45f1d7c5e22174afc8cfa6a",
+      "local_sha256": "e1c4f50823389fbd40600a928089ca2ef8bfae8aa45f1d7c5e22174afc8cfa6a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Copula_Contacts_Prediction.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Copula_Contacts_Prediction.R",
+      "upstream_sha256": "437f74b6cdc8afafb48f5e6bed5e3b5376946fcc1442f972813aafaca9e5dd98",
+      "local_sha256": "437f74b6cdc8afafb48f5e6bed5e3b5376946fcc1442f972813aafaca9e5dd98",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Plot_Domain.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Plot_Domain.m",
+      "upstream_sha256": "4f8787678eaa5163d3878ba6a36acffb386ca25bbdce417624f43ae9362bcbae",
+      "local_sha256": "4f8787678eaa5163d3878ba6a36acffb386ca25bbdce417624f43ae9362bcbae",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Plot_Particles.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Plot_Particles.m",
+      "upstream_sha256": "2c7e071b215c5c2bdd07e7013e935515b4632b71c4a345448d718f7d0d025505",
+      "local_sha256": "2c7e071b215c5c2bdd07e7013e935515b4632b71c4a345448d718f7d0d025505",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/PropVoronoi3D.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/PropVoronoi3D.m",
+      "upstream_sha256": "8533fa5aa82a969d37281c53cabceef07f4f48385ffeaee8bb9b0d6c59bbd86c",
+      "local_sha256": "8533fa5aa82a969d37281c53cabceef07f4f48385ffeaee8bb9b0d6c59bbd86c",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Sp_Coeffs_PS.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Sp_Coeffs_PS.m",
+      "upstream_sha256": "e2c658b3e1d1ad473c46fb494b98db7edd0e141e6316aafbb481e0c772c60706",
+      "local_sha256": "e2c658b3e1d1ad473c46fb494b98db7edd0e141e6316aafbb481e0c772c60706",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/SqueezeList.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/SqueezeList.m",
+      "upstream_sha256": "42a8def0637b44b626547ccb2f6dc005a093008bb8945d2235924585795049e9",
+      "local_sha256": "42a8def0637b44b626547ccb2f6dc005a093008bb8945d2235924585795049e9",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Tetravol.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Tetravol.m",
+      "upstream_sha256": "bdcd3e633e900c7d785e21154d9adfd71d33d3fae0069d9cbc7997936df8968c",
+      "local_sha256": "bdcd3e633e900c7d785e21154d9adfd71d33d3fae0069d9cbc7997936df8968c",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Translate_Color.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Translate_Color.m",
+      "upstream_sha256": "48d83987fcbb8daf53d3fcd2a522003c5bf6e5f03f2ce45c96e31c30d16b7e13",
+      "local_sha256": "48d83987fcbb8daf53d3fcd2a522003c5bf6e5f03f2ce45c96e31c30d16b7e13",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Tri2Domain.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Tri2Domain.m",
+      "upstream_sha256": "add6521fa988e90d3166c93925927a1590b668ddd616c5c9f20148fcb4974f50",
+      "local_sha256": "add6521fa988e90d3166c93925927a1590b668ddd616c5c9f20148fcb4974f50",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Voisinage3D.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Voisinage3D.m",
+      "upstream_sha256": "ceed3c94a807cac565dabb5988a6897236a7859704447ad79863ebb9cdbd859b",
+      "local_sha256": "ceed3c94a807cac565dabb5988a6897236a7859704447ad79863ebb9cdbd859b",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Volume_Domain.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Volume_Domain.m",
+      "upstream_sha256": "edbff5feb51f6eaacf7bcadc5ecdf9ffd8298992899c1988095cf82f06e6d5cf",
+      "local_sha256": "edbff5feb51f6eaacf7bcadc5ecdf9ffd8298992899c1988095cf82f06e6d5cf",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Volume_Geode.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Volume_Geode.m",
+      "upstream_sha256": "3c8a7c17162496ffa2125c9d166087962b72dd466672c31d2fdb276dbe301040",
+      "local_sha256": "3c8a7c17162496ffa2125c9d166087962b72dd466672c31d2fdb276dbe301040",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/Yharmonic_coeffs.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/Yharmonic_coeffs.m",
+      "upstream_sha256": "084cfb63c19a165fa51a23c03d4ab23d91a464cb4e17392145d7e0c3de3c4dcd",
+      "local_sha256": "084cfb63c19a165fa51a23c03d4ab23d91a464cb4e17392145d7e0c3de3c4dcd",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/characterizePulp.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/characterizePulp.R",
+      "upstream_sha256": "2ee08c289749e88ff31abea1da1ad6414deafed3aa9ffd9a7350640ea8847125",
+      "local_sha256": "2ee08c289749e88ff31abea1da1ad6414deafed3aa9ffd9a7350640ea8847125",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/conditionalSamplingPulp.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/conditionalSamplingPulp.R",
+      "upstream_sha256": "8c055bed86d2f1dc1b8248cad7cf3cbfa49c79e1e02f5338a69aad07307ef249",
+      "local_sha256": "8c055bed86d2f1dc1b8248cad7cf3cbfa49c79e1e02f5338a69aad07307ef249",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/croppedLaguerre3D.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/croppedLaguerre3D.m",
+      "upstream_sha256": "2cfd6b8e807d1d54f60399e4ab7b52ba883f843e70711d4539e1b2726f536690",
+      "local_sha256": "2cfd6b8e807d1d54f60399e4ab7b52ba883f843e70711d4539e1b2726f536690",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/drawFromMargin.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/drawFromMargin.R",
+      "upstream_sha256": "2010b46c421a8a01fb3cdd8d709fca12f16422582a9c8996d217be33612160f8",
+      "local_sha256": "2010b46c421a8a01fb3cdd8d709fca12f16422582a9c8996d217be33612160f8",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/edgeAttPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/edgeAttPD.m",
+      "upstream_sha256": "3420e4a7b96aaa32e0716d0a0ecc2036a96bc997ea5e7b908305f9d8a502ebc8",
+      "local_sha256": "3420e4a7b96aaa32e0716d0a0ecc2036a96bc997ea5e7b908305f9d8a502ebc8",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/fitMarginFunction.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/fitMarginFunction.R",
+      "upstream_sha256": "4dde36648510b8c4f5aeb0218277c0af7a37cda5d5757990062dee8a5cd38402",
+      "local_sha256": "4dde36648510b8c4f5aeb0218277c0af7a37cda5d5757990062dee8a5cd38402",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/freeBouPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/freeBouPD.m",
+      "upstream_sha256": "4038e1ef0808a6c3000cbfb80e086ccef5ca1c9487927c698f050c4ad23150f6",
+      "local_sha256": "4038e1ef0808a6c3000cbfb80e086ccef5ca1c9487927c698f050c4ad23150f6",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/generatePseudoU.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/generatePseudoU.R",
+      "upstream_sha256": "e4c0ed666534e11c1f08d008d1f25c0fbff46efd22bc80dc2d9a858e88dfaed0",
+      "local_sha256": "e4c0ed666534e11c1f08d008d1f25c0fbff46efd22bc80dc2d9a858e88dfaed0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/generatePulpSample.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/generatePulpSample.R",
+      "upstream_sha256": "6434da056359db727e0ef4d88685e8f113c9470cbfd6d56ae1998c1964d4631d",
+      "local_sha256": "6434da056359db727e0ef4d88685e8f113c9470cbfd6d56ae1998c1964d4631d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/getSH.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/getSH.m",
+      "upstream_sha256": "6570b77aee980bed0bbb723d04a2dbcae477564530dff6f2a4b3770794faabac",
+      "local_sha256": "6570b77aee980bed0bbb723d04a2dbcae477564530dff6f2a4b3770794faabac",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/inverseSHT.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/inverseSHT.m",
+      "upstream_sha256": "292e62a97fa8b77bf38ddb72f3dee619c40aaa20235a48248fa2ce60c700b811",
+      "local_sha256": "292e62a97fa8b77bf38ddb72f3dee619c40aaa20235a48248fa2ce60c700b811",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/kendall_tau.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/kendall_tau.m",
+      "upstream_sha256": "0f3fa397d7dea809d14061a9aa972775f8f4e26a9df7f230ad50bbb8dddefdfe",
+      "local_sha256": "0f3fa397d7dea809d14061a9aa972775f8f4e26a9df7f230ad50bbb8dddefdfe",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/leastSquaresSHT.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/leastSquaresSHT.m",
+      "upstream_sha256": "36f09927d095dcd3db6db0bb9f95a0b41c0fc2e84592138d5a33a6968ba5930e",
+      "local_sha256": "36f09927d095dcd3db6db0bb9f95a0b41c0fc2e84592138d5a33a6968ba5930e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/liftPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/liftPD.m",
+      "upstream_sha256": "3e1b2278e9245b1a5b9aae7dd3b2c87d3105937b6f06fd9b72636284a2e6105e",
+      "local_sha256": "3e1b2278e9245b1a5b9aae7dd3b2c87d3105937b6f06fd9b72636284a2e6105e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/loadnetwork.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/loadnetwork.m",
+      "upstream_sha256": "a8b5ed4987b90498ec8c00225761e708008648027db9f5b6c70c1c52175b8f59",
+      "local_sha256": "a8b5ed4987b90498ec8c00225761e708008648027db9f5b6c70c1c52175b8f59",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/mainScript.R",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/mainScript.R",
+      "upstream_sha256": "19e6a388a771ae7442bad19bd05a35acdf2601a630f6e70764bc6874bc5fa5f5",
+      "local_sha256": "19e6a388a771ae7442bad19bd05a35acdf2601a630f6e70764bc6874bc5fa5f5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/mk_network.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/mk_network.m",
+      "upstream_sha256": "1f091728dee81e7dab7934fafdcab68aab8e16113fdf9d471275f60855822e94",
+      "local_sha256": "1f091728dee81e7dab7934fafdcab68aab8e16113fdf9d471275f60855822e94",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/mvncondP.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/mvncondP.m",
+      "upstream_sha256": "817fc954b55f1b983a801b9f356ab7bbf8d14d5d23b6a58b22f55a1978808f7a",
+      "local_sha256": "817fc954b55f1b983a801b9f356ab7bbf8d14d5d23b6a58b22f55a1978808f7a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/normalsPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/normalsPD.m",
+      "upstream_sha256": "f610f82488e7be973bb0cc553457649d8c2e55caa639c20608b0544a033808bc",
+      "local_sha256": "f610f82488e7be973bb0cc553457649d8c2e55caa639c20608b0544a033808bc",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pairplot.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pairplot.m",
+      "upstream_sha256": "eb72dcfa57f7026b5d9c768feea36f859e0c94c744cea318bb8844a2c7023798",
+      "local_sha256": "eb72dcfa57f7026b5d9c768feea36f859e0c94c744cea318bb8844a2c7023798",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pairplot/pairplot.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pairplot/pairplot.m",
+      "upstream_sha256": "eb72dcfa57f7026b5d9c768feea36f859e0c94c744cea318bb8844a2c7023798",
+      "local_sha256": "eb72dcfa57f7026b5d9c768feea36f859e0c94c744cea318bb8844a2c7023798",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/piecesPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/piecesPD.m",
+      "upstream_sha256": "95e9155e2faa4b01be210e26716d7fa851310fa561af89c77f15d999e8596238",
+      "local_sha256": "95e9155e2faa4b01be210e26716d7fa851310fa561af89c77f15d999e8596238",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/plotnetwork.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/plotnetwork.m",
+      "upstream_sha256": "09d27b0dff859f65d6ae3bad289f13d2ec4093aa8d161bdcb164c68658b16cc9",
+      "local_sha256": "09d27b0dff859f65d6ae3bad289f13d2ec4093aa8d161bdcb164c68658b16cc9",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/powerDiagramWrapper_mod.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/powerDiagramWrapper_mod.m",
+      "upstream_sha256": "b2d0137840f1896c72d0afba6a3d8084d2340c68c8c457a5d5b8726c6c3cbd42",
+      "local_sha256": "b2d0137840f1896c72d0afba6a3d8084d2340c68c8c457a5d5b8726c6c3cbd42",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/powercentersPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/powercentersPD.m",
+      "upstream_sha256": "6356f8d7741379bb958fdd07d44c330e56bf165cebd865e0f607bbe55aa2b4ed",
+      "local_sha256": "6356f8d7741379bb958fdd07d44c330e56bf165cebd865e0f607bbe55aa2b4ed",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/.Rbuildignore",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/.Rbuildignore",
+      "upstream_sha256": "5eae613fd75af1eb6a511b43d7757811654b148a11cbcea80fce9b9faefc0bd8",
+      "local_sha256": "5eae613fd75af1eb6a511b43d7757811654b148a11cbcea80fce9b9faefc0bd8",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/.gitignore",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/.gitignore",
+      "upstream_sha256": "23c92951dafc68afcafe2696e2a571040f9442272e3a3910220700990d83f31f",
+      "local_sha256": "23c92951dafc68afcafe2696e2a571040f9442272e3a3910220700990d83f31f",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/DESCRIPTION",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/DESCRIPTION",
+      "upstream_sha256": "673d441aea9d812207680a25431a3bdec7ba63ca19edc570be0abbfdce77fc67",
+      "local_sha256": "673d441aea9d812207680a25431a3bdec7ba63ca19edc570be0abbfdce77fc67",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/LICENSE.txt",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/LICENSE.txt",
+      "upstream_sha256": "0b0856cb1397405aa89f94b5d1476ac478f12e96ddfb9c37faeac61ac2270acc",
+      "local_sha256": "0b0856cb1397405aa89f94b5d1476ac478f12e96ddfb9c37faeac61ac2270acc",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/NAMESPACE",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/NAMESPACE",
+      "upstream_sha256": "ec0c6fa4d2c8f288419d130899d5761b4bc252f664975d69a77a74321ca6b403",
+      "local_sha256": "ec0c6fa4d2c8f288419d130899d5761b4bc252f664975d69a77a74321ca6b403",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/README.md",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/README.txt",
+      "upstream_sha256": "5bd2c020db6b36cbff701818c44fdeee454f23e5a8beb31218d2f889300ef43a",
+      "local_sha256": "5bd2c020db6b36cbff701818c44fdeee454f23e5a8beb31218d2f889300ef43a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/characterizePulp.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/characterizePulp.Rd",
+      "upstream_sha256": "61df99dfe398e442854baf8088ddc6d9d8abfdfb70b14fe8603e8bf15d6c5d8d",
+      "local_sha256": "61df99dfe398e442854baf8088ddc6d9d8abfdfb70b14fe8603e8bf15d6c5d8d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/conditionalSamplingPulp.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/conditionalSamplingPulp.Rd",
+      "upstream_sha256": "97b199c7ea2859c92f09521c66a934ec1a2eae043124fb9a2e2daebe2a94f041",
+      "local_sha256": "97b199c7ea2859c92f09521c66a934ec1a2eae043124fb9a2e2daebe2a94f041",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/drawFromMargin.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/drawFromMargin.Rd",
+      "upstream_sha256": "00789d5544e33665ae5c2815a8f53291924c5a33fa75ead875a8a0674d01ccd9",
+      "local_sha256": "00789d5544e33665ae5c2815a8f53291924c5a33fa75ead875a8a0674d01ccd9",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/fitMarginFunction.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/fitMarginFunction.Rd",
+      "upstream_sha256": "6e1607bac02b7c81230cbc0ff205c62b2c93f70229f3a8e8f7cde0428989737a",
+      "local_sha256": "6e1607bac02b7c81230cbc0ff205c62b2c93f70229f3a8e8f7cde0428989737a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/generatePseudoU.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/generatePseudoU.Rd",
+      "upstream_sha256": "674d0c926a8c240e38e74a8e4f8303da9a05db80498140892e37c77426b88cc9",
+      "local_sha256": "674d0c926a8c240e38e74a8e4f8303da9a05db80498140892e37c77426b88cc9",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/generatePulpSample.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/generatePulpSample.Rd",
+      "upstream_sha256": "0b004dc595ab8ee7750e6662d3bbb8381d81825974435dd9bb1189b9e1486ab1",
+      "local_sha256": "0b004dc595ab8ee7750e6662d3bbb8381d81825974435dd9bb1189b9e1486ab1",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/man/readAndFormatPulpFile.Rd",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/man/readAndFormatPulpFile.Rd",
+      "upstream_sha256": "a0759adb53de0f58b0aba2872c5513fa9cbd4f9f8ffcb4de7ac36fbda100e183",
+      "local_sha256": "a0759adb53de0f58b0aba2872c5513fa9cbd4f9f8ffcb4de7ac36fbda100e183",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pulpDistr-master/pulpDistr.Rproj",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pulpDistr-master/pulpDistr.Rproj",
+      "upstream_sha256": "9d56477af16b2b86404697171ee5ea0990406a682b3005f96c183434ab939d1b",
+      "local_sha256": "9d56477af16b2b86404697171ee5ea0990406a682b3005f96c183434ab939d1b",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/pwrDiagramPD.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/pwrDiagramPD.m",
+      "upstream_sha256": "1983b7f35f2acb09accc81d16c50e929462ccecc526cb7d4d0a7b48131f0c27e",
+      "local_sha256": "1983b7f35f2acb09accc81d16c50e929462ccecc526cb7d4d0a7b48131f0c27e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/reducenetwork.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/reducenetwork.m",
+      "upstream_sha256": "79da59bc6d2401f3d778179a22806dca328fbd99dec8c46d10bd743d0be9fc73",
+      "local_sha256": "79da59bc6d2401f3d778179a22806dca328fbd99dec8c46d10bd743d0be9fc73",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/support_files/reducenetwork_mod.m",
+      "integrated": "src/morqex/vendor/micro_reconstruction/matlab/support_files/reducenetwork_mod.m",
+      "upstream_sha256": "379af37e03e425970e2d336fd28e28b3d1aed542c6de2dac391b38538603a44c",
+      "local_sha256": "379af37e03e425970e2d336fd28e28b3d1aed542c6de2dac391b38538603a44c",
+      "namespace_adapted": false
+    }
+  ],
+  "external_assets": [
+    {
+      "path": "Segmented_Data/Segmented_Volume.mat",
+      "bytes": 9930353,
+      "sha256": "2ccb948f94568e9df2d5edd148c757be4e30664b0cdd0b2529b0ff823edcf944"
+    },
+    {
+      "path": "Segmented_Data/example",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "Segmented_Data/recons_github.png",
+      "bytes": 557735,
+      "sha256": "b7f1268b554f39b0163d0fb31ad611ae8b8806304dc6244ad477d477d7a5ff20"
+    },
+    {
+      "path": "src/support_files/.Rhistory",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/support_files/Domain.mat",
+      "bytes": 313,
+      "sha256": "36005e06bfeb703bcd6b79d2b455ddf754ed90322abe9d5911d7057b0d626eb0"
+    },
+    {
+      "path": "src/support_files/Fisher.mat",
+      "bytes": 737,
+      "sha256": "bdb4868c83bdebd2451753fa4e1ff550d31f7839088559332d63d0b2debe61c0"
+    },
+    {
+      "path": "src/support_files/Geode3.mat",
+      "bytes": 19373,
+      "sha256": "c482ec79a08c393bd49944a4f3c5cf9d0f5f7e6d69b1904b7a38c909988e2b9a"
+    },
+    {
+      "path": "src/support_files/Geode4.mat",
+      "bytes": 82617,
+      "sha256": "739fb5cf6e433e7c1842b73c588a13b89ea7bb95bc1997cc8e6468a6133e134f"
+    },
+    {
+      "path": "src/support_files/Segmented_Volume.mat",
+      "bytes": 9930353,
+      "sha256": "2ccb948f94568e9df2d5edd148c757be4e30664b0cdd0b2529b0ff823edcf944"
+    },
+    {
+      "path": "src/support_files/example",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "src/support_files/pairplot/Fisher.mat",
+      "bytes": 737,
+      "sha256": "bdb4868c83bdebd2451753fa4e1ff550d31f7839088559332d63d0b2debe61c0"
+    },
+    {
+      "path": "src/support_files/pulpDistr-master/.Rhistory",
+      "bytes": 2826,
+      "sha256": "cdd78d9fc3d79023b0779ed2c0fd048d82d169fbde75f29af3b675ad6777dc5a"
+    }
+  ],
+  "archive": "/home/zephyrain/lw/morph_workspace/upstream/statistical/micro_reconstruction/0dda2705932fb7d0f4264fd1f22bc94f0daf7e3e.zip",
+  "license_scope": "MIT for MicroStructPy; Micro_Reconstruction parent has no declared top-level license; preserve nested pulpDistr license, private integration only, no blanket relicensing",
+  "scope": "All upstream text source files retained. Datasets/binary assets remain in the pinned external archive. Native MATLAB/R execution needs those runtimes."
+}

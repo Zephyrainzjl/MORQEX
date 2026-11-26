@@ -30,12 +30,21 @@ def open_observables(solution,stack,parameters,config,*,feedback=1.):
         scale=A*stack.lengths[d]
         for k,w in enumerate(op.weights):
             variable=solution[key(d,k,'concentration [mol.m-3]')];wx=macro_weights(variable);parts=chemical_primitives(p,d,variable.entries,T)
-            chemical+=scale*w*(wx@parts['internal_energy_J_m3']);chemical_entropy+=scale*w*(wx@parts['entropy_J_m3_K'])
+            if hasattr(op,'numeric_weights'):
+                weight=op.numeric_weights[:,k,None]
+                chemical+=scale*(wx@(weight*parts['internal_energy_J_m3']))
+                chemical_entropy+=scale*(wx@(weight*parts['entropy_J_m3_K']))
+            else:
+                chemical+=scale*w*(wx@parts['internal_energy_J_m3']);chemical_entropy+=scale*w*(wx@parts['entropy_J_m3_K'])
             for law in getattr(config,d):
                 for reservoir in law.reservoirs():
                     stock=wx@solution[age(d,reservoir.name+' [mol.m-3]',k)].entries
                     side_lithium+=scale*stock;side_energy+=scale*float(reservoir.chemical_potential_J_mol)*stock
         variable=solution[f'MORQEX {d} gradient energy density [J.m-3]'];gradient+=scale*(macro_weights(variable)@variable.entries)
+    if getattr(stack,'working_electrode','both')=='positive':
+        metal_loss=np.asarray(solution['MORQEX metal SEI lithium loss [mol]'].entries)
+        side_lithium+=metal_loss
+        side_energy+=-float(pb.constants.F.value)*float(p['SEI open-circuit potential [V]'])*metal_loss
     elastic=A*(solution['MORQEX elastic energy per area [J.m-2]'].entries-T*solution['MORQEX elastic entropy force per area [J.m-2.K-1]'].entries)
     internal=Cp*V*(T-float(p['Initial temperature [K]']))+chemical+gradient+side_energy+feedback*elastic
     work=np.asarray(solution['MORQEX accumulated electrical work [J]'].entries);cooling=np.asarray(solution['MORQEX accumulated cooling work [J]'].entries)
@@ -43,6 +52,7 @@ def open_observables(solution,stack,parameters,config,*,feedback=1.):
     entropy=chemical_entropy+sum(np.asarray(solution[name].entries) for name in ['MORQEX thermal entropy [J.K-1]','MORQEX elastic entropy [J.K-1]','MORQEX electrolyte mixing entropy [J.K-1]'])
     produced=np.asarray(solution['MORQEX accumulated entropy production [J.K-1]'].entries);exchange=np.asarray(solution['MORQEX accumulated entropy heat exchange [J.K-1]'].entries)
     entropy_residual=entropy-entropy[0]-(produced-produced[0])-(exchange-exchange[0]);lithium=np.asarray(solution['Total lithium [mol]'].entries)+side_lithium
+    if getattr(stack,'working_electrode','both')=='positive':lithium=lithium+np.asarray(solution['MORQEX Li metal inventory [mol]'].entries)
     port={d:float(np.max(abs(solution[f'MORQEX {d} port identity residual [W.m-3]'].entries))/max(1.,np.max(abs(solution[f'MORQEX {d} interface port power [W.m-3]'].entries)))) for d in stack.electrodes}
     return {'internal_energy_J':internal,'chemical_internal_energy_J':chemical,'gradient_energy_J':gradient,'reservoir_energy_J':side_energy,'entropy_J_K':entropy,
         'energy_residual_J':energy_residual,'entropy_residual_J_K':entropy_residual,'lithium_including_reservoirs_mol':lithium,

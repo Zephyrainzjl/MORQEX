@@ -165,6 +165,8 @@ def main():
                     break
                 time.sleep(0.25)
             proc.wait()
+            if reason is None and proc.returncode==-signal.SIGXCPU:
+                reason='CPU time limit'
     finally:
         if proc is not None:
             # Also reap orphan subprocesses left after the main command exits.

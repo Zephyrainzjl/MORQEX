@@ -6,7 +6,7 @@ from scipy.sparse.csgraph import dijkstra
 @dataclass(frozen=True)
 class GeometricBasis:
     strategy:str='geometry'
-    def build(self,electrode,target):return electrode.partition(target,self.strategy).partition
+    def build(self,electrode,target):return electrode.partition_labels(target,self.strategy)
 
 @dataclass(frozen=True)
 class ExactBasis:

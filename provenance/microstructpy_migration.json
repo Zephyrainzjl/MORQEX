@@ -1,0 +1,1323 @@
+{
+  "repository": "https://github.com/kip-hart/MicroStructPy",
+  "commit": "6fa72185d5fc6ac9fb6b01f8cecce1f29e4f2339",
+  "archive_sha256": "32b1e5bfc0f296d0b2bc2fcd816e0443b37d7d89d4221c2c2c992a058e2cf084",
+  "files": [
+    {
+      "upstream": ".github/CODE_OF_CONDUCT.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/CODE_OF_CONDUCT.txt",
+      "upstream_sha256": "9dbcaf3efcf6debbba28b90e1c6d6541df74ecae288d08afa9ab3cfb3519b898",
+      "local_sha256": "9dbcaf3efcf6debbba28b90e1c6d6541df74ecae288d08afa9ab3cfb3519b898",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/CONTRIBUTING.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/CONTRIBUTING.txt",
+      "upstream_sha256": "ac368658b78e4193b7cefa75bcd833c1845d464fce3f7ddf285a278b9d8507c7",
+      "local_sha256": "ac368658b78e4193b7cefa75bcd833c1845d464fce3f7ddf285a278b9d8507c7",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/FUNDING.yml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/FUNDING.yml",
+      "upstream_sha256": "7c875674eb7e13fbc257dc3a96e849c7c4b9a7feb45dc2098caffe86e428668f",
+      "local_sha256": "7c875674eb7e13fbc257dc3a96e849c7c4b9a7feb45dc2098caffe86e428668f",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/ISSUE_TEMPLATE/bug_report.txt",
+      "upstream_sha256": "0c8d64f29fb4536513653bf8c97da30f3340e2041b91c8952db1515d6b23a7b3",
+      "local_sha256": "0c8d64f29fb4536513653bf8c97da30f3340e2041b91c8952db1515d6b23a7b3",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/ISSUE_TEMPLATE/feature_request.txt",
+      "upstream_sha256": "1f48c52f209a971b8e7eae4120144d28fcf8ee38a7778a7b4d8cf1ab356617d2",
+      "local_sha256": "1f48c52f209a971b8e7eae4120144d28fcf8ee38a7778a7b4d8cf1ab356617d2",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/PULL_REQUEST_TEMPLATE.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/PULL_REQUEST_TEMPLATE.txt",
+      "upstream_sha256": "f8f64befc0fb8656ee599f2ddf5bbd6e0b8787b08f6c1eb2c626a0cb3560aca2",
+      "local_sha256": "f8f64befc0fb8656ee599f2ddf5bbd6e0b8787b08f6c1eb2c626a0cb3560aca2",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/SECURITY.md",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/SECURITY.txt",
+      "upstream_sha256": "9afb2a302dad5235582c64fcfbec1173d62f220d9f652bad3a14ecc455a05cc2",
+      "local_sha256": "9afb2a302dad5235582c64fcfbec1173d62f220d9f652bad3a14ecc455a05cc2",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/workflows/codeql-analysis.yml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/workflows/codeql-analysis.yml",
+      "upstream_sha256": "36f75773c5e856e9501ab9adf88918ff91cee839cf1f421a9ad881c044813c1d",
+      "local_sha256": "36f75773c5e856e9501ab9adf88918ff91cee839cf1f421a9ad881c044813c1d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/workflows/documentation.yaml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/workflows/documentation.yaml",
+      "upstream_sha256": "cd9a48ee1d0aca9ad43bcc53ebe648905c431b418ac7b69b1ea1c1a055453ddd",
+      "local_sha256": "cd9a48ee1d0aca9ad43bcc53ebe648905c431b418ac7b69b1ea1c1a055453ddd",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/workflows/ossar-analysis.yml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/workflows/ossar-analysis.yml",
+      "upstream_sha256": "4d3af57b28a240758c85e9f3ae55cfeacfee15935d5387b3442b642bb66bc335",
+      "local_sha256": "4d3af57b28a240758c85e9f3ae55cfeacfee15935d5387b3442b642bb66bc335",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/workflows/python_package.yaml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/workflows/python_package.yaml",
+      "upstream_sha256": "60564ceb7d08e543393b2c9f3528be73671ba57fde7bab86a24a3448d54686e6",
+      "local_sha256": "60564ceb7d08e543393b2c9f3528be73671ba57fde7bab86a24a3448d54686e6",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".github/workflows/python_publish.yaml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.github/workflows/python_publish.yaml",
+      "upstream_sha256": "5fff54177f80ff40c5e994babf6fa5a5f2f25d89d4eb95b7721ef006d4237447",
+      "local_sha256": "5fff54177f80ff40c5e994babf6fa5a5f2f25d89d4eb95b7721ef006d4237447",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".gitignore",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.gitignore",
+      "upstream_sha256": "b2ca7cef91108aacdda3173fdf0109b2374cec05024b935e6efebff34e281b8e",
+      "local_sha256": "b2ca7cef91108aacdda3173fdf0109b2374cec05024b935e6efebff34e281b8e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": ".readthedocs.yaml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/.readthedocs.yaml",
+      "upstream_sha256": "d45116e5a757ff569ee5c276c98f71470816cb9fcdc3a089fcf5ca62b2c72bd5",
+      "local_sha256": "d45116e5a757ff569ee5c276c98f71470816cb9fcdc3a089fcf5ca62b2c72bd5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "CHANGELOG.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/CHANGELOG.rst",
+      "upstream_sha256": "a924f7b98084f70dce5d5b1b5f2ca7ef004c493e451df49287729f69b37f7a1c",
+      "local_sha256": "a924f7b98084f70dce5d5b1b5f2ca7ef004c493e451df49287729f69b37f7a1c",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "LICENSE.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/LICENSE.rst",
+      "upstream_sha256": "6a51e4802d952b776d4a85f58e888106b3103111c256f28a7d2829bf3c009dec",
+      "local_sha256": "6a51e4802d952b776d4a85f58e888106b3103111c256f28a7d2829bf3c009dec",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "MANIFEST.in",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/MANIFEST.in",
+      "upstream_sha256": "dad364c3d375c1d970e53523cad50a805783dd2a9f195518f24b8552e8eb8351",
+      "local_sha256": "dad364c3d375c1d970e53523cad50a805783dd2a9f195518f24b8552e8eb8351",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "README.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/README.rst",
+      "upstream_sha256": "88eb719cb0069075704902a6c397cfa0444835733ebbe60e3735fdfbf0cc62f8",
+      "local_sha256": "88eb719cb0069075704902a6c397cfa0444835733ebbe60e3735fdfbf0cc62f8",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/README.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/README.rst",
+      "upstream_sha256": "8231536e7bc097fc412d343a78d6517681f0b806c3b802201ab9bf95801a50b6",
+      "local_sha256": "8231536e7bc097fc412d343a78d6517681f0b806c3b802201ab9bf95801a50b6",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/example_cache.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/example_cache.py",
+      "upstream_sha256": "78cee874614d06230edbf89d2ab32560ffb82194ae2a6b9f006f922a1da90221",
+      "local_sha256": "78cee874614d06230edbf89d2ab32560ffb82194ae2a6b9f006f922a1da90221",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/example_digest.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/example_digest.py",
+      "upstream_sha256": "5df4fd678cd62efb085ffa036fb07ee610ffa3ed415bccff9ce8b7b3c49cb4e2",
+      "local_sha256": "5df4fd678cd62efb085ffa036fb07ee610ffa3ed415bccff9ce8b7b3c49cb4e2",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/publications/cmame2020.bib",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/publications/cmame2020.bib",
+      "upstream_sha256": "268f56bd3007062a003d6ea58e18196b2a6434ea1af7cf10bd4080ec86837890",
+      "local_sha256": "268f56bd3007062a003d6ea58e18196b2a6434ea1af7cf10bd4080ec86837890",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/publications/swx2020.bib",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/publications/swx2020.bib",
+      "upstream_sha256": "4e6b4cac75b2273c628ee2ec6d3749af92201c54dcc4d57a20e32ed60117b4e0",
+      "local_sha256": "4e6b4cac75b2273c628ee2ec6d3749af92201c54dcc4d57a20e32ed60117b4e0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/requirements.txt",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/requirements.txt",
+      "upstream_sha256": "9534b93f4dc7c7bed71d827bb5befe3fdc0a7748341fea61fefe1afdde263771",
+      "local_sha256": "9534b93f4dc7c7bed71d827bb5befe3fdc0a7748341fea61fefe1afdde263771",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/.gitignore",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/.gitignore",
+      "upstream_sha256": "e3ba4df2a1f8b24596a5ebcb7d12d9b5ebbf3c17f605e38d24d1c19e08e608ae",
+      "local_sha256": "e3ba4df2a1f8b24596a5ebcb7d12d9b5ebbf3c17f605e38d24d1c19e08e608ae",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/_static/logo/browserconfig.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/_static/logo/browserconfig.xml",
+      "upstream_sha256": "ca463b889f1d3d8912cd8d36f3871d139a7e5725853b69be0776540ae5ceab52",
+      "local_sha256": "ca463b889f1d3d8912cd8d36f3871d139a7e5725853b69be0776540ae5ceab52",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/cli.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/cli.rst",
+      "upstream_sha256": "70725778dfb639e2d92b7a616f1136130b2abc8312a203e64d1e590babf5e12e",
+      "local_sha256": "70725778dfb639e2d92b7a616f1136130b2abc8312a203e64d1e590babf5e12e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/box.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/box.rst",
+      "upstream_sha256": "296a6d0f6bab17bb465aa5a6e14ece797d40adbe423a5c1eaa8660c68e35df23",
+      "local_sha256": "296a6d0f6bab17bb465aa5a6e14ece797d40adbe423a5c1eaa8660c68e35df23",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/circle.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/circle.rst",
+      "upstream_sha256": "f390fdf2481d101bfc7d28b58a6dd368aa08150d69e8a8770c4b36711a29575a",
+      "local_sha256": "f390fdf2481d101bfc7d28b58a6dd368aa08150d69e8a8770c4b36711a29575a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/cube.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/cube.rst",
+      "upstream_sha256": "90b4d9d191884e11ab94f168e7a50a9d9afad2c5e9c9fa10d8cdf9557f553ee1",
+      "local_sha256": "90b4d9d191884e11ab94f168e7a50a9d9afad2c5e9c9fa10d8cdf9557f553ee1",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/ellipse.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/ellipse.rst",
+      "upstream_sha256": "da16c89464bdfc0071642788331580e58fa08d600da56dbb2aac2e1f15032bf4",
+      "local_sha256": "da16c89464bdfc0071642788331580e58fa08d600da56dbb2aac2e1f15032bf4",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/ellipsoid.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/ellipsoid.rst",
+      "upstream_sha256": "98499bdb13d14416ec4851ca1670f1a77ec38ed34b545ef428b9ffc081832664",
+      "local_sha256": "98499bdb13d14416ec4851ca1670f1a77ec38ed34b545ef428b9ffc081832664",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/factory.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/factory.rst",
+      "upstream_sha256": "a3cae91295659ba7da75219b58cc192bda639d7450ad01af884bc034e4967bf5",
+      "local_sha256": "a3cae91295659ba7da75219b58cc192bda639d7450ad01af884bc034e4967bf5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/index.rst",
+      "upstream_sha256": "66725e34810070cbb3320ea12d64cf3f9fbb571cc9a5fc77cf7a81d6dd53222a",
+      "local_sha256": "66725e34810070cbb3320ea12d64cf3f9fbb571cc9a5fc77cf7a81d6dd53222a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/n_box.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/n_box.rst",
+      "upstream_sha256": "95eb904f9c7936e671a0d315b7124a0c74179e86788dcfb5ea5f5840d164b483",
+      "local_sha256": "95eb904f9c7936e671a0d315b7124a0c74179e86788dcfb5ea5f5840d164b483",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/n_sphere.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/n_sphere.rst",
+      "upstream_sha256": "2a6cfd2a455edf4a90a5e4001b341721a5d853c40a25e0af3f431c0fca322ade",
+      "local_sha256": "2a6cfd2a455edf4a90a5e4001b341721a5d853c40a25e0af3f431c0fca322ade",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/rectangle.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/rectangle.rst",
+      "upstream_sha256": "55b1ea482d6199df589559f06447968275fcc02c7a5b9272ac524a2942b8e2c5",
+      "local_sha256": "55b1ea482d6199df589559f06447968275fcc02c7a5b9272ac524a2942b8e2c5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/sphere.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/sphere.rst",
+      "upstream_sha256": "45c82198a074626bb5141ab493ab922c36c937b775ac5307dc840ac5db603dd0",
+      "local_sha256": "45c82198a074626bb5141ab493ab922c36c937b775ac5307dc840ac5db603dd0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/geometry/square.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/geometry/square.rst",
+      "upstream_sha256": "2036d702c12ed4ce07d911529cdfa58426920b264d43fe1c5ad67d6098b48525",
+      "local_sha256": "2036d702c12ed4ce07d911529cdfa58426920b264d43fe1c5ad67d6098b48525",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/index.rst",
+      "upstream_sha256": "0ffe4376c46e54b229ec49a877072b67fdffaa54c4c9467729de7cfa91b30ffd",
+      "local_sha256": "0ffe4376c46e54b229ec49a877072b67fdffaa54c4c9467729de7cfa91b30ffd",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/meshing/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/meshing/index.rst",
+      "upstream_sha256": "28583b9155ca72e1b8a493345eae2ff5241bce6079d95dae714b163c0ec85087",
+      "local_sha256": "28583b9155ca72e1b8a493345eae2ff5241bce6079d95dae714b163c0ec85087",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/meshing/polymesh.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/meshing/polymesh.rst",
+      "upstream_sha256": "12e576ff760e0a541747fea3bcee93f8b232503ed55a678fd1af7f940eba2238",
+      "local_sha256": "12e576ff760e0a541747fea3bcee93f8b232503ed55a678fd1af7f940eba2238",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/meshing/rastermesh.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/meshing/rastermesh.rst",
+      "upstream_sha256": "2feef7b2024ce9624028741c23a1cb0179ba926268a460ce84d2eb5fc2807bf0",
+      "local_sha256": "2feef7b2024ce9624028741c23a1cb0179ba926268a460ce84d2eb5fc2807bf0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/meshing/trimesh.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/meshing/trimesh.rst",
+      "upstream_sha256": "5c3eef9b3a01bf8a5bb26feb134432863ff09f48628c8331a71aeed0ec500705",
+      "local_sha256": "5c3eef9b3a01bf8a5bb26feb134432863ff09f48628c8331a71aeed0ec500705",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/seeding/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/seeding/index.rst",
+      "upstream_sha256": "d4d2ea368b5d359df52f7c61a1243ecc7a39e51ae3a8228cf1fa1c52b45e4c8e",
+      "local_sha256": "d4d2ea368b5d359df52f7c61a1243ecc7a39e51ae3a8228cf1fa1c52b45e4c8e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/seeding/seed.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/seeding/seed.rst",
+      "upstream_sha256": "83d1a7e3c69e6ceffc16a8a843a3a3a895733fef5d6c3bb2c41680ff8ce2b0f4",
+      "local_sha256": "83d1a7e3c69e6ceffc16a8a843a3a3a895733fef5d6c3bb2c41680ff8ce2b0f4",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/seeding/seedlist.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/seeding/seedlist.rst",
+      "upstream_sha256": "6ec0f1377133b4c5ae55def0229e7799de4dfc7c8ed8f17a16bcd467317cb081",
+      "local_sha256": "6ec0f1377133b4c5ae55def0229e7799de4dfc7c8ed8f17a16bcd467317cb081",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/api/verification.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/api/verification.rst",
+      "upstream_sha256": "81796e555d74bb61ce5e27d621d2c350a9ab49e659f3ff99ce69f99eaed79b95",
+      "local_sha256": "81796e555d74bb61ce5e27d621d2c350a9ab49e659f3ff99ce69f99eaed79b95",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/changelog.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/changelog.rst",
+      "upstream_sha256": "d8a74a8989015f6ff8f2e9c52c07518770e91dd69c81b078eec816aafc8ab9a2",
+      "local_sha256": "d8a74a8989015f6ff8f2e9c52c07518770e91dd69c81b078eec816aafc8ab9a2",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/cli/domain.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/cli/domain.rst",
+      "upstream_sha256": "bc6bc497df3bfb88adda6901e0bab13ef15d8e335f2fe47ea7e4653a18cbcb66",
+      "local_sha256": "bc6bc497df3bfb88adda6901e0bab13ef15d8e335f2fe47ea7e4653a18cbcb66",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/cli/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/cli/index.rst",
+      "upstream_sha256": "0b24e47aa21d4ba8d2054ef285732859eef2d2f823977c2f5a658e9729a98943",
+      "local_sha256": "0b24e47aa21d4ba8d2054ef285732859eef2d2f823977c2f5a658e9729a98943",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/cli/introduction.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/cli/introduction.rst",
+      "upstream_sha256": "c7366a56de48b0e69fdfcac426ff559c4b8420bb5c86467ca7e3646cce20553d",
+      "local_sha256": "c7366a56de48b0e69fdfcac426ff559c4b8420bb5c86467ca7e3646cce20553d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/cli/material.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/cli/material.rst",
+      "upstream_sha256": "f6a6ad78ade8711c70e8664e489fb4ce23f8398da557bb519c4697ed0bf16113",
+      "local_sha256": "f6a6ad78ade8711c70e8664e489fb4ce23f8398da557bb519c4697ed0bf16113",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/cli/settings.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/cli/settings.rst",
+      "upstream_sha256": "adf7d1adf532908286c554f4106b179efe6904e713542f0398064286c7e700cc",
+      "local_sha256": "adf7d1adf532908286c554f4106b179efe6904e713542f0398064286c7e700cc",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/conf.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/conf.py",
+      "upstream_sha256": "20fe2a61948bdf0d684f345aae085c37b57a1572590335fb9c101f60cb376ae9",
+      "local_sha256": "d73f36c8ce5fef496e823badebc473496149cfc834b8a2e6759729aff18d8358",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "docs/source/contents.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/contents.rst",
+      "upstream_sha256": "850ff01e2f05d26095bcca43a55f43008f4b00f248f60a5a7dc368d1c6a758fa",
+      "local_sha256": "850ff01e2f05d26095bcca43a55f43008f4b00f248f60a5a7dc368d1c6a758fa",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/basalt.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/basalt.rst",
+      "upstream_sha256": "5c30225745c1a6d3b47b5099fb2e3be0aebdbc4be120cf1803a18ba077ed1892",
+      "local_sha256": "5c30225745c1a6d3b47b5099fb2e3be0aebdbc4be120cf1803a18ba077ed1892",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/colormap.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/colormap.rst",
+      "upstream_sha256": "8919296b9d89d819d589023844644a2f154dbfbdaf70178b5c2a0c9a87055a64",
+      "local_sha256": "8919296b9d89d819d589023844644a2f154dbfbdaf70178b5c2a0c9a87055a64",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/elliptical_grains.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/elliptical_grains.rst",
+      "upstream_sha256": "94152da95dd312facbc75a4adfe25e59d3a17ec7e04d3a3638fcfe33659735f5",
+      "local_sha256": "94152da95dd312facbc75a4adfe25e59d3a17ec7e04d3a3638fcfe33659735f5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/minimal.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/minimal.rst",
+      "upstream_sha256": "942da25df4f58090e6b44b9e1df611ce6413b5d6f2e0a6ba13230ceb1756e5ec",
+      "local_sha256": "942da25df4f58090e6b44b9e1df611ce6413b5d6f2e0a6ba13230ceb1756e5ec",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/pbx_2d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/pbx_2d.rst",
+      "upstream_sha256": "0e44672191c03eb9b4cbb166446e09cbec5fbcd30036c4e07fdf8048033d4b02",
+      "local_sha256": "0e44672191c03eb9b4cbb166446e09cbec5fbcd30036c4e07fdf8048033d4b02",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/pbx_3d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/pbx_3d.rst",
+      "upstream_sha256": "ecd0d40bd56a29e716c072538908a8ada7d12405e3008e110bf894da5daa4859",
+      "local_sha256": "ecd0d40bd56a29e716c072538908a8ada7d12405e3008e110bf894da5daa4859",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/pbx_interface_2d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/pbx_interface_2d.rst",
+      "upstream_sha256": "0beeb03ff6c5903819b0f136c461a60a5d97f35f82f8faac4c9c5a2d95e53406",
+      "local_sha256": "0beeb03ff6c5903819b0f136c461a60a5d97f35f82f8faac4c9c5a2d95e53406",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/pbx_interface_3d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/pbx_interface_3d.rst",
+      "upstream_sha256": "11ae538efd17cf4522847ac35cb0f8c03d36637e709a56ea1d9a66a58c8d737d",
+      "local_sha256": "11ae538efd17cf4522847ac35cb0f8c03d36637e709a56ea1d9a66a58c8d737d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/periodic_2d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/periodic_2d.rst",
+      "upstream_sha256": "83b7614a8ee6f3fd3904e1d01001ad07014170dd62960660f648d61138acbb94",
+      "local_sha256": "83b7614a8ee6f3fd3904e1d01001ad07014170dd62960660f648d61138acbb94",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/periodic_3d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/periodic_3d.rst",
+      "upstream_sha256": "80ffaec407375fad2d5eefbceb330f7f7072b7c4d6c0878d8a1ba5bea78c9432",
+      "local_sha256": "80ffaec407375fad2d5eefbceb330f7f7072b7c4d6c0878d8a1ba5bea78c9432",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/cli/two_phase_3d.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/cli/two_phase_3d.rst",
+      "upstream_sha256": "5498224ddc9ff14d3afdd96ecbe28d75858ec6bcd3333d33f43352614ec77e99",
+      "local_sha256": "5498224ddc9ff14d3afdd96ecbe28d75858ec6bcd3333d33f43352614ec77e99",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/index.rst",
+      "upstream_sha256": "a7076929ef33346de8f7fa827736362ec917973fd39a5eaf9bb0562a16ad35ad",
+      "local_sha256": "a7076929ef33346de8f7fa827736362ec917973fd39a5eaf9bb0562a16ad35ad",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_1.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_1.rst",
+      "upstream_sha256": "28eb62475af81f589d6e933c6bd195d213a567ef3926406013c8853f6a69d66d",
+      "local_sha256": "28eb62475af81f589d6e933c6bd195d213a567ef3926406013c8853f6a69d66d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_2.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_2.rst",
+      "upstream_sha256": "12165683b82bed3a5c95b4f26f3d68265745fee0002979a0b4fe15618842e11e",
+      "local_sha256": "12165683b82bed3a5c95b4f26f3d68265745fee0002979a0b4fe15618842e11e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_3.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_3.rst",
+      "upstream_sha256": "6bd3a06fe16e605f3f9a5ab6907c8874bae896a95cd0d2ae3085d40ebf79b7ac",
+      "local_sha256": "6bd3a06fe16e605f3f9a5ab6907c8874bae896a95cd0d2ae3085d40ebf79b7ac",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_4.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_4.rst",
+      "upstream_sha256": "38314202197bcaf0267725e334af84221070eb9f4ba59feb95a3ae990b3f8a2d",
+      "local_sha256": "38314202197bcaf0267725e334af84221070eb9f4ba59feb95a3ae990b3f8a2d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_5.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_5.rst",
+      "upstream_sha256": "bdaa4088d07409bf6aa4cd6665efffb69f6a115062abbf22297ca2bd5cff2c77",
+      "local_sha256": "bdaa4088d07409bf6aa4cd6665efffb69f6a115062abbf22297ca2bd5cff2c77",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/intro/intro_6.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/intro/intro_6.rst",
+      "upstream_sha256": "89c6a47b7f14fa05f3c8c88b77d1c047a32a270435a9f54a9d4932e837d9edf5",
+      "local_sha256": "89c6a47b7f14fa05f3c8c88b77d1c047a32a270435a9f54a9d4932e837d9edf5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/foam.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/foam.rst",
+      "upstream_sha256": "ab9a0a613673b05f8b6e68c2a5a2ab020803037d9b80ced87ee746221ada1a89",
+      "local_sha256": "ab9a0a613673b05f8b6e68c2a5a2ab020803037d9b80ced87ee746221ada1a89",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/from_image.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/from_image.rst",
+      "upstream_sha256": "d6093032c14e1c0f67faba6269b2d59ec36edd5edeb19ef9e1ced5e053bb09c0",
+      "local_sha256": "d6093032c14e1c0f67faba6269b2d59ec36edd5edeb19ef9e1ced5e053bb09c0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/grain_neighborhoods.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/grain_neighborhoods.rst",
+      "upstream_sha256": "232f74f4446e3b262b935c3a141f5569ceb83da032413d3d72daf3cadab49a52",
+      "local_sha256": "232f74f4446e3b262b935c3a141f5569ceb83da032413d3d72daf3cadab49a52",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/logo.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/logo.rst",
+      "upstream_sha256": "0a6673d81e379e27a91a67f6bdb33414929a605ca2e0d46c0aad28e0c06d7800",
+      "local_sha256": "0a6673d81e379e27a91a67f6bdb33414929a605ca2e0d46c0aad28e0c06d7800",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/mesh_process.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/mesh_process.rst",
+      "upstream_sha256": "fb2b4f65df1a95b95a6503574b32498fc0f6d3fe026304049f35e2dfc089dddc",
+      "local_sha256": "fb2b4f65df1a95b95a6503574b32498fc0f6d3fe026304049f35e2dfc089dddc",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/periodic_tiling.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/periodic_tiling.rst",
+      "upstream_sha256": "0961e03532a6c40f51eb49ec897196313bb1ca5a060d614dfbf3b964847c63e5",
+      "local_sha256": "0961e03532a6c40f51eb49ec897196313bb1ca5a060d614dfbf3b964847c63e5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/standard_voronoi.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/standard_voronoi.rst",
+      "upstream_sha256": "c0fb446919d18d088cafdb08db5d5fd4e3d60b06f4bd1303ca7216a40a00158f",
+      "local_sha256": "c0fb446919d18d088cafdb08db5d5fd4e3d60b06f4bd1303ca7216a40a00158f",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/examples/package/uniform_seeding.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/examples/package/uniform_seeding.rst",
+      "upstream_sha256": "7c569dd74f9a9e9c48c042129d41dbb3788e6db6e7b5852ed85d445e9c51eee6",
+      "local_sha256": "7c569dd74f9a9e9c48c042129d41dbb3788e6db6e7b5852ed85d445e9c51eee6",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/file_formats.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/file_formats.rst",
+      "upstream_sha256": "4430b699840987c7305744fe283e295aee940acbfc5ac542347675deebe01e33",
+      "local_sha256": "4430b699840987c7305744fe283e295aee940acbfc5ac542347675deebe01e33",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/getting_started.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/getting_started.rst",
+      "upstream_sha256": "1d2e8f80d2b6794a3a6ae72fd1273242f7b9267839e8c288009c27d037301f1e",
+      "local_sha256": "1d2e8f80d2b6794a3a6ae72fd1273242f7b9267839e8c288009c27d037301f1e",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/index.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/index.rst",
+      "upstream_sha256": "e7bb2bc5e14cf2597141487f7d479a736a6a8129223025d9591b5366f1869eae",
+      "local_sha256": "e7bb2bc5e14cf2597141487f7d479a736a6a8129223025d9591b5366f1869eae",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/package_guide.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/package_guide.rst",
+      "upstream_sha256": "43097b95ef5e1b748032b0fac7625eed70839deb8d28d85be35e69808c625652",
+      "local_sha256": "43097b95ef5e1b748032b0fac7625eed70839deb8d28d85be35e69808c625652",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/sphinx_gallery/README.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/sphinx_gallery/README.rst",
+      "upstream_sha256": "13835cc24ce4fcaae4848bcb3809923dd70663fbade34bd96f85055170b248e3",
+      "local_sha256": "13835cc24ce4fcaae4848bcb3809923dd70663fbade34bd96f85055170b248e3",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/sphinx_gallery/geometry/README.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/sphinx_gallery/geometry/README.rst",
+      "upstream_sha256": "13835cc24ce4fcaae4848bcb3809923dd70663fbade34bd96f85055170b248e3",
+      "local_sha256": "13835cc24ce4fcaae4848bcb3809923dd70663fbade34bd96f85055170b248e3",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/sphinx_gallery/geometry/plot_ellipse.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/sphinx_gallery/geometry/plot_ellipse.py",
+      "upstream_sha256": "b3ead62374030e720581e4d3a97b5916eda0880b3ae6d62a9489a0f05f136933",
+      "local_sha256": "fcfac4d94b1b78cf5b270435ef96e1aa9e8e5a51659080496fa8d925dc2a2dd3",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "docs/source/sphinx_gallery/geometry/plot_rectangle.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/sphinx_gallery/geometry/plot_rectangle.py",
+      "upstream_sha256": "750391e5aee4136b4f8822b7fc9342eba36e699072a150da8a4ade1d708c8595",
+      "local_sha256": "b24214af1a74f7d4995f57bda6e946db80a3500dd0d8095f91082490554f51cb",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "docs/source/sphinx_gallery/plot_demos.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/sphinx_gallery/plot_demos.py",
+      "upstream_sha256": "5c8cf8805d3638a29921f0bb71e569a52dad53c11a933256ac3ad3a3fbe9824f",
+      "local_sha256": "3b75bd6dbaf686e70d8d0b801a30566edff99669b5f37b1def2a73c6019000f2",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "docs/source/troubleshooting.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/troubleshooting.rst",
+      "upstream_sha256": "79d01bb95d142e228147e786221ef1a79f6f831336c2b9b5aa166f60377a0044",
+      "local_sha256": "79d01bb95d142e228147e786221ef1a79f6f831336c2b9b5aa166f60377a0044",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "docs/source/welcome.rst",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/docs/source/welcome.rst",
+      "upstream_sha256": "18e9771392e3a6be8006b2b59b868a30b06490c46b184fe5766396cfc31ec2b1",
+      "local_sha256": "18e9771392e3a6be8006b2b59b868a30b06490c46b184fe5766396cfc31ec2b1",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "requirements.txt",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/requirements.txt",
+      "upstream_sha256": "9ecea236033f32b1c478f92beb0382010eace3050ad8f2a8b35b26b65b553b1d",
+      "local_sha256": "9ecea236033f32b1c478f92beb0382010eace3050ad8f2a8b35b26b65b553b1d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "setup.cfg",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/setup.cfg",
+      "upstream_sha256": "6ad408e4f762424217a8c332338d3bc3e3f745d2f0d2c26cd37419629212beda",
+      "local_sha256": "6ad408e4f762424217a8c332338d3bc3e3f745d2f0d2c26cd37419629212beda",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "setup.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/setup.py",
+      "upstream_sha256": "49519c3b68a28db4da4547a3ab7a84a327a71d2d8ae735d40e071996f29b5031",
+      "local_sha256": "49519c3b68a28db4da4547a3ab7a84a327a71d2d8ae735d40e071996f29b5031",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/__init__.py",
+      "integrated": "src/morqex/vendor/microstructpy/__init__.py",
+      "upstream_sha256": "79ff62da88236c2300be3154e52bf0758ea2c9396be48cc6958a0d24d19f3fee",
+      "local_sha256": "4a37db4460527f2de0956d2464dd7a715b1c8273e70770cc86c8983d9a31b4d5",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/_misc.py",
+      "integrated": "src/morqex/vendor/microstructpy/_misc.py",
+      "upstream_sha256": "0d16652d578bb8cc4a4af7da86d60a16e40db0c180056bb88c72aa18f6dd6c2d",
+      "local_sha256": "d566793a3a7a601520386da715a7ec35467ced2ce5b4d4f2c0738ee27e441b85",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/cli.py",
+      "integrated": "src/morqex/vendor/microstructpy/cli.py",
+      "upstream_sha256": "820dd4b666e31e6009e7cbf8aae2ccb773788c6b27cc80f45dab1a466687c931",
+      "local_sha256": "ed0078e8b7a166039ed47ce97eb5211626f87ab7b2c6e07891bdc1f7f7b365c7",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/.gitignore",
+      "integrated": "src/morqex/vendor/microstructpy/examples/.gitignore",
+      "upstream_sha256": "7a99fe95eb3ee4ccecbcb1232f5c8ea1cc6319b126444564ae709e4c0b19f8f0",
+      "local_sha256": "7a99fe95eb3ee4ccecbcb1232f5c8ea1cc6319b126444564ae709e4c0b19f8f0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/aphanitic_cdf.csv",
+      "integrated": "src/morqex/vendor/microstructpy/examples/aphanitic_cdf.csv",
+      "upstream_sha256": "711e8579e689aa2531b6e18af4d5282b016457eb8130eb360a583c53e6807630",
+      "local_sha256": "711e8579e689aa2531b6e18af4d5282b016457eb8130eb360a583c53e6807630",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/basalt_circle.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/basalt_circle.xml",
+      "upstream_sha256": "8b400dc98bcb22cc1dde0fec576880ba30a5132c7102a2cef96c14766936b849",
+      "local_sha256": "8b400dc98bcb22cc1dde0fec576880ba30a5132c7102a2cef96c14766936b849",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/colormap.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/colormap.xml",
+      "upstream_sha256": "0a1664e9696b8318be3683f88f90ddd16f927f4a9d61137b6b6d2d7591bcb629",
+      "local_sha256": "0a1664e9696b8318be3683f88f90ddd16f927f4a9d61137b6b6d2d7591bcb629",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/docs_banner.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/docs_banner.py",
+      "upstream_sha256": "d62b43b8e6550b672c909427ac83faba8632fb171df75f30e10ee05122312f7f",
+      "local_sha256": "bc3a21a0c622e67adb4da726bc4edb97d6767f27a2e8424fbe1d5f623cfde4af",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/elliptical_grains.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/elliptical_grains.xml",
+      "upstream_sha256": "6b6932a38bfd155d881bac3dce8772dc4f7180d2c4e389a8762f06c75510eedc",
+      "local_sha256": "6b6932a38bfd155d881bac3dce8772dc4f7180d2c4e389a8762f06c75510eedc",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/foam.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/foam.py",
+      "upstream_sha256": "000e09f3caa50efd2fa1aaf109b016b97a8cd0356515c8802b223e7774ddbda0",
+      "local_sha256": "27215e9187e14edb4b5c633022ab942a6fac74eae03893e6f85cebcecb35bcc3",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/from_image.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/from_image.py",
+      "upstream_sha256": "d11b5cc7acf41fee3e69b0d0b1c5b52eb18c59adb0b266eaa4206d55d5b9f7fe",
+      "local_sha256": "372fc45dadca76c370b399950f8dea2decf4434394380f1f4ad3f7cda0eca94f",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/grain_neighborhoods.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/grain_neighborhoods.py",
+      "upstream_sha256": "a19ccbe6681f5f8ba844ccdf608a32cc94387cafefba6d63a74babdfbe9b6502",
+      "local_sha256": "63ed6989d52422821d979e0ef1a32af34ce26cfff1d4a68a751802a04bef3407",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_1_basic.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_1_basic.xml",
+      "upstream_sha256": "cc80b96cf6c26ddaf62f43da100b096b65e338d88a5bcd32bbcc69f57eaebaec",
+      "local_sha256": "cc80b96cf6c26ddaf62f43da100b096b65e338d88a5bcd32bbcc69f57eaebaec",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_2_quality.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_2_quality.xml",
+      "upstream_sha256": "32a4b6acf3ab253a8f79e475ecbb1ead04f6b85addc23dc112c288619e33875d",
+      "local_sha256": "32a4b6acf3ab253a8f79e475ecbb1ead04f6b85addc23dc112c288619e33875d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_3_size_shape.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_3_size_shape.xml",
+      "upstream_sha256": "4273d8f6e6b12a6b2b074f42fddef7a98a6f47f8f1937f530e1cc8a932d8086a",
+      "local_sha256": "4273d8f6e6b12a6b2b074f42fddef7a98a6f47f8f1937f530e1cc8a932d8086a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_4_oriented.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_4_oriented.xml",
+      "upstream_sha256": "6b9c7a9f167f277cbca36d60a191486260b1a0509f7c7fb56018a945d231e5f4",
+      "local_sha256": "6b9c7a9f167f277cbca36d60a191486260b1a0509f7c7fb56018a945d231e5f4",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_5_plotting.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_5_plotting.xml",
+      "upstream_sha256": "5fcac74d3d65a506c2edf063da2e169b74d3880bc03799d2e54d0c8f12835417",
+      "local_sha256": "5fcac74d3d65a506c2edf063da2e169b74d3880bc03799d2e54d0c8f12835417",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/intro_6_culmination.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/intro_6_culmination.xml",
+      "upstream_sha256": "87760eb86aeb347c863bdd4f6230bf1bf1362f98ae693d69798eab448c682dc9",
+      "local_sha256": "87760eb86aeb347c863bdd4f6230bf1bf1362f98ae693d69798eab448c682dc9",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/logo.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/logo.py",
+      "upstream_sha256": "2cad5dc54fdee4026c100902691d1e38dbe62988fa219d5ee8c4a3e15caf19d2",
+      "local_sha256": "b55b73311ed868177886a96b48a9f9879f7b6b84394692aa49f04406607f5460",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/minimal.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/minimal.xml",
+      "upstream_sha256": "f898164272c02902cdf07cf8266a1084c34c104312f24cbe3c0ee461f6fcedda",
+      "local_sha256": "f898164272c02902cdf07cf8266a1084c34c104312f24cbe3c0ee461f6fcedda",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/minimal_paired.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/minimal_paired.xml",
+      "upstream_sha256": "2a6983f36bdaed8300749f23dc414d9bcb093121e62e82dfd276dbe6c9a17d48",
+      "local_sha256": "2a6983f36bdaed8300749f23dc414d9bcb093121e62e82dfd276dbe6c9a17d48",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/olivine_cdf.csv",
+      "integrated": "src/morqex/vendor/microstructpy/examples/olivine_cdf.csv",
+      "upstream_sha256": "28fafd7eb50327ac73b3544084e2126c3225d0df27303f469c19f7aa067fb083",
+      "local_sha256": "28fafd7eb50327ac73b3544084e2126c3225d0df27303f469c19f7aa067fb083",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/pbx_2D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/pbx_2D.xml",
+      "upstream_sha256": "03304dd789cf29f23a10bda5437395a5b28981c00997aedbf750982d758d9b0a",
+      "local_sha256": "03304dd789cf29f23a10bda5437395a5b28981c00997aedbf750982d758d9b0a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/pbx_3D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/pbx_3D.xml",
+      "upstream_sha256": "7fbf97e2c1932b1adcb2d875d87d0bfb8dafa8b11a641feed6665b58723f12b1",
+      "local_sha256": "7fbf97e2c1932b1adcb2d875d87d0bfb8dafa8b11a641feed6665b58723f12b1",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/pbx_interface_2D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/pbx_interface_2D.xml",
+      "upstream_sha256": "4ed2c36cdec4a330c174ba01393bea6f43c631bce2d5140e6739e0ba303101e0",
+      "local_sha256": "4ed2c36cdec4a330c174ba01393bea6f43c631bce2d5140e6739e0ba303101e0",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/pbx_interface_3D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/pbx_interface_3D.xml",
+      "upstream_sha256": "47f4ba717beeeeefba65ea3f8c3e75282c8a23482e279fe71a4722d3f7b0b8b4",
+      "local_sha256": "47f4ba717beeeeefba65ea3f8c3e75282c8a23482e279fe71a4722d3f7b0b8b4",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/periodic_2D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/periodic_2D.xml",
+      "upstream_sha256": "bb74ea1190ddfadf704af1039e0e0db335e417405e3dc843c325faeb98f3af2a",
+      "local_sha256": "bb74ea1190ddfadf704af1039e0e0db335e417405e3dc843c325faeb98f3af2a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/periodic_3D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/periodic_3D.xml",
+      "upstream_sha256": "f3ccacccf51f37feb75c501aa04c6c17d21ef1f417d99f88a2ae0b0218858ea8",
+      "local_sha256": "f3ccacccf51f37feb75c501aa04c6c17d21ef1f417d99f88a2ae0b0218858ea8",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/periodic_tiling.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/periodic_tiling.py",
+      "upstream_sha256": "e36c7a9ee757440d8cb8f1270588cae195c9cb70b9bbf577093f35c5d0e3bb38",
+      "local_sha256": "114c775a2b6645698a4c5df4c0e0582392cbb706af70b4be7c2409acf6c5ec44",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/standard_voronoi.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/standard_voronoi.py",
+      "upstream_sha256": "36ba84bb9b4b539ed02fd5316cd7d958a730ebcf37f779b940aba22474bd3852",
+      "local_sha256": "761aa95f7959e66d3e3ff228cc96a95d0e1c040d8e48d0962167f17235b8e946",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/examples/two_phase_3D.xml",
+      "integrated": "src/morqex/vendor/microstructpy/examples/two_phase_3D.xml",
+      "upstream_sha256": "273e87e822d0b104a241e3ccda049f8baa39f59615d4b6db27b368ad104c03e7",
+      "local_sha256": "273e87e822d0b104a241e3ccda049f8baa39f59615d4b6db27b368ad104c03e7",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/examples/uniform_seeding.py",
+      "integrated": "src/morqex/vendor/microstructpy/examples/uniform_seeding.py",
+      "upstream_sha256": "0c8dc848ce7e54fcd7a10449ad957deb591f169a6082521c5ba2333c51230e2f",
+      "local_sha256": "97ac126d0ebc1367d97b7dd1a3a4cb144e506b12e2dd280017dfc3c5a24deab8",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/__init__.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/__init__.py",
+      "upstream_sha256": "1a1d0571c0b1152a1dcd61d931cbd01823e7867ddf8a2452400bec7f2a4d0fec",
+      "local_sha256": "1a050cbe1d4e157647eb138242d135a71cc3534801df16257b1498488b14afbc",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/box.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/box.py",
+      "upstream_sha256": "588d5a90ed83e30c5e924499549faa49bb730fe24fd9a954279ca40e4e575983",
+      "local_sha256": "7e2e491c3a115fb154821cd686fe46c2383fc05455d1c5b1efe3eabae258be10",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/circle.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/circle.py",
+      "upstream_sha256": "509cb09aedda9cf1936698b7945e525e8c28278270bde1e8d203392767be3c70",
+      "local_sha256": "e42ecb036a6e08e1972dcbe8dbad338c7d596da278efe088c5f0027f210b927c",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/ellipse.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/ellipse.py",
+      "upstream_sha256": "61a54ab712537532492cf392b48d5a2c5a2e0c177fb42117ee01edff20b3cd88",
+      "local_sha256": "61a54ab712537532492cf392b48d5a2c5a2e0c177fb42117ee01edff20b3cd88",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/geometry/ellipsoid.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/ellipsoid.py",
+      "upstream_sha256": "3f094601cc2fe2a22423f2e055d64cc02a2413f91b079f52f94a24b945d31464",
+      "local_sha256": "52deaee6962eff6705b7a679e0abf940ffe8335b430ab6c051c7954b6b69f088",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/n_box.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/n_box.py",
+      "upstream_sha256": "827d3f9f01c58011c46310bf5393d68b91a92f0906cfd6fc5b81e7dda5aac63a",
+      "local_sha256": "827d3f9f01c58011c46310bf5393d68b91a92f0906cfd6fc5b81e7dda5aac63a",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/geometry/n_sphere.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/n_sphere.py",
+      "upstream_sha256": "36217221e72cf55bf82f36c210fa3873625a1277a709465efef743ca2cfb32d5",
+      "local_sha256": "36217221e72cf55bf82f36c210fa3873625a1277a709465efef743ca2cfb32d5",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "src/microstructpy/geometry/rectangle.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/rectangle.py",
+      "upstream_sha256": "dc085c96e8815080d1be6a99c3a66b3ea7d262cf5b4e8ba926e36abc224294b0",
+      "local_sha256": "cb2b9d5e32e9398be7743d765a50f4070fca8ef65f88691b94cfaebaffa9c930",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/geometry/sphere.py",
+      "integrated": "src/morqex/vendor/microstructpy/geometry/sphere.py",
+      "upstream_sha256": "f54c7cce3321ea675311ae7e6418cc48d3074b3a3d05f05dfa8cd69f82a80326",
+      "local_sha256": "69dc30c22cce42c72b7502635f9dec512dab8e8b6a6f50361c58a5f0e4519d02",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/meshing/__init__.py",
+      "integrated": "src/morqex/vendor/microstructpy/meshing/__init__.py",
+      "upstream_sha256": "c36da48fb735e2cb1ebcaeac89cf8096aabf0dc8d55fdcd14a6814e6bdd39213",
+      "local_sha256": "b75ad5c7ed2166156a97622b5dad2675e484faf61565e6cc08326c6110aea7d5",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/meshing/polymesh.py",
+      "integrated": "src/morqex/vendor/microstructpy/meshing/polymesh.py",
+      "upstream_sha256": "1c33a935983f961ed80abbfdd28203df06e2547d5cfa4b14ec17bec0369f03de",
+      "local_sha256": "14c9d162f5bf33fc8e31420075150bec7c40c3a06d2398dbd1405438861d856d",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/meshing/trimesh.py",
+      "integrated": "src/morqex/vendor/microstructpy/meshing/trimesh.py",
+      "upstream_sha256": "a52e11779c556ba0143ecd0734f937b733573c1bea50838fc5b30e56c9e11c27",
+      "local_sha256": "e235dc3cea1481302f68310076f039be5b675df4df3927e27b75816870272f5f",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/seeding/__init__.py",
+      "integrated": "src/morqex/vendor/microstructpy/seeding/__init__.py",
+      "upstream_sha256": "b20621281ad5aea7cbf37a32bf13d747f92fd9c5fdc4472687f274522e61266d",
+      "local_sha256": "c42ba22b30e04f063c10d4ec0ea2c4363b4f1b47e59da898e9a864e00ef571f1",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/seeding/seed.py",
+      "integrated": "src/morqex/vendor/microstructpy/seeding/seed.py",
+      "upstream_sha256": "6499d39962606841e6e1c1900245ecd4988369f907fc9a4c0c8906bef6eb88d6",
+      "local_sha256": "4c71a01276dc3c5f25434ff9c9fa7d248f7982990f438ca7914eee3b99345eb2",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/seeding/seedlist.py",
+      "integrated": "src/morqex/vendor/microstructpy/seeding/seedlist.py",
+      "upstream_sha256": "07a008b2a882c0b269f0304548da32f2bf860b1ea7af2122fb37d1217dbacf01",
+      "local_sha256": "a69bb010ce52b50b6aff502eec0d624818c038b76ea434ef0bd9c184db43741e",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "src/microstructpy/verification.py",
+      "integrated": "src/morqex/vendor/microstructpy/verification.py",
+      "upstream_sha256": "dd51a732d60f5b458d2b088e4c15df7e759eccda3af330fa34118a621c1cedda",
+      "local_sha256": "4d716c6b093be7b6e4953ca325ac8a782e601f0c2dbccd2b7d87ba5243727bcd",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/cli/test_cli_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_cli_fixes.py",
+      "upstream_sha256": "6f39a681f9baada6895f30b581fe7683ea92bb54531759fb5917819e3f6f2af4",
+      "local_sha256": "ad03923fa02e0e3ba1312de82f8c8d661f4678941fc8e3754fc216c4d72a5650",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/cli/test_includes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes.py",
+      "upstream_sha256": "f433a250b2c503deb1b2569dc44491c0636cca09c039dbb2037293b996d3631e",
+      "local_sha256": "b3519821004cf3032fca552ee63cb217061c88b27581496c3efeff523bc859b0",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/cli/test_includes_files/different_dir/input.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes_files/different_dir/input.xml",
+      "upstream_sha256": "7b494f0d62edb75002e649e425fc9871917c73542245765e3d96ed1769ecf81d",
+      "local_sha256": "7b494f0d62edb75002e649e425fc9871917c73542245765e3d96ed1769ecf81d",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "tests/cli/test_includes_files/expected_input.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes_files/expected_input.xml",
+      "upstream_sha256": "b9238065fad7773709faa4b2b1536c1eab62c30198e944a4d51e2b374d2e9ac3",
+      "local_sha256": "b9238065fad7773709faa4b2b1536c1eab62c30198e944a4d51e2b374d2e9ac3",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "tests/cli/test_includes_files/fine_grained.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes_files/fine_grained.xml",
+      "upstream_sha256": "d28fedaa64b06b81a040e3de56b9cf907d31177d986197ab8cc9afa9284c5055",
+      "local_sha256": "d28fedaa64b06b81a040e3de56b9cf907d31177d986197ab8cc9afa9284c5055",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "tests/cli/test_includes_files/input.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes_files/input.xml",
+      "upstream_sha256": "fc0f1cc8021f0c87eac0bfb1b253369fe1177409bcc33d8a08e4c6b2491cbdf6",
+      "local_sha256": "fc0f1cc8021f0c87eac0bfb1b253369fe1177409bcc33d8a08e4c6b2491cbdf6",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "tests/cli/test_includes_files/materials.xml",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_includes_files/materials.xml",
+      "upstream_sha256": "e7dea5be4f8cd343d18c19cbec2ab0f77869c96016c421aed83a9647845db982",
+      "local_sha256": "e7dea5be4f8cd343d18c19cbec2ab0f77869c96016c421aed83a9647845db982",
+      "namespace_adapted": false
+    },
+    {
+      "upstream": "tests/cli/test_periodic_cli.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/cli/test_periodic_cli.py",
+      "upstream_sha256": "69511d2e9eeda78bb269b02659bf9bd0cdf5a6a489e716e5da3013a5864ba619",
+      "local_sha256": "c32fbf270276a8a13fe943c15428e60f9a8155f8939367fe102c74c42f699670",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/geometry/test_geometry_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/geometry/test_geometry_fixes.py",
+      "upstream_sha256": "2d44d71a66e30cf1f9f03336744a2f67e9686cdb78fbb6f0c657a34565eb3ed6",
+      "local_sha256": "ba27b67dcddf014519b427ad37c0eff5fea08ecd77f61cfa7a69121077322b78",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/geometry/test_n_sphere.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/geometry/test_n_sphere.py",
+      "upstream_sha256": "99c1dade8f46679e7f98bee91d982ac424d627e5940cac9ac655be316c769e26",
+      "local_sha256": "f7a0d2478f5aa84841fb690ba8dc2b499ffd5840cc555f02245e8a4b395d23f5",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/periodic_helpers.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/periodic_helpers.py",
+      "upstream_sha256": "6c20118c00efbd34c6f5a333a5402d539fc9f000eb589f19ea1af6dc16b3e63f",
+      "local_sha256": "eefc8de63d6ccbd00778df933801c4fd2d9bfc432d8c6f9ddc133650fd1bea67",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_edge_opt_pieces.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_edge_opt_pieces.py",
+      "upstream_sha256": "11bcafa280367a1e995d8f32a2193908f2caa680eac276bd19ee1fd321520e28",
+      "local_sha256": "be74a75929433c514aabb5240173005331a687abc18712c139d8e73c14e9500c",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_periodic_geometry.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_periodic_geometry.py",
+      "upstream_sha256": "70f416a7bce9c0cde8ec1587694637d933923f917b4b4b19736aa36d052f1a5f",
+      "local_sha256": "e7306a3454831b0eb6fe00e9882e9033ffe9cebe301f754e234705bd7312dee7",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_periodic_polymesh.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_periodic_polymesh.py",
+      "upstream_sha256": "694c2e2c564ed53ed30526191783cab482b322d4f49f1e9e719eac7b7bb97516",
+      "local_sha256": "7c03431fe413f4a74b6ae0d7b50c37ec0efd669435691619dd205753ed9ebb11",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_periodic_quality.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_periodic_quality.py",
+      "upstream_sha256": "e8c4841b7ae7c1a27694a5fe8ebf8ceac12b021770887b6804a841a82348b8c0",
+      "local_sha256": "82f54fa5f66ad3abee9d287dd477d8440e36926164e228f6f0a340c9ada24381",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_periodic_trimesh.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_periodic_trimesh.py",
+      "upstream_sha256": "5b8a5480ce39d13a8f46f97a87af0ffbbd70c7b709cf6c57d6dace7049f138f4",
+      "local_sha256": "d2685bc9845e8f373efaf1df3570ee0a77c94c2654e9f6d74b4af461f236ff26",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_polymesh.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_polymesh.py",
+      "upstream_sha256": "d94bc541d65a746ac647ebcb895fd3780157c26065fa4bd8ed06b0a1cbc45b64",
+      "local_sha256": "8b6ef0e2f923b090de8971b3a388f34054dfdf03534bbece00d66bec5deafcce",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_polymesh_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_polymesh_fixes.py",
+      "upstream_sha256": "5b7e8a8fdcfff8b45d3f47392a2f0b003620a87bf4e1a674bc863217f11bc735",
+      "local_sha256": "2541eb113d0e5f94c55a95589ad51966efea5eb2ebb4b2a4a812cc2044c2d1b3",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/meshing/test_trimesh_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/meshing/test_trimesh_fixes.py",
+      "upstream_sha256": "87fa441b879d558c3da5e5acd612cc781d8d309ad6a14cf1f7423992ec8bd900",
+      "local_sha256": "f209bec49e6ce1d88f2d5ebb4c4eb8b6affc6878ac405f2056e399d268c9273c",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/seeding/test_periodic_seeding.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/seeding/test_periodic_seeding.py",
+      "upstream_sha256": "dfdea2f90351a0c63d8b06066433a08a345b1abf98e2d66bbc4849f6e9dfd50c",
+      "local_sha256": "a3f898317d5004f6814c206034ff95d3f21a5c5d43074f96e8be191af554b74d",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/seeding/test_seeding_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/seeding/test_seeding_fixes.py",
+      "upstream_sha256": "4c7abd01c8e934badbad991d3cc2c3499fd1810a3f6476b1fa9e04ac9d294d36",
+      "local_sha256": "9c051386c55d9e971e0ffc3b5ca1cf2e1ac4e7dbd0706b0692f9e62d8d6c888f",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/test_misc.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/test_misc.py",
+      "upstream_sha256": "345c579d930fe821ba2e8cb73a2d58e4b5fecd6672320c4e795cd0a3486d39ed",
+      "local_sha256": "505a5a43a632bd24aaaa93de89479b8b1de91d56d824181979fc4ef18442a4e9",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/test_periodic_verification.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/test_periodic_verification.py",
+      "upstream_sha256": "9d293c6b4698f99b9531bce5b3419f2fb34339657473497a068cd6457da21569",
+      "local_sha256": "96df5a137050be1d390c23deecce5c95ca6a40a3c4b68279d07e68a0002cd1d4",
+      "namespace_adapted": true
+    },
+    {
+      "upstream": "tests/test_verification_fixes.py",
+      "integrated": "src/morqex/vendor/microstructpy/upstream_source/tests/test_verification_fixes.py",
+      "upstream_sha256": "33ecdf29b4367acd20dd2fc26c9ff1c7b6de16dcb433c0bbcb9b078e34772ce3",
+      "local_sha256": "9a24fe9ef417ba3a6917ad5046d72bd0e9d8528666b68cce1e3454909ac55192",
+      "namespace_adapted": true
+    }
+  ],
+  "external_assets": [
+    {
+      "path": ".coveragerc",
+      "bytes": 112,
+      "sha256": "2f05a346f5c3d443370945057a5548a9e7742a4830427d75e8e1112f5f7b80d7"
+    },
+    {
+      "path": "docs/source/_static/favicon.ico",
+      "bytes": 1907,
+      "sha256": "9629ea0822d92d1e4f09ffee58890595d06a7e77dbb464de9babccca4c14aec4"
+    },
+    {
+      "path": "docs/source/_static/github.svg",
+      "bytes": 2338,
+      "sha256": "ec746aab84cf38b21f36f11a22c40b478c6cec17b1171aaad17880e2fc40ebd3"
+    },
+    {
+      "path": "docs/source/_static/logo/logo.png",
+      "bytes": 166269,
+      "sha256": "40990adb3603875685d7522d1bbe16c0c0163017eaf0ae963ba8f312d1049cc9"
+    },
+    {
+      "path": "docs/source/_static/logo/logo.svg",
+      "bytes": 220912,
+      "sha256": "49085817907a345d1acd86bcfc71c133d27b9a9e192854d86f0d02c41c7fb606"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_114x114.png",
+      "bytes": 20992,
+      "sha256": "657abd1170be0cf967add2e395633d7e398bb69f9fba830263bf15f3bb8a0e07"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_120x120.png",
+      "bytes": 22769,
+      "sha256": "c900ff9c30349725bd9c94a8aaf061026d00cf4b8e83b7d90678e3586c974ccc"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_128x128.png",
+      "bytes": 24740,
+      "sha256": "585949d96259cff1dec420ed1bb6bb2a8d4c1819e2734d58fa99d12d637d49d3"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_144x144.png",
+      "bytes": 29954,
+      "sha256": "feaa93cedb5a72e7ac5b8a9faf59bf9ba73719b84a540e9dafce701f3ba28fe3"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_180x180.png",
+      "bytes": 41275,
+      "sha256": "23c831b35d25c949eba5ea1f6b31c43c460fc38593cfaa212c52453e898c6408"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_192x192.png",
+      "bytes": 40240,
+      "sha256": "8101a4977984547722327ae934087758a960fca67a39a2d4171fd3e5263298cd"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_196x196.png",
+      "bytes": 41511,
+      "sha256": "d522a76c2037b692174db47dba27592afe5aeb1d43fa61f2953dccd21338c5cb"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_228x228.png",
+      "bytes": 50396,
+      "sha256": "1bda73db01310147da88caf032747c9d68d55f0d86df9bf8edee0cc081ffd41f"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_32x32.png",
+      "bytes": 3480,
+      "sha256": "9b25ae1f350911142fa6256fddc8f736ea81c130759c104a05692621331bcfd4"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_57x57.png",
+      "bytes": 7623,
+      "sha256": "fcc626ca6fee879e19cc38d24917b6d7e34cbb642020d719e463bf326b382862"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_72x72.png",
+      "bytes": 11158,
+      "sha256": "cbc4a114d81b688e64f82629609a2f92ffbe940f5540c830c14736eee3fe3eac"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_76x76.png",
+      "bytes": 12266,
+      "sha256": "e2ebddf97ef0f5527638756c5f1e525a2a59bbc75c90b1b7407cda6f28154086"
+    },
+    {
+      "path": "docs/source/_static/logo/logo_96x96.png",
+      "bytes": 16209,
+      "sha256": "a8a8e565bf1192f1f567a1d7a59c97704d363534b55ff799cceef5e32074a743"
+    },
+    {
+      "path": "docs/source/_static/logo/pad_logo.png",
+      "bytes": 201850,
+      "sha256": "b0e2ed3e5f2ca2e61ae148d0c6867a7422a6de922a466dd2b5808b89b5e711d4"
+    },
+    {
+      "path": "docs/source/_static/logo/pad_logo.svg",
+      "bytes": 249032,
+      "sha256": "eebeec5362860f615822e1e141f080a1074470eea1aa13d20a93dda53dc2ce49"
+    },
+    {
+      "path": "docs/source/_static/logo/social.png",
+      "bytes": 49494,
+      "sha256": "8d839f91b903edba4e1c8390ae69fe46b2ef68fb5c2240c5ddbe731e9fd38703"
+    },
+    {
+      "path": "docs/source/_static/pypi.svg",
+      "bytes": 1699,
+      "sha256": "4f0213270fd71d3c59c61d3514dde726a0cab7ef77db63a1356daebff4732189"
+    },
+    {
+      "path": "docs/source/_static/rtd.svg",
+      "bytes": 3011,
+      "sha256": "ee15877ce5ebaeb8b64a9275504f4be991b1eadfd9bc8926717c8c200f7b64b1"
+    },
+    {
+      "path": "docs/source/_templates/layout.html",
+      "bytes": 3790,
+      "sha256": "5bf30f6e17586cfe4a8cca9aa98d59dc114a02b9809654483444043492b25d1a"
+    },
+    {
+      "path": "docs/source/docutils.conf",
+      "bytes": 38,
+      "sha256": "2912b018752500b617faf8781e1d2add965f7abe3151ce6f560d5263eaa6b0f5"
+    },
+    {
+      "path": "src/microstructpy/examples/aluminum_micro.png",
+      "bytes": 12266,
+      "sha256": "21a90a5a5bdfbb8a2d405a337d9a6866810f9b1f200d0fd4a5f02668a929c0af"
+    },
+    {
+      "path": "tox.ini",
+      "bytes": 1506,
+      "sha256": "cb521b371c2deec9aeea9b394056f72beabea75a50e6cfcec3cfdf7a5e7c288e"
+    }
+  ],
+  "archive": "/home/zephyrain/lw/morph_workspace/upstream/statistical/microstructpy/6fa72185d5fc6ac9fb6b01f8cecce1f29e4f2339.zip",
+  "license_scope": "MIT for MicroStructPy; Micro_Reconstruction parent has no declared top-level license; preserve nested pulpDistr license, private integration only, no blanket relicensing",
+  "scope": "All upstream text source files retained. Datasets/binary assets remain in the pinned external archive. Native MATLAB/R execution needs those runtimes."
+}

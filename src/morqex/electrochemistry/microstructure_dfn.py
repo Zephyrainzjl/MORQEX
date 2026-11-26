@@ -18,7 +18,7 @@ from pybamm.models.submodels.thermal.lumped import Lumped
 
 
 def key(domain,region,quantity):return f'MORQEX {domain} region {region} {quantity}'
-def dot(a,b):return sum((float(x)*y for x,y in zip(a,b)),pb.Scalar(0))
+from .linear_port import linear_combination as dot
 
 
 class MicrostructureStack:
@@ -60,7 +60,7 @@ class GeometryActiveMaterial(Constant):
     def __init__(self,*args,operator,**kwargs):super().__init__(*args,**kwargs);self.op=operator
     def get_fundamental_variables(self):
         variables=super().get_fundamental_variables();d,D=self.domain_Domain
-        area=pb.FullBroadcast(self.op.area_density,f'{d} electrode','current collector')
+        area=self.op.area_density if isinstance(self.op.area_density,pb.Symbol) else pb.FullBroadcast(self.op.area_density,f'{d} electrode','current collector')
         variables[f'{D} electrode surface area to volume ratio [m-1]']=area
         variables[f'X-averaged {d} electrode surface area to volume ratio [m-1]']=pb.x_average(area)
         return variables

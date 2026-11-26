@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import time
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.linalg import splu
 from .constraints import constraints
 from .tensors import MANDEL_BASIS, validate_stiffness
@@ -26,7 +26,7 @@ class ElasticState:
 
 
 class ElasticitySolver:
-    def __init__(self, mesh, stiffness, *, boundary="kubc", pivot_tolerance=1e-13):
+    def __init__(self, mesh, stiffness, *, boundary="kubc", pivot_tolerance=1e-13,factorize=True):
         started = time.perf_counter()
         self.mesh = mesh
         nc = len(mesh.cells)
@@ -36,17 +36,25 @@ class ElasticitySolver:
         col = np.broadcast_to(mesh.dofs[:, None, :], self.B.shape)
         self.D = coo_matrix((self.B.ravel(), (row.ravel(), col.ravel())), shape=(6*nc, 3*len(mesh.points))).tocsr()
         self.D.eliminate_zeros()
-        local = np.einsum("esi,est,etj,e->eij", self.B, self.stiffness, self.B, mesh.volumes, optimize=True)
-        row = np.broadcast_to(mesh.dofs[:, :, None], local.shape)
-        col = np.broadcast_to(mesh.dofs[:, None, :], local.shape)
-        self.K = coo_matrix((local.ravel(), (row.ravel(), col.ravel())), shape=(3*len(mesh.points),)*2).tocsr()
+        # Bound element COO temporaries independently of mesh size. The same
+        # Tet4 bilinear form is summed; no stiffness/geometry is approximated.
+        del row,col
+        self.K=csr_matrix((3*len(mesh.points),)*2)
+        for begin in range(0,nc,2048):
+            end=min(nc,begin+2048)
+            local=np.einsum('esi,est,etj,e->eij',self.B[begin:end],self.stiffness[begin:end],self.B[begin:end],mesh.volumes[begin:end],optimize=True)
+            row=np.broadcast_to(mesh.dofs[begin:end,:,None],local.shape)
+            col=np.broadcast_to(mesh.dofs[begin:end,None,:],local.shape)
+            self.K+=coo_matrix((local.ravel(),(row.ravel(),col.ravel())),shape=self.K.shape).tocsr()
+        del local,row,col
         self.constraint = constraints(mesh, boundary)
         self.P = self.constraint.projection
         self.Kr = (self.P.T @ self.K @ self.P).tocsc()
         self.scale = float(np.max(self.K.diagonal()))
         self.assembly_seconds = time.perf_counter()-started
         started = time.perf_counter()
-        if self.Kr.shape[0]:
+        self.pivot_tolerance=pivot_tolerance
+        if self.Kr.shape[0] and factorize:
             try:
                 self.factor = splu(self.Kr/self.scale)
             except RuntimeError as exc:
@@ -67,7 +75,13 @@ class ElasticitySolver:
         rhs = np.asarray(rhs, dtype=float)
         if not np.isfinite(rhs).all():
             raise ValueError("Nonfinite RHS")
-        return np.zeros_like(rhs) if self.factor is None else self.factor.solve(rhs/self.scale)
+        if not self.Kr.shape[0]:return np.zeros_like(rhs)
+        if self.factor is None:
+            self.factor=splu(self.Kr/self.scale);self.factorizations+=1
+            pivots=np.abs(self.factor.U.diagonal())
+            if pivots.min()<self.pivot_tolerance*pivots.max():raise MechanicalSolveError('Near-singular deferred stiffness')
+        return self.factor.solve(rhs/self.scale)
+
 
     def eigenstrain_load(self, eigenstrain):
         eps = np.broadcast_to(np.asarray(eigenstrain, dtype=float), (len(self.mesh.cells), 6))
@@ -102,3 +116,12 @@ class ElasticitySolver:
         mean = np.einsum("e,ei->i", self.mesh.volumes, stress)/self.mesh.rve_volume
         return ElasticState(u.reshape(-1, 3), strain, stress, float(energy), float(energy-external @ u), mean,
                             reaction.reshape(-1, 3), float(residual), float(physical))
+
+
+class DeferredElasticity:
+    """Material-only holder until an intact mechanical solve is requested."""
+    def __init__(self,mesh,stiffness,*,boundary='kubc'):
+        self.mesh=mesh;self.stiffness=validate_stiffness(stiffness);self.boundary=boundary;self._solver=None
+    def __getattr__(self,name):
+        if self._solver is None:self._solver=ElasticitySolver(self.mesh,self.stiffness,boundary=self.boundary)
+        return getattr(self._solver,name)

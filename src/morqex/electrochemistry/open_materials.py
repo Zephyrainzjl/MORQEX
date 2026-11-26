@@ -38,7 +38,7 @@ class _TableEvaluation:
                 return out
             left=tail(0) if curve.extrapolate else ca.MX(np.nan);right=tail(-1) if curve.extrapolate else ca.MX(np.nan)
             result=ca.if_else(z<polynomial.x[0],left,ca.if_else(z>polynomial.x[-1],right,result))
-            _TABLE_FUNCTIONS[key]=ca.Function('morqex_ocp_'+curve.fingerprint[:16]+f'_{int(self.entropy)}_{self.order}',[z],[result])
+            _TABLE_FUNCTIONS[key]=ca.Function('morqex_ocp_'+curve.fingerprint[:16]+f'_{int(self.entropy)}_{self.order}',[z],[result],{'never_inline':True,'jac_penalty':-1})
         return _TABLE_FUNCTIONS[key](value)
 
 class PchipFunction(pb.Function):

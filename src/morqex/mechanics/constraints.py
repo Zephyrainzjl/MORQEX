@@ -1,7 +1,7 @@
 """Kinematic/periodic identification and explicitly removed compatible rigid modes."""
 from dataclasses import dataclass
 import numpy as np
-from scipy.linalg import null_space, qr
+from scipy.linalg import svd, qr
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 
@@ -74,7 +74,15 @@ def constraints(mesh, boundary):
         local_index = {int(node): i for i, node in enumerate(nodes)}
         restrictions = [modes[local_index[int(i)]] for i in fixed if cluster[mesh.components[i]] == body]
         restrictions += [modes[local_index[i]]-modes[local_index[j]] for i, j in pairs if cluster[mesh.components[i]] == body]
-        allowed = null_space(np.concatenate(restrictions, axis=0), rcond=1e-10) if restrictions else np.eye(modes.shape[-1])
+        if restrictions:
+            restriction=np.concatenate(restrictions,axis=0)
+            # Only the right singular vectors are needed. scipy.null_space's
+            # full left factor grows quadratically in boundary-node count.
+            # A wide restriction still needs the full (small) right factor.
+            _,singular,right=svd(restriction,full_matrices=restriction.shape[0]<restriction.shape[1])
+            rank=int(np.sum(singular>1e-10*singular[0])) if len(singular) else 0
+            allowed=right[rank:].T.copy()
+        else:allowed=np.eye(modes.shape[-1])
         if allowed.shape[1] == 0:
             continue
         values = (modes @ allowed).reshape(-1, allowed.shape[1])

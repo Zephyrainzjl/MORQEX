@@ -1368,8 +1368,8 @@
       "path": "models/submodels/electrolyte_diffusion/base_electrolyte_diffusion.py",
       "upstream_sha256": "87f6ec64eba6fb36f52e17413a22715223720bcffcc8aa0e6fd39429c775d287",
       "bytes": 4635,
-      "local_sha256": "87f6ec64eba6fb36f52e17413a22715223720bcffcc8aa0e6fd39429c775d287",
-      "locally_modified": false
+      "local_sha256": "a56d817f0253181c0927aef410c919e1964ec1f92a8a7bb344dcbe87d479b360",
+      "locally_modified": true
     },
     {
       "path": "models/submodels/electrolyte_diffusion/constant_concentration.py",
@@ -2299,8 +2299,8 @@
       "path": "solvers/base_solver.py",
       "upstream_sha256": "47aed5c1219b5256ca6b11fbd6f6a8dced4fcbdb9b742b5450b0f1efe91b7161",
       "bytes": 75401,
-      "local_sha256": "47aed5c1219b5256ca6b11fbd6f6a8dced4fcbdb9b742b5450b0f1efe91b7161",
-      "locally_modified": false
+      "local_sha256": "c7b9bbfb85e64ea96d28f877f1954a55b8127dc4c1198075b000b9b6da43f298",
+      "locally_modified": true
     },
     {
       "path": "solvers/casadi_algebraic_solver.py",
@@ -2492,6 +2492,6 @@
       "locally_modified": false
     }
   ],
-  "patch": "MORQEX scalar 1D cubic/PCHIP derivative order conversion; marker in __init__; no other source edits",
+  "patch": "Scalar 1D interpolant derivative conversion and marker; exact reuse/composition of CasADi Jacobians and directional actions (no-sensitivity path); half-cell electrolyte lithium diagnostic excludes planar Li foil from porous integration length.",
   "morqex_0_0_9_note": "Converter-local exact scalar cubic table/derivative function reuse; avoids duplicate CasADi functions for region and edge inputs. Original data and tolerances unchanged."
 }

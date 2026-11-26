@@ -12,7 +12,7 @@ AI生成路线、NGSolve、PyBaMM和echemAMR的科学出处仍应在实际使用
 
 
 
-PyBaMM26.3.1来源为官方PyPI发行对应的纯Python包，固定上游链接https://github.com/pybamm-team/PyBaMM/tree/v26.3.1。355文本文件迁入src/pybamm，BSD-3-Clause许可保留在src/pybamm/LICENSE.txt，CITATIONS.bib与参数输入CSV均保留。原文件与修改hash见provenance/pybamm_migration.json；只修改__init__.py的补丁标记和convert_to_casadi.py的标量1D插值导数转换。本框架不将其宣称为自研DFN求解器。CasADi/pybammsolvers依赖遵循各自许可，二进制不放源码。独立venv安装本发行，避免与上游PyBaMM wheel覆盖同名namespace。
+PyBaMM26.3.1来源为官方PyPI发行对应的纯Python包，固定上游链接https://github.com/pybamm-team/PyBaMM/tree/v26.3.1。355文本文件迁入src/pybamm，BSD-3-Clause许可保留在src/pybamm/LICENSE.txt，CITATIONS.bib与参数输入CSV均保留。原文件与修改hash见provenance/pybamm_migration.json；本地改动包括__init__.py补丁标记、convert_to_casadi.py标量1D插值导数转换、base_solver.py复用同一解析Jacobian及其组合/方向作用，以及半电池电解液锂库存诊断的积分长度修正。本框架不将其宣称为自研DFN求解器。CasADi/pybammsolvers依赖遵循各自许可，二进制不放源码。独立venv安装本发行，避免与上游PyBaMM wheel覆盖同名namespace。
 
 
 新增体素后端调用外部 CuPy 14.x（MIT）和 PyAMG 5.x（MIT），不把二进制纳入源码。矩阵自由兼容差分、CG、P0 Galerkin/AMG 和几何多重网格采用成熟数值思想，不因纳入 MORQEX 即宣称原创。NumPy/SciPy/CasADi/字体工具遵循各自上游许可证。
@@ -20,3 +20,5 @@ PyBaMM26.3.1来源为官方PyPI发行对应的纯Python包，固定上游链接h
 报告中文字形来自 Noto Sans CJK SC，固定官方 Sans2.004 发行（https://github.com/notofonts/noto-cjk/releases/tag/Sans2.004），SIL Open Font License 1.1。原字体/许可证/SHA 在外部 data/report_font；报告内子集重命名 MORQEXReportCJK，并嵌入原 OFL 文本。源码不存字体二进制。
 
 公开 CT 来源为 NLR Battery Microstructure Library；使用五个提供的 NMC532 体积，活性相来自影像，CBD 为来源作者重构。每份下载 URL、SHA、体素间距、相和重构假设随外部 manifest 保存；不把它们称为五种电化学材料或完整制造电极片。
+
+MicroStructPy 1.6.1 固定提交 6fa72185d5fc6ac9fb6b01f8cecce1f29e4f2339，MIT；完整文本源码在私有命名空间，NumPy 2 与可选 Gmsh 导入改动逐文件记录。Micro_Reconstruction 固定提交 0dda2705932fb7d0f4264fd1f22bc94f0daf7e3e，完整 MATLAB/R 文本保留，二进制数据外置。父项目无顶层许可证，嵌套 pulpDistr 的 MIT 不覆盖父项目；仅本机私有集成。未安装 MATLAB/R 的环境不声称已执行或复现其原生重构算法。

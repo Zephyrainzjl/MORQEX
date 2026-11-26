@@ -253,12 +253,32 @@ class BaseSolver:
                 model.concatenated_rhs, model.concatenated_algebraic
             )
 
-        (
-            rhs_algebraic,
-            jac_rhs_algebraic,
-            jacp_rhs_algebraic,
-            jac_rhs_algebraic_action,
-        ) = process(rhs_algebraic, "rhs_algebraic", vars_for_processing)
+        if model.convert_to_format == "casadi" and not model.calculate_sensitivities:
+            # MORQEX: exact function composition reuses the already generated
+            # RHS/algebraic derivatives. Re-differentiating their concatenation
+            # builds another large AD graph for multi-region microstructures.
+            arguments=[vars_for_processing[k] for k in
+                       ("t_casadi","y_casadi","p_casadi_stacked")]
+            rhs_algebraic=casadi.Function("rhs_algebraic",arguments,
+                [casadi.vertcat(rhs(*arguments),algebraic(*arguments))])
+            jacp_rhs_algebraic=None
+            if model.use_jacobian:
+                jac_rhs_algebraic=casadi.Function("rhs_algebraic_jac",arguments,
+                    [casadi.vertcat(jac_rhs(*arguments),jac_algebraic(*arguments))])
+                direction=casadi.MX.sym("v",model.len_rhs_and_alg)
+                action_arguments=[*arguments,direction]
+                jac_rhs_algebraic_action=casadi.Function("rhs_algebraic_jac_action",action_arguments,
+                    [casadi.vertcat(jac_rhs_action(*action_arguments),jac_algebraic_action(*action_arguments))])
+            else:
+                jac_rhs_algebraic=None
+                jac_rhs_algebraic_action=None
+        else:
+            (
+                rhs_algebraic,
+                jac_rhs_algebraic,
+                jacp_rhs_algebraic,
+                jac_rhs_algebraic_action,
+            ) = process(rhs_algebraic, "rhs_algebraic", vars_for_processing)
 
         (
             casadi_switch_events,
@@ -1876,9 +1896,9 @@ def process(
                 "v",
                 model.len_rhs_and_alg,
             )
-            jac_action_casadi = casadi.densify(
-                casadi.jtimes(casadi_expression, y_casadi, v)
-            )
+            # Reuse the exact sparse Jacobian, instead of building a second
+            # automatic-differentiation graph for the same derivative action.
+            jac_action_casadi = casadi.densify(jac_casadi @ v)
             jac_action = casadi.Function(
                 name + "_jac_action",
                 [t_casadi, y_casadi, p_casadi_stacked, v],

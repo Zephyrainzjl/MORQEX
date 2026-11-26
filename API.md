@@ -2,6 +2,54 @@
 
 源码、配置和测试在 MORQEX；数据、环境、编译、算子、断点、结果、HTML 全部在相邻的 `morph_workspace`。新全体积接口与旧版 SVE 接口分别验证，不共享通过标签。本文末尾为从源码 AST 生成的公开定义索引；研究内部入口仍需遵守各模块 docstring。
 
+## 当前算例：6 节点 / 32³ CBD 正极 / 平面 Li
+
+```bash
+# 在下文资源运行器设置的外部工作目录中执行；默认生成真实 56 颗粒几何
+$PY scripts/run_local.py --label sphere_geometry -- $PY /home/zephyrain/lw/MORQEX/scripts/prepare_sphere32.py
+$PY scripts/run_local.py --label sphere_operator -- $PY /home/zephyrain/lw/MORQEX/scripts/build_sphere32_li.py --modes 64
+$PY scripts/run_local.py --label li_short -- $PY /home/zephyrain/lw/MORQEX/scripts/run_sphere32_li.py --short --solver casadi
+$PY scripts/run_local.py --label li_html -- $PY /home/zephyrain/lw/MORQEX/scripts/report_sphere32_li.py
+$PY scripts/run_local.py --label li_cuda --gpu -- $PY /home/zephyrain/lw/MORQEX/benchmarks/probe_sphere32_cuda.py
+```
+
+`reports/MORQEX_sphere32_Li_geometry.html` 是几何页，`reports/MORQEX_sphere32_Li_short.html` 是已完成的 120 秒物理验证。32³ 两轮完整循环在当前 CPU 预算内尚未完成；`run_sphere32_li.py --cycles 2` 是研究入口，不是已通过保证。失败结果标记为未完成，报告脚本拒绝把它发布为完成协议。
+
+```python
+from morqex.generation import SpherePackSpec, sphere_pack
+from morqex.nodewise import BindingSpec, bind_microstructures
+from morqex.nodewise import HalfCellStack, lithium_halfcell_parameters
+from morqex.nodewise.cache import load_node_kernel, NodeLocalization
+from morqex.nodewise.localization import BatchLocalization
+
+structure, particle_ids = sphere_pack(SpherePackSpec(
+    shape=(32, 32, 32), particle_count=56, radius_voxels=3.3,
+    minimum_gap_voxels=1.05, cbd_fraction=.14, spacing_m=(.8e-6,)*3,
+    seed=104))
+bindings = bind_microstructures(BindingSpec(mode="shared", shape=(32,)*3),
+    6, "positive", workspace, template=structure)
+# mode="slab" 在显式 reference 的各厚度区原生裁取；不缩放原始 CT。
+# mode="statistical" 从全局 StatisticsCard 生成一个共享模板，节点状态独立。
+
+parameters, provenance = lithium_halfcell_parameters(
+    host="NMC532", active_fraction=float((structure.labels == 1).mean()))
+kernel = load_node_kernel(external_operator_path)
+stack = HalfCellStack([kernel]*6, parameters,
+    constraint="fixed-thickness", metal_sei="none")
+stack.update_parameters(parameters)  # 验证材料/浓度/温度参考与算子一致
+var_pts = stack.var_pts(model)       # x_p=6；无负极颗粒状态
+```
+
+体素数和浓度状态数独立：32³ 是全部 32,768 个几何位置；本轮 64 个守恒浓度区域覆盖全部 56 个颗粒，并替代 DFN 球形径向状态。112 状态的三维力学算子亦已构建，但其在线编译未通过内存预算。尚未完成浓度模式、颗粒表面网格和应力尾部的收敛研究；守恒至机器精度不证明局部场误差小。每颗粒约 6–7 个体素直径，不能当作网格无关的球面解。
+
+共享算例对应 6×32,768 个体素位置，共用一份不可变响应算子；并非 6 份独立存储，也不意味着这六块在真实电极内几何拼接。DFN 厚度控制体、代表微结构物理尺寸和尺度分离必须分别检查。
+
+`HalfCellStack` 的节点数由正极 kernel 列表长度决定，可绑定不同合格结构。锂金属采用原生界面 BV 和有限锂库存，不构造负极粒子。当前验收使用固定参考几何、均温热耦合和 `NoDamage()`；平面 Li 空间热耦合有门禁，金属 SEI 尚未验收，不将颗粒副反应律移植为平面金属模型。32³ 完整界面算子拒绝启用脱粘；演化 cohesive 路线单独验证。NMC532/NMC811/LFP/LCO 和自定义 OCP/材料入口保留，变更机械参数需重建算子。
+
+`BatchLocalization([NodeLocalization(path)], backend="cuda", parallel_nodes=6)` 调用源码 CUDA 核，FP64 输出全部体素应力、应变和位移；`states` 每项为 `(geometry_index, c, E_x, delta_T, damage)`。支持不同几何的索引并行；一个批次要求相同输出网格。DFN DAE 仍在 CPU。GPU 的编译/上传成本、传输和节流均分别计时，不与纯核时混淆。
+
+MicroStructPy 和 Micro_Reconstruction 完整文本源码分别位于 `src/morqex/vendor`，二进制/数据归档在外部工作区。`morqex.generation.upstream.backend_status()` 报告原生运行时状态。后者需要 MATLAB/R，目前未安装和验收；Python 随机场不是其原生算法复现。父项目缺少顶层许可证，当前集成为本机私有使用，嵌套包许可不覆盖整体。
+
 ## 1. 环境与资源
 
 Python ≥3.11，核心 NumPy/SciPy；`dfn`、`ct`、`gpu`、`test` 是可选依赖。项目提供集成的 `pybamm` 命名空间，建议独立环境，避免被另一个 PyBaMM 发行包覆盖。CPU 核需 g++；CUDA 核由 CuPy NVRTC 编译，不向源码写 `.so`。本地所有数值命令使用：

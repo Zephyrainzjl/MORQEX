@@ -66,7 +66,7 @@ class DiffusionLimitedSEI:
         _finite_parameters(self)
         if min(self.diffusivity_m2_s,self.solvent_concentration_mol_m3,self.initial_thickness_m,self.molar_volume_per_Li,self.onset_width_V)<=0 or self.resistivity_ohm_m<0:raise ValueError('Invalid SEI parameters')
     def reservoirs(self):return (Reservoir(self.name,chemical_potential_J_mol=-96485.33212*self.equilibrium_V,volume_m3_mol=self.molar_volume_per_Li),)
-    def thickness(self,states,area):return self.initial_thickness_m+self.molar_volume_per_Li*states[self.name]/max(area,1e-30)
+    def thickness(self,states,area):return self.initial_thickness_m+self.molar_volume_per_Li*states[self.name]/pb.maximum(area,1e-30)
     def resistance(self,states,area):return self.resistivity_ohm_m*self.thickness(states,area)
     def evaluate(self,c):
         eta=c.delta-c.film_resistance*c.film_current-self.equilibrium_V
@@ -97,7 +97,7 @@ class PlatingStrippingDeadLi:
     def evaluate(self,c):
         eta=c.delta-c.film_resistance*c.film_current
         plate=-self.conductance_A_m2_V*(c.electrolyte_concentration/1000.)*pb.maximum(-eta,0)
-        strip=c.faraday*self.stripping_rate_per_V_s*pb.maximum(c.states[self.name],0)/max(c.area,1e-30)*pb.maximum(eta,0)
+        strip=c.faraday*self.stripping_rate_per_V_s*pb.maximum(c.states[self.name],0)/pb.maximum(c.area,1e-30)*pb.maximum(eta,0)
         j=plate+strip
         L=c.states.get('sei',0.)*0.+self.sei_reference_m
         # Actual SEI thickness is exposed by the network when available.

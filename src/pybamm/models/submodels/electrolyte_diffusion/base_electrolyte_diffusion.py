@@ -127,7 +127,9 @@ class BaseElectrolyteDiffusion(pybamm.BaseSubModel):
         variables : dict
             The "Total lithium in electrolyte [mol]" variable.
         """
-        L_x = self.param.L_x
+        # A planar Li foil is not an electrolyte control volume. Include only
+        # the domains represented by eps_c_e in this diagnostic integral.
+        L_x = sum(self.param.domain_params[d.split()[0]].L for d in self.options.whole_cell_domains)
         A = self.param.A_cc
 
         eps_c_e_av = pybamm.yz_average(pybamm.x_average(eps_c_e))
