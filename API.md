@@ -2728,3 +2728,13 @@ Native ABI 2 adds a serial FP64 Tet4 tangent action. `matrix-free-amg-minres` us
 - Positive mobility and declared gradient energy follow the existing `TransportLaw`. Reference diffusivity is a tracer/mobility input, not automatically a measured chemical Fick diffusivity. Nonconvex OCP requires positive gradient energy and subsequent spatial-resolution validation.
 
 Qualification: synthetic local-potential feedback, conservation, chemical port identity, rejected-step rollback and restart tests for NMC532/NMC811/LFP/LCO. This fixed-topology candidate does not yet advance the published dense-cycle trajectory, infer electrolyte wetting, solve six nonlinear microstructures simultaneously, or establish phase-interface/material/lifetime accuracy. The nonlinear mechanics input is frozen within a segment; coupling time-step/Picard convergence remains required.
+
+The bounded research workflow is now available through the same MORQEX CLI:
+
+```bash
+$PY scripts/run_local.py --label region_probe -- $PY -m morqex.top_damage region-probe /home/zephyrain/lw/MORQEX/configs/top_damage_region_probe.toml
+```
+
+This command prepares the regional DFN state, solves each configured microstructure node serially, projects finite-mechanics chemical potentials, advances a second DFN segment, runs a matched zero-feedback comparison, and creates the voxel-to-node HTML. `--stage prepare`, `--stage node --node 0`, `--stage feedback`, and `--stage report` provide bounded restart points. Repeating a completed stage reads its result. Configuration/source/geometry/checksum changes reject resume; select a new output identifier instead. `run_probe(RegionProbeConfig(...), workspace, stage=...)` provides the identical Python API.
+
+The TOML controls node/region counts, geometry, material host, temperature, time increment, C-rate, explicit CBD microporosity/ionic efficiency, chemical stretch, elastic/fracture constants and solver tolerance. This fixture uses pore/active/CBD labels 0/1/2 and fixed zero-macro-strain KUBC at each microdomain; it does **not** enforce a series-stack force condition. A 64-region request produced 66 connected regions on the supplied geometry; disconnected regional supports are split rather than silently merged. The supplied values are research sensitivity parameters, not a calibrated NMC fatigue card. Porous CBD here is an unresolved overlapping continuum, not CT-resolved liquid pores.

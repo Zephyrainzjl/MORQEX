@@ -18,6 +18,9 @@ def status():
                         'AMG equilibrium and active-set CG with direct-reference checks',
                         'conservative Li-metal DFN with persistent state and cutoff reversal',
                         '32-cubed diffuse-fatigue/effective-conductivity feedback candidate',
+                        'MFEM finite-strain chemical elasticity and compiled FP64 tangent action',
+                        'conservative regional DFN states with spatial mechanical-potential ports',
+                        'TOML per-node finite-mechanics feedback probe and field visualization',
                         'accepted-state VTI/XDMF time series and bounded-memory HTML'],
         'not_qualified': ['polycrystal fatigue reference', 'phase-field-to-aperture topology update',
                           'dynamic tensor homogenization with fracture', 'topology-changing DFN restart',
@@ -31,6 +34,11 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog='morqex top-damage')
     sub = p.add_subparsers(dest='action', required=True)
     sub.add_parser('status')
+    region=sub.add_parser('region-probe',help='TOML full-voxel regional DFN -> finite mechanics -> spatial feedback probe')
+    region.add_argument('config')
+    region.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    region.add_argument('--stage',choices=['all','prepare','node','feedback','report'],default='all')
+    region.add_argument('--node',type=int)
     geometry = sub.add_parser('geometry', help='Generate tracked initial polycrystals and full voxel HTML/HDF5/VTI')
     geometry.add_argument('config')
     geometry.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
@@ -62,6 +70,10 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'region-probe':
+        if not args.workspace:p.error('An external workspace is required')
+        from .region_probe import run_probe
+        print(json.dumps(run_probe(args.config,Workspace(args.workspace),stage=args.stage,node=args.node),indent=2))
     elif args.action == 'build-hyperelastic':
         if not args.workspace:p.error('An external workspace is required')
         from .backend import NativeConfig

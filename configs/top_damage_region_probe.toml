@@ -1,0 +1,25 @@
+schema_version = 1
+[probe]
+geometry = "dense_large_particles_32_g4"
+output = "region_finite_32_toml"
+host = "NMC811"
+nodes = 6
+requested_regions = 64
+time_step_s = 30.0
+C_rate = 0.5
+initial_stoichiometry = 0.5
+temperature_K = 298.15
+gradient_coefficient_J_m5_mol2 = 1e-14
+# Explicit unresolved CBD electrolyte continuum; numerical sensitivity values.
+cbd_microporosity = 0.47
+cbd_ionic_efficiency = 0.05
+electronic_conductivity_S_m = 10.0
+active_young_Pa = 93e9
+cbd_young_Pa = 1e9
+poisson = 0.3
+active_Gc_J_m2 = 10.0
+cbd_Gc_J_m2 = 10000.0
+length_m = 1e-6
+precrack_radius_m = 1e-6
+chemical_strain_per_stoichiometry = [0.012, 0.012, 0.040]
+stagger_tolerance = 1e-6

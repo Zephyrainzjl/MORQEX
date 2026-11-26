@@ -8,6 +8,14 @@
 `configs/top_damage_finite_cycle.toml` 选择该路线，原小变形默认值保留。
 详细 API 与运行入口见 [API.md](API.md)。所有构建/结果仍在外部工作区。
 
+有限变形路线现已完成三个环境各一轮实际截止电压 CC 放电—充电，
+报告为 `reports/MORQEX_TOP_DAMAGE_2S_finite_cycles.html`。
+另有 `configs/top_damage_region_probe.toml` 驱动的六节点 32³ 全体素测试：
+66 个连通区域浓度状态（请求 64，拆分不连通区域）、六次独立三维有限变形/AT2
+求解、六组功共轭化学势反馈及同起点无反馈对照。报告为
+`reports/region_finite_32_toml.html`。这是 60 秒分段耦合验证，
+尚不是完整三维电解液/电势参考，也不是长期物理拓扑退化验收。
+
 本地运行限制：单核、nice 15、进程树 RSS 3 GiB；启动保留至少 8 GiB 可用内存；
 GPU 默认关闭。运行必须经 `scripts/run_local.py`。
 

@@ -95,3 +95,14 @@ def test_projection_is_work_conjugate_and_failed_step_rolls_back():
     assert one.last is before and one.simulation._solution is sim_before
     one.initial_inventory=initial;result=one.advance_regions(2.,current,feedback,mu)
     np.testing.assert_allclose(result['time_s'],4.)
+
+def test_region_probe_configuration_contract(tmp_path):
+    from morqex.top_damage.region_probe import RegionProbeConfig
+    from dataclasses import replace
+    cfg=RegionProbeConfig()
+    for kwargs in ({'nodes':2},{'requested_regions':0},{'output':'../outside'}, {'C_rate':0}, {'length_m':float('nan')}, {'cbd_ionic_efficiency':.9}):
+        with pytest.raises(ValueError):replace(cfg,**kwargs)
+    path=tmp_path/'probe.toml';path.write_text('schema_version = 1\n[probe]\nnodes = 3\nrequested_regions = 8\n')
+    assert RegionProbeConfig.read(path).nodes==3
+    path.write_text('schema_version = 2\n[probe]\n')
+    with pytest.raises(ValueError,match='schema'):RegionProbeConfig.read(path)
