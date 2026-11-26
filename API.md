@@ -6,6 +6,20 @@
 
 ### TOP-DAMAGE 子框架：源码编译与三维参考
 
+初始大颗粒几何从同一入口生成：
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+$PY scripts/run_local.py --label large_particles -- $PY -m morqex.top_damage geometry /home/zephyrain/lw/MORQEX/configs/top_damage_few_particles.toml
+$PY scripts/run_local.py --label particle_seeds -- $PY /home/zephyrain/lw/MORQEX/scripts/study_top_damage_polycrystals.py
+```
+
+`[microstructure]` 参数为 `name/shape_zyx/spacing_m/particle_count/radius_voxels/radius_cv/minimum_gap_voxels/cbd_fraction/grains_per_particle/seed/grain_seed`。长度为米；`radius_voxels` 和间隙为体素数。默认块长 16 μm、名义颗粒直径 6.5 μm，4 个颗粒是稀疏形貌检查案例而非材料标定。`PolycrystalSpec.from_toml(...).generate()` 返回 `PolycrystalData`；`create_polycrystal(config, Workspace(...))` 保存初始结果。同名目录若已有不同配置或几何会拒绝覆盖。
+
+`PolycrystalData` 保留完整 `structure/particle_ids/grain_ids/grain_rotations/grain_particles`，在每个颗粒内用固定种子的三维 Voronoi 分区；不连通碎片分开编号并报告实际晶粒数。`grain_rotations` 是逐晶粒、晶体到实验室 XYZ 坐标的 SO(3) 旋转；`rotated_tensor_table(A)` 返回 `R A Rᵀ`，不替用户补造材料参数。`grain_boundary_faces()` 返回同颗粒内不同晶粒的全体素平坦索引对、XYZ 法向轴、米平方参考面积；没有把晶界赋予任意厚度。
+
+`save_hdf5/load_hdf5` 校验材料标签、身份、取向和派生晶界面；`initial.vti` 是 X-fastest 的完整 VTK CellData，含相/颗粒/晶粒三个字段。`index.html` 可拖动旋转、选择配色、控制三维 Z 剖切和独立 Z 切片、点击查编号。默认仅在三维视图隐藏 CBD，原始数据和二维切片仍完整保留 CBD。页面片段 `#cut=24&slice=23&mode=grain` 可固定晶粒剖切视图。只有真实接受的后续物理状态才允许输出为退化时刻；此命令只生成 `t=0` 初始态。
+
 入口统一在 MORQEX 内；旧固定结构模块不变。已实现 MFEM 源码后端和三维力学—AT2 参考；当前没有合格的长期电池疲劳 `run`，不能把机械试件的循环测试当成充放电寿命预测。
 
 ```bash

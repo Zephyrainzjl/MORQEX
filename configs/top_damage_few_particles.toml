@@ -1,0 +1,15 @@
+schema_version = 1
+
+[microstructure]
+name = "few_large_particles_32"
+shape_zyx = [32, 32, 32]
+spacing_m = 0.5e-6
+particle_count = 4
+radius_voxels = 6.5
+radius_cv = 0.04
+minimum_gap_voxels = 1.05
+cbd_fraction = 0.14
+grains_per_particle = 8
+seed = 104
+grain_seed = 20261126
+# Numerical morphology for geometry/identity checks, not a calibrated electrode.

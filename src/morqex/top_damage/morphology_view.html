@@ -1,0 +1,48 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MORQEX · 大颗粒多晶微结构</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#e4edf7;font:15px system-ui,sans-serif}main{max-width:1450px;margin:auto;padding:30px}h1{font-size:30px;margin:6px 0 12px}p{line-height:1.7;color:#b9cadc}.tag{color:#54d7c7;font-size:13px;letter-spacing:2px}.cards{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}.card{background:#142237;padding:15px 22px;border:1px solid #263c53;border-radius:10px}.card b{display:block;font-size:24px;color:white}.views{display:grid;grid-template-columns:3fr 2fr;gap:18px}.panel{background:#101d30;border:1px solid #263c53;border-radius:12px;overflow:hidden}.panel h2{font-size:17px;margin:18px 22px}canvas{display:block;width:100%;height:510px;touch-action:none}.controls{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:18px 0}select,button{padding:8px;background:#1b3048;color:white;border:1px solid #395570;border-radius:5px}input{vertical-align:middle;accent-color:#54d7c7}.note{padding:16px 20px;border-left:3px solid #e9b65c;background:#212335;margin:22px 0}a{color:#6edace}code{overflow-wrap:anywhere}#inspect{font:13px MORQEXReportCJK,monospace;color:#75d9d0;min-height:25px}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #2b3b50;padding:10px;text-align:left}footer{font-size:12px;color:#8ca2b8;margin-top:20px}@media(max-width:850px){.views{grid-template-columns:1fr}main{padding:16px}canvas{height:380px}}
+</style>
+<main><div class="tag">MORQEX / TOP-DAMAGE · FULL VOXEL GEOMETRY</div><h1>少量大颗粒，看清内部晶粒与 CBD</h1>
+<p>这里展示真实生成的三维体素及其编号。旋转视角、剖开颗粒，或隐藏 CBD 检查内部结构；没有将体素重新画成光滑球面。</p>
+<div id="cards" class="cards"></div>
+<div class="controls"><label>颜色 <select id="mode"><option value="particle">颗粒编号</option><option value="grain">晶粒编号</option><option value="phase">材料相</option></select></label><label><input id="cbd" type="checkbox">显示 CBD</label><label>三维 Z 剖切 <input id="cut" type="range" min="1"><span id="cutText"></span></label><label>右侧 Z 平面 <input id="plane" type="range" min="0"></label><button id="reset">复位视角</button></div>
+<div class="views"><section class="panel"><h2>三维全结构 · 拖动旋转</h2><canvas id="solid"></canvas></section><section class="panel"><h2>独立 Z 切片 · 点击读取体素编号</h2><canvas id="slice"></canvas></section></div>
+<p id="inspect">点击右侧切片，可查看 (x,y,z)、材料相、颗粒 ID 与晶粒 ID。</p>
+<div class="note"><b>状态：初始几何，t = 0。</b>本页尚未包含这四个颗粒的疲劳求解或 DFN 循环结果。三维视图默认隐藏 CBD，便于观察颗粒；右侧切片始终保留全部相，灰色为 CBD。晶粒分区是带固定种子的数值 Voronoi 结构，不等同于实验晶粒重建。这是稀疏可视检查案例，较高孔隙率不代表真实电极配方。晶界面面积是阶梯体素面积，需网格收敛检验。</div>
+<table><thead><tr><th>几何网络（六邻接）</th><th>连通分量数</th><th>贯通 X / Y / Z</th></tr></thead><tbody id="networks"></tbody></table>
+<p>几何连通性不等于电导率；本页的孔隙连通检查只包括显式孔隙，不假设 CBD 内部微孔已经被解析。</p>
+<p><a href="initial.h5">完整 HDF5 + 取向表 + 晶界面</a> · <a href="initial.vti">ParaView 体素结构</a> · <a href="metrics.json">实测几何统计</a> · <a href="config.toml">TOML 配置</a> · <a href="manifest.json">文件校验</a></p>
+<footer id="identity"></footer></main>
+<script>
+const DATA=__MORQEX_DATA__;
+const [nz,ny,nx]=DATA.shape, [hx,hy,hz]=DATA.spacing, $=id=>document.getElementById(id), m=DATA.metrics;
+$('cards').innerHTML=[['完整体素',nx+' × '+ny+' × '+nz],['颗粒 / 晶粒',m.particle_count+' / '+m.grain_count],['物理尺寸 / μm',m.dimensions_xyz_um.join(' × ')],['活性材料 / CBD',(100*m.phase_fractions.active).toFixed(1)+'% / '+(100*m.phase_fractions.cbd).toFixed(1)+'%']].map(([a,b])=>`<div class="card">${a}<b>${b}</b></div>`).join('');
+$('networks').innerHTML=Object.entries(m.networks).map(([n,v])=>`<tr><td>${n}</td><td>${v.face_connected_components}</td><td>${v.spans_xyz.map(x=>x?'是':'否').join(' / ')}</td></tr>`).join('');
+$('identity').textContent='完整几何 SHA256：'+m.fingerprint+' · CPU Canvas 渲染 · 无外部网络依赖';
+$('cut').max=nz;$('cut').value=nz;$('plane').max=nz-1;
+let sliceCounts=Array(nz).fill(0);DATA.particle.forEach((v,i)=>{if(v>0)sliceCounts[Math.floor(i/(nx*ny))]++});$('plane').value=sliceCounts.indexOf(Math.max(...sliceCounts));
+const params=new URLSearchParams(location.hash.slice(1));if(params.has('cut'))$('cut').value=params.get('cut');if(params.has('slice'))$('plane').value=params.get('slice');if(['grain','particle','phase'].includes(params.get('mode')))$('mode').value=params.get('mode');$('cbd').checked=params.get('cbd')==='1';
+let yaw=-.65,pitch=.60,faces=[],drag=null;
+const index=(x,y,z)=>(z*ny+y)*nx+x;
+function kind(i){return DATA.kinds[DATA.phase[i]]}
+function color(i,shade=1){if(kind(i)==='cbd')return `hsl(209 13% ${Math.round(54*shade)}%)`;if($('mode').value==='phase')return `hsl(174 65% ${Math.round(57*shade)}%)`;let id=DATA[$('mode').value][i];return `hsl(${(id*137.508+12)%360} 70% ${Math.round(63*shade)}%)`}
+function occupied(x,y,z){return x>=0&&x<nx&&y>=0&&y<ny&&z>=0&&z<+$('cut').value&&(kind(index(x,y,z))==='active'||($('cbd').checked&&kind(index(x,y,z))==='cbd'))}
+const dirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+const corners=[[[1,0,0],[1,1,0],[1,1,1],[1,0,1]],[[0,0,0],[0,0,1],[0,1,1],[0,1,0]],[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]],[[0,0,0],[0,1,0],[1,1,0],[1,0,0]]];
+function mesh(){faces=[];for(let z=0;z<+$('cut').value;z++)for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){if(!occupied(x,y,z))continue;dirs.forEach((d,k)=>{if(!occupied(x+d[0],y+d[1],z+d[2]))faces.push({i:index(x,y,z),k,p:corners[k].map(c=>[(x+c[0]-nx/2)*hx,(y+c[1]-ny/2)*hy,(z+c[2]-nz/2)*hz])})})}}
+function canvas(id){const c=$(id),r=c.getBoundingClientRect(),ratio=Math.min(window.devicePixelRatio||1,2);c.width=Math.round(r.width*ratio);c.height=Math.round(r.height*ratio);const ctx=c.getContext('2d');ctx.scale(ratio,ratio);ctx.fillStyle='#101d30';ctx.fillRect(0,0,r.width,r.height);return [ctx,r.width,r.height]}
+function rot(p){const a=Math.cos(yaw)*p[0]-Math.sin(yaw)*p[1],b=Math.sin(yaw)*p[0]+Math.cos(yaw)*p[1];return [a,Math.sin(pitch)*b-Math.cos(pitch)*p[2],Math.cos(pitch)*b+Math.sin(pitch)*p[2]]}
+function draw(){let [ctx,w,h]=canvas('solid'),scale=1.05*Math.min(w,h)/Math.hypot(nx*hx,ny*hy,nz*hz);let list=faces.map(f=>{const p=f.p.map(rot);return {...f,p,depth:p.reduce((s,v)=>s+v[2],0)/4}}).sort((a,b)=>a.depth-b.depth);for(const f of list){ctx.beginPath();f.p.forEach((p,j)=>(j?ctx.lineTo(w/2+p[0]*scale,h/2+p[1]*scale):ctx.moveTo(w/2+p[0]*scale,h/2+p[1]*scale)));ctx.closePath();ctx.fillStyle=color(f.i,[.86,.76,.90,.8,1,.7][f.k]);ctx.fill();ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=.35;ctx.stroke()}
+ ctx.font='13px MORQEXReportCJK, system-ui';ctx.fillStyle='#aac3d8';ctx.fillText(`${faces.length} 个外露体素面 · 原始网格`,18,h-20);
+ for(let axis=0;axis<3;axis++){let v=[0,0,0];v[axis]=35;const p=rot(v);ctx.strokeStyle=['#e58283','#79d7a4','#83b7f8'][axis];ctx.beginPath();ctx.moveTo(55,60);ctx.lineTo(55+p[0],60+p[1]);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillText('XYZ'[axis],55+p[0],60+p[1]);}
+ [ctx,w,h]=canvas('slice');const s=.86*Math.min(w/(nx*hx),h/(ny*hy)),ox=(w-nx*hx*s)/2,oy=(h-ny*hy*s)/2,z=+$('plane').value;
+ window.sliceBounds={s,ox,oy};for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){const i=index(x,y,z);ctx.fillStyle=kind(i)==='pore'?'#213349':color(i);ctx.fillRect(ox+x*hx*s,oy+(ny-1-y)*hy*s,hx*s+.05,hy*s+.05)}
+ ctx.fillStyle='#b9cadc';ctx.font='13px MORQEXReportCJK, system-ui';ctx.fillText(`z = ${z} · 体素中心 ${(DATA.origin[2]+(z+.5)*hz).toFixed(2)} μm · X → / Y ↑`,18,h-20);
+ $('cutText').textContent=`${+$('cut').value} / ${nz}`;document.body.dataset.rendered='true';document.body.dataset.faces=faces.length;document.body.dataset.cut=$('cut').value;document.body.dataset.mode=$('mode').value;
+}
+for(const id of ['cut','cbd','mode'])$(id).oninput=()=>{mesh();draw()};$('plane').oninput=draw;$('reset').onclick=()=>{yaw=-.65;pitch=.60;draw()};
+$('solid').onpointerdown=e=>{drag=[e.clientX,e.clientY];$('solid').setPointerCapture(e.pointerId)};$('solid').onpointermove=e=>{if(!drag)return;yaw+=(e.clientX-drag[0])*.01;pitch=Math.max(-1.4,Math.min(1.4,pitch+(e.clientY-drag[1])*.01));drag=[e.clientX,e.clientY];draw()};$('solid').onpointerup=()=>drag=null;$('solid').onpointercancel=()=>drag=null;
+$('slice').onclick=e=>{const r=$('slice').getBoundingClientRect(),{s,ox,oy}=window.sliceBounds,x=Math.floor((e.clientX-r.left-ox)/(hx*s)),y=ny-1-Math.floor((e.clientY-r.top-oy)/(hy*s)),z=+$('plane').value;if(x<0||x>=nx||y<0||y>=ny)return;const i=index(x,y,z);$('inspect').textContent=`(x,y,z) = (${x},${y},${z}) | phase = ${kind(i)} | particle = ${DATA.particle[i]} | grain = ${DATA.grain[i]}`};
+window.addEventListener('resize',draw);mesh();draw();if(document.fonts)document.fonts.ready.then(draw);
+</script></html>

@@ -14,6 +14,8 @@ TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`resea
 
 完整接口、单位、操作步骤与适用范围见 [API.md](API.md)。源码仅保留 README 和 API 两份 Markdown；历史理论、计划、日志和旧接口说明完整归档到源码外 `morph_workspace/research_archive`。文献表保留在 [literature](literature)，第三方说明见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
 
+少量大颗粒检查入口为 `top-damage geometry configs/top_damage_few_particles.toml`（仍经资源运行器执行）。默认 32³、4 个近球形颗粒、每颗粒 8 个晶粒及 CBD；参数均可配置。完整 HDF5/VTI、取向表、晶界面、三维旋转与剖切 HTML 写入外部 `results/top_damage/microstructures/`。该稀疏几何用于检查编号和后续损伤映射，不能当作真实电极 RVE 或已经完成的疲劳循环。
+
 ```text
 /home/zephyrain/lw/MORQEX                 # 轻量源码、配置、测试、复现脚本
 /home/zephyrain/lw/morph_workspace        # 数据、环境、编译、算子、结果、HTML
