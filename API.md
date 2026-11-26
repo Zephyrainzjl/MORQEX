@@ -4,6 +4,39 @@
 
 ## 当前算例：6 节点 / 32³ CBD 正极 / 平面 Li
 
+### TOP-DAMAGE 子框架（Phase A 基础接口）
+
+入口统一在 MORQEX 内；旧固定结构模块不变。当前没有合格的长期疲劳 `run`/`resume`，不能把接口测试当成循环寿命预测。
+
+```bash
+$PY scripts/run_local.py --label top_damage_audit -- $PY /home/zephyrain/lw/MORQEX/scripts/audit_top_damage.py
+$PY -m morqex.top_damage status
+$PY scripts/run_local.py --label top_damage_report -- $PY -m morqex.top_damage report --workspace /home/zephyrain/lw/morph_workspace
+# 更新 editable 安装入口后：morqex top-damage status / report
+```
+
+```python
+import numpy as np
+from morqex.top_damage import ConductingNetwork, PartitionTransfer, OperatorStamp, TopDamageRegistry
+from morqex.extensions import ComponentSpec
+
+network = ConductingNetwork(4, np.array([[0,1],[1,2],[2,3]]),
+    conductance_S=[1.,0.,1.], anchors=np.array([0]),
+    channel="electronic", provenance="显式物理接触示例，非材料标定")
+reachable = network.accessible()  # [True,True,False,False]；所有四个顶点仍保留
+# ionic 网络需单独定义；可达性不是实际传输电阻，也不是完整反应活性判据。
+transfer = PartitionTransfer(np.array([0,0,1,1]), np.array([0,1,2,3]),
+    material_cell_volumes_m3=[1e-18,2e-18,3e-18,4e-18])
+result = transfer.apply([10.,30.], maximum_mol_m3=50.)
+# 分裂后每个区域持有自己的库存；电子失联不删除锂。固定材料参考网格专用。
+registry = TopDamageRegistry().register("state-transfer",
+    ComponentSpec("volume-overlap", PartitionTransfer))
+```
+
+`OperatorStamp(geometry,topology,materials,boundary,discretization,backend)` 的六个输入必须为规范内容的 SHA256，`require_same(current)` 拒绝陈旧算子。拓扑键须包含各物理通道接触与电导，材料键包含晶粒取向和历史相关物性；旧缓存尚未自动迁移到该契约。
+
+新注册类型为 `fatigue/topology-update/homogenizer/cycle-stepper/state-transfer`，使用原有 `ComponentSpec`，无插件自动导入。注册本身不代表算法通过验证。完整字段、候选公式、许可证和验收条件在外部 11 份报告；文献能力矩阵为 `literature/top_damage_matrix.json`。HDF5 epoch、完整相场、动态 DFN 和周期跳跃是下一阶段任务，当前不提供伪实现。
+
 ```bash
 # 在下文资源运行器设置的外部工作目录中执行；默认生成真实 56 颗粒几何
 $PY scripts/run_local.py --label sphere_geometry -- $PY /home/zephyrain/lw/MORQEX/scripts/prepare_sphere32.py

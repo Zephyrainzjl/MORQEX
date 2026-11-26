@@ -8,6 +8,8 @@
 
 ## 使用
 
+TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`research/top-damage`）。当前完成首轮审计、13 项文献初筛、物理/数学方案和接触网络、保库存分区转移、算子失效检测接口；尚未完成疲劳裂纹与长期循环闭环。`python -m morqex.top_damage status` 返回真实资格范围；`morqex top-damage` 使用同一入口。研究记录与全部 11 份阶段文档位于外部 `morph_workspace/research_archive/top_damage`，可读报告为 `reports/MORQEX_TOP_DAMAGE_phase_A.html`。该子框架不使用神经网络，旧求解器保持不变。
+
 完整接口、单位、操作步骤与适用范围见 [API.md](API.md)。源码仅保留 README 和 API 两份 Markdown；历史理论、计划、日志和旧接口说明完整归档到源码外 `morph_workspace/research_archive`。文献表保留在 [literature](literature)，第三方说明见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
 
 ```text
