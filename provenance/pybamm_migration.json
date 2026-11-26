@@ -2397,8 +2397,8 @@
       "path": "solvers/solution.py",
       "upstream_sha256": "05728e7312908974188f351d24f825f6c96f6f37d8b33c188f3cfd912e33b248",
       "bytes": 41053,
-      "local_sha256": "05728e7312908974188f351d24f825f6c96f6f37d8b33c188f3cfd912e33b248",
-      "locally_modified": false
+      "local_sha256": "6d6fa748a5f7936a6c5cb0ab811475acf3ddc7a9b544bbcbeb6cd6d4cbd3f9c0",
+      "locally_modified": true
     },
     {
       "path": "solvers/summary_variable.py",
@@ -2492,6 +2492,6 @@
       "locally_modified": false
     }
   ],
-  "patch": "Scalar 1D interpolant derivative conversion and marker; exact reuse/composition of CasADi Jacobians and directional actions (no-sensitivity path); half-cell electrolyte lithium diagnostic excludes planar Li foil from porous integration length.",
+  "patch": "Scalar 1D interpolant derivative conversion and marker; exact reuse/composition of CasADi Jacobians and directional actions (no-sensitivity path); half-cell electrolyte lithium diagnostic excludes planar Li foil from porous integration length. Mixed scalar/spatial InputParameter stacking preserves input order by concatenating flattened ports; empty inputs remain valid.",
   "morqex_0_0_9_note": "Converter-local exact scalar cubic table/derivative function reuse; avoids duplicate CasADi functions for region and edge inputs. Original data and tolerances unchanged."
 }

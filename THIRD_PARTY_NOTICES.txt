@@ -36,3 +36,5 @@ Optional independent binary comparison uses the MFEM library distributed in
 PyMFEM 4.10.0.1 (BSD-3-Clause, Princeton Plasma Physics Laboratory); installed
 license remains in external site-packages/mfem-4.10.0.1.dist-info/licenses.
 Neither MFEM nor the cited fatigue/AT2 methods are claimed as MORQEX inventions.
+
+PyBaMM solution.py local modification (2026-11-26): correctly concatenate mixed scalar and spatial-vector InputParameter values for solution postprocessing. Upstream BSD-3 license retained; original and modified hashes in provenance/pybamm_migration.json.

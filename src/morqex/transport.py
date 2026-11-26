@@ -42,6 +42,8 @@ class VoxelDiffusion:
             raise ValueError("Use diagonal XYZ diffusivity entries; full tensor diffusion is not implemented")
         d = np.broadcast_to(d, (len(self.voxel_ids), 3)).copy()
         if not np.isfinite(d).all() or np.any(d <= 0): raise ValueError("Positive finite diagonal diffusivities required")
+        self.diffusivity_XYZ = d.copy()
+        self.diffusivity_XYZ.flags.writeable = False
         if particle_ids is not None:
             particle_ids = np.asarray(particle_ids)
             if particle_ids.shape != a.shape or particle_ids.dtype.kind not in "iu" or np.any(particle_ids[self.mask] <= 0):

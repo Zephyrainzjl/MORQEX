@@ -344,7 +344,11 @@ class Solution:
     def all_inputs_stacked(self) -> list[np.ndarray]:
         if self._all_inputs_stacked is None:
             self._all_inputs_stacked = [
-                np.asarray(list(inp.values())).reshape(-1) for inp in self.all_inputs
+                # MORQEX: spatial input ports can mix scalar and vector values.
+                # Preserve the processed input order while flattening each port.
+                np.concatenate([np.asarray(v).reshape(-1) for v in inp.values()])
+                if inp else np.empty(0)
+                for inp in self.all_inputs
             ]
         return self._all_inputs_stacked
 
