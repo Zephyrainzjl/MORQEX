@@ -26,6 +26,16 @@ def cube(n=2):
     return TetMesh.from_volume(Volume(np.ones((n,n,n),np.uint8),spacing=(1/n,)*3))
 
 
+def test_amg_preconditioner_does_not_retain_owning_mechanics(backend):
+    import weakref
+    model=Hyperelasticity(cube(2),backend,100.,.3,linear_solver='matrix-free-amg-minres')
+    reference=weakref.ref(model)
+    # Deliberately do not call gc.collect(): releasing the owner's last strong
+    # reference must release its large arrays, even between long cycle steps.
+    del model
+    assert reference() is None
+
+
 def test_mfem_energy_stress_and_consistent_tangent(backend):
     rng=np.random.default_rng(104);F=np.eye(3)+rng.normal(size=(7,3,3))*.09
     fc=np.broadcast_to(np.diag([1.03,1.01,.98]),F.shape)

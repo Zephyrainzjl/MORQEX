@@ -184,7 +184,11 @@ class Hyperelasticity:
                 B=np.asarray(self.P.T@rigid),symmetry='symmetric',max_coarse=48,
                 presmoother=('gauss_seidel',{'sweep':'symmetric'}),
                 postsmoother=('gauss_seidel',{'sweep':'symmetric'}))
-            amg=ml.aspreconditioner();self.preconditioner=LinearOperator(amg.shape,matvec=lambda x:amg@x/self.base.scale)
+            # Capture immutable scale, not self: self -> preconditioner -> self
+            # otherwise retains the full mesh/tangent workspace until cyclic GC.
+            # NumPy's large allocations do not reliably trigger that collector.
+            amg=ml.aspreconditioner();scale=self.base.scale
+            self.preconditioner=LinearOperator(amg.shape,matvec=lambda x:amg@x/scale)
 
     def assemble(self,u,chemical_F,degradation=1.,*,tangent=True):
         if self.mesh.fingerprint!=self._geometry_fingerprint:

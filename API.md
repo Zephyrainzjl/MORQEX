@@ -2781,6 +2781,11 @@ $PY $ROOT/scripts/run_local.py --label history -- $PY $ROOT/benchmarks/validate_
 默认机械参数是合成验证参数，不等于实验标定。
 批量历史驱动每帧使用独立进程、保存 `mechanics_*.solver.log`；可用 `--steps 20`
 分批，再用 `--start 20` 续算，避免长期保留求解器导致内存累积。
+AMG 预条件器已消除持有力学对象的引用环；同进程内存回归用
+`benchmarks/validate_resolved_memory.py --seeded-isolated --output unique_name`。
+该对照固定 PyAMG 谱半径估计所用的随机序列，逐字段比较进程内外结果，
+不使用手工垃圾回收或缩小网格。不同源码版本的历史身份不能手改；旧接受态应由
+记录的源版本恢复。40 秒/41 帧参考对应版本 `0367d2a`。
 
 ```python
 from morqex.top_damage.resolved_echem import ResolvedElectrochemistry
