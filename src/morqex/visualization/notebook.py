@@ -9,11 +9,13 @@ import numpy as np
 
 
 class VoxelView:
-    def __init__(self,model,*,maximum_3d_size=48,height=660,title='MORQEX geometry',show_region=None):
+    def __init__(self,model,*,maximum_3d_size=48,height=660,title='MORQEX geometry',show_region=None,slice_origin='upper'):
         if type(maximum_3d_size) is not int or not 8<=maximum_3d_size<=96:
             raise ValueError('3D display size8..96 required')
         if type(height) is not int or not 300<=height<=1400:raise ValueError('Height300..1400 required')
         if show_region is not None and type(show_region) is not int:raise ValueError('show_region must be an integer region or None')
+        if slice_origin not in ('upper','lower'):raise ValueError('slice_origin must be upper or lower')
+        self.slice_origin=slice_origin
         self.maximum_3d_size=maximum_3d_size;self.height=height;self.title=str(title);self.show_region=show_region
         self.handle=None;self._set(model)
 
@@ -29,7 +31,7 @@ class VoxelView:
         def pack(values):return base64.b64encode(gzip.compress(np.asarray(values,dtype='<u4').tobytes(),compresslevel=1)).decode()
         payload={'shape':a.shape,'spacing':model.spacing,'origin':model.origin,'names':model.region_names,
             'labels':pack(a),'preview':pack(preview),'previewShape':preview.shape,'stride':stride,
-            'title':self.title,'metadata':model.metadata,'show_region':self.show_region if self.show_region is not None else
+            'title':self.title,'metadata':model.metadata,'slice_origin':self.slice_origin,'show_region':self.show_region if self.show_region is not None else
                 next((k for k,v in model.region_names.items() if 'active' in v.lower()),None)}
         template=Path(__file__).with_name('notebook_voxels.html').read_text()
         self.document=template.replace('__DATA__',json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c'))
@@ -62,9 +64,8 @@ class VoxelView:
         return self
 
     def save_html(self,path):
-        target=Path(path).expanduser().resolve()
-        source=Path(__file__).resolve().parents[3]
-        if target.is_relative_to(source):raise ValueError('Save notebook visuals outside source')
+        from morqex.modeling.voxel import external_path
+        target=external_path(path)
         target.parent.mkdir(parents=True,exist_ok=True);target.write_text(self.document)
         return target
 

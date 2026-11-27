@@ -313,7 +313,7 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
     if any(np.any((np.asarray(plc.seeds[k])<plc.points.min(axis=0))|
                   (np.asarray(plc.seeds[k])>plc.points.max(axis=0))) for k in labels):
         raise ValueError('A region seed is outside the PLC bounding box')
-    switches=f'p{options.facet_separation_angle:.8f}q{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzfQS{options.maximum_steiner}T{options.coplanarity_tolerance:.8g}'
+    switches=f'p{options.facet_separation_angle:.8f}q{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzQS{options.maximum_steiner}T{options.coplanarity_tolerance:.8g}'
     if options.maximum_volume is not None or options.region_maximum_volumes:switches+='a'
     if options.preserve_surface:switches+='Y'
     if options.consistency_check:switches+='C'
@@ -326,7 +326,12 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
         p,t,a,faces,markers=execute((plc.points-centre)/scale,plc.facets,plc.markers,seed_array,
             (plc.holes-centre)/scale,switches,workspace=workspace,maximum_cells=options.maximum_cells)
         retry=False
-        volume=np.abs(np.linalg.det(p[t[:,1:]]-p[t[:,:1]]))/6*scale**3
+        volume=None
+        if options.maximum_volume is not None or options.region_maximum_volumes:
+            volume=np.empty(len(t),np.float64)
+            for first in range(0,len(t),50000):
+                block=t[first:first+50000]
+                volume[first:first+len(block)]=np.abs(np.linalg.det(p[block[:,1:]]-p[block[:,:1]]))/6*scale**3
         for index,k in enumerate(labels,1):
             bound=options.region_maximum_volumes.get(k,options.maximum_volume)
             if bound is None:continue
@@ -345,14 +350,17 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
     _verify_seeds((p-centre)/scale,t,ids,seed_array)
     phases=decode[ids-1]
     # TetGen's internal orientation differs from our positive determinant convention.
-    signed=np.linalg.det(p[t[:,1:]]-p[t[:,:1]])
-    t[signed<0]=t[signed<0][:,[1,0,2,3]]
+    for first in range(0,len(t),50000):
+        block=t[first:first+50000]
+        reverse=np.linalg.det(p[block[:,1:]]-p[block[:,:1]])<0
+        block[reverse]=block[reverse][:,[1,0,2,3]]
     quality,volumes=tetra_quality(p,t)
     errors={}
     for k,expected in plc.region_volumes.items():
         error=abs(float(volumes[phases==int(k)].sum())/expected-1);errors[str(k)]=error
         if error>1e-8:raise ArithmeticError(f'Exact PLC region {k} volume error {error}')
-    # f outputs all faces; retain explicitly marked PLC faces including interfaces.
+    # Default PLC output retains constrained subfaces, including interfaces;
+    # avoid -f, which needlessly exports every interior volume face as well.
     boundary=markers>0
     report={'mesher':'source-integrated TetGen1.6.0','source_identity':identity(),'switches':switches,
         'input_points':len(plc.points),'input_facets':len(plc.facets),'nodes':len(p),'tetrahedra':len(t),

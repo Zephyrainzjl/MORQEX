@@ -25,6 +25,60 @@ The default hides region0 for display only; choose another label or “None” i
 the interface. Hidden regions remain in the model and its exports.
 默认显示时隐藏区域0，可在界面改为其他标签或“不隐藏”。隐藏只影响显示，不删除数据。
 
+### Physical aspect and matching slices / 物理比例与同位置切面
+
+Two-dimensional pixels use the declared physical spacing, including anisotropic
+voxels. `slice_origin='upper'` keeps image-array rows increasing downwards;
+`slice_origin='lower'` puts the vertical physical coordinate upwards, matching
+the mesh viewer's Cartesian sections. Region colours match between these two
+viewers, including arbitrary labels such as0/128/255. Each voxel slice displays
+its physical centre plane in metres. 二维像素按真实体素边长比例绘制，不强行画成正方形。
+`upper`是默认图像行方向，`lower`与有限元切面的笛卡尔方向一致。两类视图中同一区域
+使用相同基色；颜色对应区域编号，不自动赋予材料化学含义。
+
+```python
+from morqex.modeling import from_regions,tetgen_mesh,TetGenOptions
+import numpy as np
+
+model = from_regions(np.ones((4,6,8),np.uint8),
+    spacing=(1e-6,2e-6,4e-6),origin=(10e-6,20e-6,30e-6))  # ZYX
+model.viewer(maximum_3d_size=8,slice_origin='lower').display()
+# Requires the explicitly compiled TetGen backend / 需要事先显式编译TetGen。
+volume = tetgen_mesh(model,options=TetGenOptions(maximum_cells=100000))
+shape_xyz = model.regions.shape[::-1]
+fractions_xyz = tuple((n//2+.5)/n for n in shape_xyz)
+volume.adaptive_viewer(section_fractions=fractions_xyz).display()
+# Select XY volume section to compare the default voxel Z slice.
+# 选择XY体网格切面，与默认体素Z切片对照。
+```
+
+`section_fractions` gives three fractions in **XYZ** order, each strictly between
+zero and one, measured across the actual mesh bounding box. The default is its
+midpoint, `(.5,.5,.5)`. An even-sized voxel array's centre-index slice is half a
+voxel away from that midpoint; the formula above accounts for it. It assumes the
+source and mesh occupy the same physical box, and must not be used to identify
+the independent supplied TIFF and COMSOL geometries as a pair.
+`section_fractions`是实际网格包围盒中的XYZ相对坐标，不能与ZYX数组轴顺序混淆。
+上式使切面穿过默认体素索引的中心；偶数尺寸的半体素偏移也被计入。必须先确认源体素
+与网格包围盒相同；不能据此把独立的NMC和参考COMSOL强行配对。
+
+The gallery comparison refresh command validates matching boxes, sets Cartesian
+voxel slices and evaluates the **complete** Tet4 mesh at the same planes:
+下列命令先检查包围盒，再重新生成同位切面的HTML，不修改体素和网格数据：
+
+```bash
+PROJECT=/home/zephyrain/lw/MORQEX
+python "$PROJECT/scripts/run_local.py" --workspace "$MORQEX_WORKSPACE" \
+  --label aligned_geometry_views --reference-memory --large-mesh-output -- \
+  "$MORQEX_WORKSPACE/runtime/bin/python" "$PROJECT/scripts/refresh_geometry_comparison.py"
+```
+
+Slice controls remain independent; the offline mesh HTML stores the three
+requested planes. To inspect another plane, call `adaptive_viewer` with new
+fractions. This is a new exact intersection calculation, not a displacement of
+the old image. 两侧控件独立；离线网格HTML保存指定的三个切面，其他位置通过API重新
+计算真实单元求交，不能把已有切片平移后当作新结果。
+
 For a notebook's automatic rich display, use `model.viewer()` as the final
 cell expression. Use `view=model.show()` when subsequent cells need a handle.
 若希望依靠单元格自动富显示，可将 `model.viewer()` 放在单元格末尾；后续要刷新时，
@@ -198,11 +252,14 @@ view.display()
 view.save_html('/home/zephyrain/lw/morph_workspace/microelectrode_gallery/adaptive.html')
 ```
 
-This viewer retains the full marked boundary surface and exact3D-element
-plane intersections. It provides material selection, rotation, wireframe,
+By default this viewer retains the full marked boundary surface and exact3D-element
+plane intersections. An explicit `maximum_embedded_faces` display budget samples
+actual faces; its legend records that limit and the full HDF5 remains unchanged.
+It provides material selection, rotation, wireframe,
 face-display budgets and YZ/XZ/XY interior sections. These are not a display
 made from voxel splitting or a replacement finite-element mesh.
-该查看器保存完整计算边界及真实体单元切面，支持材料选择、旋转、线框及内部疏密查看；
+默认保存完整计算边界及真实体单元切面；显式设置面预算后，三维只显示标注的实际面片
+抽样，完整HDF5不变。支持材料选择、旋转、线框及内部疏密查看；
 不会把体素图或其他网格冒充计算结果。详细API见
 [完整教程](06_gemsim_adaptive_meshing.md)。
 ## Isolate material regions / 单独查看材料域
@@ -217,3 +274,60 @@ The Show dropdown switches between individual materials and all regions.
 Hide and clipping remain available. Explicit labels must exist in the model;
 the view never changes geometry or physical phase assignments. 三维可选择活性材料、
 CBD、电解液及各电池层，不改变模型；显式标签不存在时接口会报错。
+
+## Complete actual boundary detail inside a physical ROI / 物理范围内的完整真实网格细节
+
+A uniformly sampled whole-model boundary can look like a point cloud when the
+complete model has millions of faces. Use `surface_bounds_m` to inspect a
+**complete actual boundary subset**, without generating a smaller SVE, changing
+geometry, or recomputing a physical solution. Every displayed triangle is an
+original FEM interface triangle, with its original global face ID retained.
+全模型面片均匀抽样可能显得稀疏。下面只选择显示范围，不裁剪计算、不重新生成微结构，
+不补人工封口，也不重划网格。显示面片均来自原有限元模型，保留全局面片索引。
+
+```python
+import numpy as np
+from morqex.modeling import VoxelModel, MeshArtifact
+model = VoxelModel.load(work/'geometry.h5')
+artifact = MeshArtifact.load(work/'mesh.h5')
+# XYZ metres; source array/spacing convention remains ZYX.
+# XYZ米；原体素数组和spacing仍为ZYX。
+shape_xyz = np.array(model.regions.shape[::-1])
+spacing_xyz = np.array(model.spacing[::-1])
+origin_xyz = np.array(model.origin[::-1])
+centre_xyz = origin_xyz + .5 * shape_xyz * spacing_xyz
+half_width_xyz = 24 * spacing_xyz  # Display48 voxels per direction / 每方向显示48体素范围
+bounds_xyz_m = np.array([centre_xyz-half_width_xyz, centre_xyz+half_width_xyz])
+detail = artifact.adaptive_viewer(
+    sections=False, surface_bounds_m=bounds_xyz_m,
+    maximum_embedded_faces=500000,
+    title='Actual FEM boundary detail / 真实有限元网格局部')
+assert detail.selected_surface_faces == detail.embedded_surface_faces
+print('Source faces / 全局面数:', detail.source_surface_faces)
+print('Complete selected faces / 完整局部面数:', detail.selected_surface_faces)
+detail.display()
+detail.save_html(work/'actual_mesh_detail.html')
+```
+
+The ROI selects triangles whose **three original vertices** lie inside the
+inclusive XYZ box, with an explicitly recorded machine-roundoff tolerance. Triangles crossing its edge are omitted, and no artificial
+cap is inserted; open edges at the display boundary are expected. Empty or
+invalid boxes raise an error. The original full source mesh and global quality
+report remain unchanged. `source_face_ids` in the HTML payload refers back to
+the full interface table. For a complete ROI, keep its embedded face budget at
+least as large as its selected count; the gallery controller refuses to call
+a sampled ROI complete.
+范围选择条件为三顶点均在闭区间盒内（记录机器舍入容差）；跨越边界的三角形不显示，不生成伪造封口。
+完整模型和全局质量报告不改变，局部截边不是物理裂纹。预算不足时可减小**显示范围**，
+不能把抽样面片宣称为局部完整网格。不能用显示ROI代替全模型的数值验收。
+
+`surface_bounds_m` affects **3D boundary display only**. If `sections=True`,
+stored Tet4 plane intersections still cover the full computational mesh.
+For a quick boundary detail use `sections=False`. A region entirely inside a
+homogeneous material can contain no physical boundary; use a volume section
+instead. Section modes default to **all phases**, while surface mode defaults
+to a foreground phase for visibility. Changing modes resets this visual filter;
+select the desired material after choosing a mode.
+该范围只控制三维界面显示；体网格切面仍来自完整计算域。均匀材料内部可能没有物理界面，
+此时应看真实体单元切面。切面默认显示全部相，三维默认显示前景相；切换视图后可重新选择
+相过滤器，过滤器不影响计算数据。

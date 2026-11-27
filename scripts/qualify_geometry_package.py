@@ -27,10 +27,15 @@ target=Path(sys.argv[1]);output=Path(sys.argv[2]);names=json.loads(sys.argv[3])
 assert Path(morqex.__file__).resolve().is_relative_to(target)
 model=from_regions(np.pad(np.ones((4,4,4),np.uint8),2),spacing=(1e-6,)*3)
 base=model.tetrahedralize()
+from morqex.visualization.notebook import MeshView
+voxel_html=model.viewer(maximum_3d_size=8,slice_origin='lower').save_html(output/'source_voxels.html')
+mesh_html=MeshView(base,cell_count=20).save_html(output/'actual_cells.html')
+assert voxel_html.is_file() and mesh_html.is_file()
 bundle=export_bundle(base,output/'software',formats=['comsol','vtu','gmsh','medit','abaqus'],
     region_names=model.region_names,length_unit='um')
 assert bundle['passed']
-result={'imported_package':str(Path(morqex.__file__).resolve()),'exchange':bundle,'native':{}}
+result={'imported_package':str(Path(morqex.__file__).resolve()),'exchange':bundle,'native':{},
+    'installed_voxel_and_mesh_html_saved':True}
 if 'tetgen' in names:
     from morqex.modeling.tetgen_backend import library_path
     assert library_path().resolve().is_relative_to(target)
@@ -41,7 +46,15 @@ if 'tetgen' in names:
         assert native.signed_volumes().min()>0
         counts.append(len(native.cells))
     assert counts[1]>counts[0]
-    result['native']['tetgen']={'library':str(library_path()),'coarse_fine_cells':counts}
+    from morqex.modeling import partitioned_tetgen
+    import h5py
+    aligned=partitioned_tetgen(model,output/'installed_exact_parts',surface_method='voxel_aligned',slab_depth=4)
+    with h5py.File(aligned.hdf5) as h:
+        report=json.loads(h.attrs['report'])
+        assert report['source_voxel_cell_centroids_checked']==aligned.tetrahedra
+        assert max(report['source_voxel_phase_volume_errors'].values())<1e-8
+    result['native']['tetgen']={'library':str(library_path()),'coarse_fine_cells':counts,
+        'installed_exact_partition_cells':aligned.tetrahedra}
 if 'acvd' in names:
     from morqex.modeling.acvd_backend import load_acvd
     module=load_acvd();assert Path(module.__file__).resolve().is_relative_to(target)

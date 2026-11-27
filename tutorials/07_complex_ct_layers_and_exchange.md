@@ -200,7 +200,7 @@ from morqex.modeling import partitioned_tetgen
 # Run through run_local's reference-memory profile for large arrays.
 # 大数组在外部资源限制器下运行；全部相（包括电解液）均参与完整域剖分。
 artifact = partitioned_tetgen(ct, work/'complete_ct',
-    surface_method='voxel_plc', slab_depth=32, axis=0,content_addressed=True)
+    surface_method='voxel_aligned', slab_depth=32, axis=0,content_addressed=True)
 # surface_nets is the separate smoothed shared-interface choice.
 # axis uses ZYX; anisotropic spacing and nonzero origins are retained.
 # 可选surface_nets光滑共享曲面；保留各向异性体素尺寸和非零原点。
@@ -211,7 +211,7 @@ AdaptiveMeshView(artifact, maximum_embedded_faces=450000,
 
 ```bash
 python -m morqex.modeling partition /external/geometry.h5 \
-  --directory /external/complete_mesh --surface-method voxel_plc \
+  --directory /external/complete_mesh --surface-method voxel_aligned \
   --slab-depth 32 --axis 0 --content-addressed --preview /external/complete_mesh.html
 ```
 
@@ -228,7 +228,132 @@ does not return an accepted mesh. A low resource budget may require smaller
 Core algorithm/backend fingerprints also prevent reuse after a mesher source
 change. Internal cuts automatically avoid original vertices within a bounded,
 deterministic search; moving a computational cut does not move a material
-interface. 核心源码改变会使旧断点拒绝复用；自动微调的是计算分块平面，而非物理界面。
+interface. This plane adjustment applies to `voxel_plc` and `surface_nets`;
+`voxel_aligned` instead uses exact integer voxel boundaries as described below.
+核心源码改变会使旧断点拒绝复用；前两种路线自动微调的是计算分块平面，而非物理界面。
+
+### Exact lattice-aligned partitioning / 精确体素边界分区
+
+`surface_method="voxel_aligned"` partitions the **original array** at integer
+voxel faces. Each subblock uses exact shared material quads and a canonical
+diagonal, so both sides construct the same triangular cap independently.
+If adjacent voxels across a cut have different material IDs, assembly retains
+that triangle **once as a real material interface**. Equal-material cap faces
+are removed as computational boundaries. No material is filled, resampled or
+assigned by a nearest-centroid guess.
+
+该模式在原始数组的整数体素边界分区，避免半体素切面切穿三角形后产生额外短边。
+每个四边形都使用字典序最小顶点对应的对角线；两侧实际节点和三角面必须一致。
+切面两侧若材料不同，该面保留一次作为真实材料界面；相同则只删除计算分区面。
+原始数组、物理尺寸、各向异性间距及非零原点均保留，不会为剖分成功擅自填孔。
+
+Accepted output additionally checks positive cell volumes, exact source phase
+volumes (relative tolerance `1e-8`), and the original voxel label at **every**
+cell centroid. The centroid check is a validation cross-check, **not** the
+material-assignment algorithm or a rigorous pointwise surface-error proof.
+All physical faces can be independently derived from cell ownership in the
+small regression benchmarks, including material jumps on computational cuts.
+相标签仍来自TetGen的区域属性；逐单元中心检查不能替代PLC共形证明，也不等于有限元
+离散收敛。体素阶梯几何中的点/边接触仍可能不可剖分；实际切面若出现不一致的强制恢复点，
+接口会拒绝返回合格结果。该模式不承诺任意分割都成功，也不保证请求的单元形状上限。
+
+Use `region_labelling="seeds"` for the conservative exact-voxel route. All
+present labels, including electrolyte/pore regions, are meshed. Per-region
+maximum-volume keys are checked globally and filtered only for absent labels
+in a particular subblock. Choose a **new** or content-addressed cache when
+changing methods; the original `voxel_plc` clipped-cap route remains available.
+保守的精确体素模式默认使用连通域内部种子，支持各相不同的体积控制。不存在的全局相ID
+会报错，不会静默忽略。新模式与旧的裁切PLC、光滑Surface Nets路线分别保留。
+
+```toml
+[meshing]
+method = "partitioned_tetgen"
+directory = "/external/aligned_exact_mesh"
+content_addressed = true
+surface_method = "voxel_aligned"
+slab_depth = 32
+axis = 0
+[meshing.tetgen_options]
+preserve_surface = true
+merge_coplanar = false
+region_labelling = "seeds"
+coplanarity_tolerance = 1e-15
+maximum_cells = 8000000
+maximum_steiner = 800000
+require_quality = false  # Report shape failures; true rejects them / true则拒绝形状未达标结果
+```
+
+`require_quality=false` does **not** mean the quality request passed. Inspect
+`quality_limits_satisfied`, the measured radius-edge maximum and minimum
+dihedral; use `true` whenever downstream analysis requires those bounds.
+不能把正体积或体积守恒当作形状达标，更不能仅据此宣称物理求解收敛。
+
+The independent layered-conduction regression solves P1 finite elements on the
+generated unstructured mesh and compares nodal potential, total current and
+Dirichlet quadratic functional (half the dissipation, not stored energy) with the series-layer analytic solution. It tests
+all three partition directions and a material jump exactly on a cut, with
+`1e-9` potential/current/energy tolerances. This is a transmission/patch test,
+not convergence evidence for an arbitrary electrode PDE.
+分层导电回归独立装配P1有限元，检查电势、两端电流、自由节点残差和二次能量；材料界面
+恰在计算分区面上，三个方向均验证。导电二次泛函是耗散的一半，不是存储自由能；解析比较不能替代真实电极的网格收敛实验。
+
+To reproduce all exact-route gallery stages under the serial local resource
+guard, use the controller below. It freezes the source, retains logs for each
+case/stage, verifies every selected whole-model software export, and generates
+`nmc_complex_gallery/voxel_aligned.html`. Large inputs must already exist in
+the external complex gallery; initial generation is described above.
+下面的控制器串行执行，默认一个CPU、低优先级、6GiB进程组内存上限、8GiB主机余量，
+不使用GPU；每个导出格式单独验收，任一阶段失败会保留断点并停止接受结果。
+
+```bash
+python scripts/run_aligned_geometry.py \
+  --workspace /home/zephyrain/lw/morph_workspace/microelectrode_gallery \
+  --cases nmc granular rods platelets agglomerates bicontinuous cell_stack \
+  --stages mesh preview exchange vtk \
+  --formats comsol vtu gmsh medit abaqus --length-unit um --slab-depth 32
+```
+
+For generation only use `--stages mesh`; for existing meshes use
+`--stages preview exchange`. The fixed gallery checkpoint directory belongs
+to its recorded source/algorithm; archive it explicitly or choose a fresh
+gallery workspace after changing the core algorithm. For general API use,
+`content_addressed=True` automatically separates new structures and parameter
+sets without any manual geometric repair.
+只剖分、只可视化或只导出均可选择。图库断点绑定源码版本；通用API的内容寻址模式则
+自动管理新结构和参数，不需要每次手动修几何。更改算法后不能把旧验收当作新验收。
+
+The optional final `vtk` stage uses the **compiled VTK XML reader** and compares
+every coordinate, cell connection, offset, element type, domain and boundary
+tag against the complete HDF5 mesh. It requires the `vtu` export and VTK.
+This is an independent application-library readback; it is not a COMSOL or
+Abaqus solver execution. 可选`vtk`阶段使用真实VTK C++读取库，逐项核对完整数据，
+保留独立JSON证据；不将其冒充COMSOL/Abaqus实际求解验证。
+
+### Independent numerical verification / 独立数值验证
+
+`scripts/benchmark_geometry_transmission.py` solves a classical spherical
+conductivity transmission problem on three voxel resolutions. The analytic
+potential is prescribed on the unit-cube boundary; potential and normal flux
+are continuous on the exact sphere. The P1 solve uses Jacobi-preconditioned
+CG (`rtol=1e-11`), with an independently checked free-node residual.
+该脚本在三个体素分辨率上求解经典球形夹杂导电问题：解析电势作为外边界条件，真实球面上
+电势与法向通量连续。输出完整节点电势VTU、误差、二次Dirichlet泛函及独立HTML。
+
+```bash
+WORK=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
+PY="$WORK/runtime/bin/python"
+python scripts/run_local.py --workspace "$WORK" --label geometry_scalar_transmission \
+  --reference-memory -- "$PY" "$PWD/scripts/benchmark_geometry_transmission.py" \
+  --sizes 16 32 64
+```
+
+The measured errors include **both voxel geometry and P1 approximation**;
+four-point quadrature gives estimates, not rigorous norm bounds. The Dirichlet
+functional equals half the dissipation in this conductivity problem and is not
+stored thermodynamic energy. This benchmark does not qualify every full
+electrode mesh and does not simulate NMC charge/discharge.
+这里不能将体素几何误差当作纯求解器误差，也不能将数学验证冒充真实电极的收敛认证或
+NMC充放电结果。严格单元形状请求、界面/体积检查和PDE收敛仍分别报告。
 
 With `content_addressed=True`, `directory` is a cache parent. Each distinct
 source array, parameter set and algorithm/native-backend fingerprint gets a
@@ -626,3 +751,55 @@ python "$PROJECT/scripts/run_local.py" --workspace "$MORQEX_WORKSPACE" \
 The browser check uses one browser and two attached frames, disables GPU, and
 saves screenshots and JSON externally. It does not require a network service.
 浏览器验收不使用GPU，所有截图、日志和大文件仍保存在外部工作区。
+
+## 10. Reproduce the native output benchmark / 重现原生输出开销对照
+
+`scripts/benchmark_tetgen_face_output.py` reconstructs one physical PLC from
+an existing Tet4 artifact, then changes only whether TetGen exports ordinary
+interior faces. Every material interface is retained. It saves input and output
+hashes, actual native flags and separate numerical/shape reports. The default
+input budget is five million cells; all runs remain subject to the resource
+guard. 这个对照不改物理几何、求解容限或硬件，不删除坏单元；比较前先核对同一输入及
+节点、单元、材料和规范化带标签界面的哈希。几何通过与形状通过仍是不同门槛。
+
+```bash
+PROJECT=/home/zephyrain/lw/MORQEX
+PY="$MORQEX_WORKSPACE/runtime/bin/python"
+INPUT="$MORQEX_WORKSPACE/nmc_complex_gallery/native/granular/partitioned/part_00.h5"
+BENCH="$MORQEX_WORKSPACE/benchmarks/face_output_example"
+python "$PROJECT/scripts/run_local.py" --workspace "$MORQEX_WORKSPACE" \
+  --label faces_baseline --reference-memory -- \
+  "$PY" "$PROJECT/scripts/benchmark_tetgen_face_output.py" "$INPUT" \
+  --mode all_faces --output "$BENCH/all_faces.json"
+python "$PROJECT/scripts/run_local.py" --workspace "$MORQEX_WORKSPACE" \
+  --label faces_constrained --reference-memory -- \
+  "$PY" "$PROJECT/scripts/benchmark_tetgen_face_output.py" "$INPUT" \
+  --mode constrained --output "$BENCH/constrained.json"
+```
+
+Use a new output directory for another experiment; results are not overwritten.
+In Python, load both JSON files, check `input_sha256` and `hashes` equality,
+then compare `raw_returned_faces` and `native_and_validation_seconds`. Peak
+process-group RSS is recorded in each launcher's manifest, rather than inferred
+from array sizes. A single timing pair is a measured observation, not a
+statistical speedup estimate. 再次实验选择新目录；实际峰值内存读取运行清单，不以数组
+大小估算冒充。基准可换成其他已有体网格，但不能将不同输入的耗时直接相除。
+
+### Full-model overview plus unsampled FEM detail / 全模型概览与不抽样的有限元细节
+
+```bash
+python scripts/run_aligned_geometry.py \
+  --workspace /home/zephyrain/lw/morph_workspace/microelectrode_gallery \
+  --cases nmc granular rods platelets agglomerates bicontinuous cell_stack \
+  --stages detail --roi-voxels 48
+```
+
+The gallery links each `roi_mesh.html`. It contains the complete original
+triangles selected inside the central48-voxel-wide physical display box,
+without a new SVE or cropped numerical solve. `roi_display.json` records its
+physical XYZ bounds, full source-cell count, selected/embedded face counts
+and unchanged source-file checks. The whole-model source and exact volume
+sections remain available alongside it. See the
+[complete ROI API and code](04_notebook_visualization.md).
+每个局部详情都绑定完整大模型，不能当作另一个小SVE计算结果；完整源数据、全域体网格
+切面和全局质量限制均保留。局部未生成新网格，没有补面，没有隐藏计算规模。

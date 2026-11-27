@@ -47,23 +47,29 @@ def write_index(out):
         items.insert(1,{'id':'nmc','label':'Original NMC TIFF / 原始NMC','text':f"252×252×253 original voxels · {r['nodes']:,} nodes · {r['tetrahedra']:,} Tet4; exact voxel boundary route",
             'voxel':'nmc_tiff/voxels.html','mesh':base+'mesh.html','shape_quality':r.get('quality_limits_satisfied'),
             'links':[['Source voxels','nmc_tiff/geometry.h5'],['COMSOL',base+'mesh.mphtxt'],['HDF5',base+'mesh.h5'],['XDMF',base+'mesh.xdmf'],['Checks',base+'validation.json']]+exchange_links(out/base)})
+    for item in items:
+        if item.get('mesh'):
+            detail=Path(item['mesh']).with_name('roi_mesh.html')
+            if (out/detail).exists():item['detail']=str(detail)
     html='''<!doctype html><html lang="en"><meta charset="utf-8"><title>MORQEX · complex geometry gallery</title>
 <style>body{font:15px system-ui;background:#edf3f6;color:#1c3b4d;margin:20px}main{max-width:1900px;margin:auto}article{background:white;border-radius:14px;padding:16px;margin:18px 0}.views{display:grid;grid-template-columns:1fr 1fr;gap:10px}iframe{width:100%;height:940px;border:1px solid #d9e3e8;border-radius:8px}a{color:#126d80}nav{display:flex;gap:12px;flex-wrap:wrap}select{padding:9px;font-size:16px}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid #e2e9ec;padding:9px}.notice{color:#8b471e}button{padding:5px 12px;cursor:pointer}@media(max-width:1100px){.views{grid-template-columns:1fr}}</style>
 <main><h1>MORQEX · complex electrode geometry / 复杂电极几何</h1>
 <p>完整原始体素 → 共享多相界面 → 非结构有限元网格 → 软件交换。只加载当前结构的两个视图；切换时释放旧视图，减少浏览器内存。</p>
 <p>The TIFF and COMSOL references are independent. COMSOL extent is ≈1 m as confirmed by its owner; TIFF spacing is an explicitly chosen 0.5 µm example.
 Five native 256³ structures are generated independently, without tiling or deforming the CT. Source and mesh files stay complete; display LOD is labelled.</p>
-<nav><a href="acceptance.html">Measured qualification report / 实测验收报告</a><a href="exchange_validation.json">40 full-model software round trips / 40组全量格式回读</a><a href="browser_validation.json">Offline 3D/section checks / 离线显示检查</a></nav>
-<article><nav><label>Structure / 结构 <select id="case"></select></label><a id="surface" target="_blank">Open 3D interface faces / 打开三维网格界面</a><a id="section" target="_blank">Open exact Tet4 section / 打开真实单元切面</a></nav>
+<nav><a href="acceptance.html">Measured qualification report / 实测验收报告</a><a href="voxel_aligned.html">Exact voxel-aligned route / 精确体素边界分区</a><a href="exchange_validation.json">40 full-model software round trips / 40组全量格式回读</a><a href="browser_validation.json">Offline 3D/section checks / 离线显示检查</a></nav>
+<article><nav><label>Structure / 结构 <select id="case"></select></label><a id="surface" target="_blank">Open whole 3D interface sample / 打开全域三维界面抽样</a><a id="detail" target="_blank">Complete actual 3D ROI faces / 完整真实网格三维局部</a><a id="section" target="_blank">Open exact Tet4 section / 打开真实单元切面</a></nav>
 <h2 id="label"></h2><p id="description"></p><p id="quality" class="notice"></p><nav id="files"></nav>
+<p>Voxel and mesh controls are independent; compare their physical plane coordinates. / 体素与网格控件独立，以各自显示的物理切面坐标为准。</p>
 <div class="views" id="views"></div></article><article><h2>Complete data catalogue / 完整数据目录</h2><table><thead><tr><th>Structure / 结构</th><th>Full model / 全量模型</th><th>Inspect / 查看</th></tr></thead><tbody id="catalogue"></tbody></table>
 <p>Conformity, phase volume, shape quality and software readback are separate checks. A positive-volume mesh is not a certified converged FE solution. Numerical reports retain failed shape requests.</p>
 <p>几何共形、相体积、单元形状与软件回读分别验收；形状未达请求上限的模型不会标成完全合格。三维大模型显示的是明确抽样的实际界面面片；切面由完整Tet4网格求交得到。</p></article></main>
 <script>const items=__ITEMS__,$=id=>document.getElementById(id);
 function choose(id){const d=items.find(x=>x.id===id)||items[0];$('case').value=d.id;$('label').textContent=d.label;$('description').textContent=d.text;
-$('quality').textContent=d.shape_quality===false?'Geometry conformity checked; requested shape bound NOT met / 几何共形已检查；形状请求上限未通过':d.shape_quality===true?'Measured shape request met / 实测形状请求通过':'No shape limit requested for the imported reference / 导入参考未指定形状上限';
-$('surface').hidden=$('section').hidden=!d.mesh;$('surface').href=d.mesh?d.mesh+'#view=surface':'#';$('section').href=d.mesh?d.mesh+'#view=0':'#';$('files').replaceChildren(...d.links.map(([name,href])=>{let a=document.createElement('a');a.textContent=name;a.href=href;if(!href.endsWith('.json'))a.download='';return a;}));
-$('views').replaceChildren(...[d.voxel||(d.mesh?d.mesh+'#view=surface':null),d.mesh?d.mesh+'#view=0':null].filter(Boolean).map((src,i)=>{let f=document.createElement('iframe');f.src=src;f.title=d.label+(i?' actual Tet4 section':' complete source');return f;}));location.hash='case='+d.id;document.body.dataset.rendered='true';document.body.dataset.case=d.id;}
+$('quality').textContent=!d.mesh?'Mesh qualification pending / 网格待验收':d.shape_quality===false?'Geometry conformity checked; requested shape bound NOT met / 几何共形已检查；形状请求上限未通过':d.shape_quality===true?'Measured shape request met / 实测形状请求通过':'No shape limit requested for the imported reference / 导入参考未指定形状上限';
+$('surface').hidden=$('section').hidden=!d.mesh;$('surface').href=d.mesh?d.mesh+'#view=surface':'#';$('section').href=d.mesh?d.mesh+'#view=2':'#';$('files').replaceChildren(...d.links.map(([name,href])=>{let a=document.createElement('a');a.textContent=name;a.href=href;if(!href.endsWith('.json'))a.download='';return a;}));
+$('detail').hidden=!d.detail;$('detail').href=d.detail||'#';
+$('views').replaceChildren(...[d.voxel||(d.mesh?d.mesh+'#view=surface':null),d.mesh?d.mesh+'#view=2':null].filter(Boolean).map((src,i)=>{let f=document.createElement('iframe');f.src=src;f.title=d.label+(i?' actual Tet4 section':' complete source');return f;}));location.hash='case='+d.id;document.body.dataset.rendered='true';document.body.dataset.case=d.id;}
 $('case').replaceChildren(...items.map(d=>new Option(d.label,d.id)));$('case').onchange=()=>choose($('case').value);
 for(const d of items){let row=document.createElement('tr'),a=document.createElement('td'),b=document.createElement('td'),c=document.createElement('td'),button=document.createElement('button');a.textContent=d.label;b.textContent=d.text;button.textContent='View / 查看';button.onclick=()=>{choose(d.id);scrollTo({top:0,behavior:'smooth'});};c.append(button);row.append(a,b,c);$('catalogue').append(row);}
 choose(new URLSearchParams(location.hash.slice(1)).get('case')||'granular');</script></html>'''
@@ -105,7 +111,7 @@ def worker(args):
             pos=from_regions(np.ones((n,n,4),np.uint8),spacing=spacing,region_names={1:'positive_collector'})
             model=stack_layers([('negative_collector',neg),('anode',anode),('negative_electrolyte',electrolyte),('separator',separator),('cathode',cathode),('positive_collector',pos)],axis=2)
         else:model=coated_electrode(args.case,size=256,seed=20261127,active_fraction=.5)
-        model.save(folder/'geometry.h5');model.viewer(maximum_3d_size=64,title=args.case+' / complete native voxels').save_html(folder/'voxels.html')
+        model.save(folder/'geometry.h5');model.viewer(maximum_3d_size=64,slice_origin='lower',title=args.case+' / complete native voxels').save_html(folder/'voxels.html')
         (folder/'generation.json').write_text(json.dumps({'shape':model.regions.shape,'metadata':model.metadata,
             'statistics':statistics(model),'source_snapshot':json.loads(os.environ.get('MORQEX_SOURCE_SNAPSHOT','{}'))},indent=2))
         print(json.dumps({'generated':args.case,'shape':model.regions.shape,'metadata':model.metadata}),flush=True);return

@@ -67,7 +67,8 @@ def main():
             large.append(str(path))
     assert not large, large
     link_count = 0
-    for path in [*ROOT.glob("*.md"), *(ROOT / "docs").glob("*.md")]:
+    for path in [*ROOT.glob("*.md"), *(ROOT / "docs").glob("*.md"),
+                 *(ROOT / "tutorials").rglob("*.md")]:
         markdown = re.sub(r"```[\s\S]*?```", "", path.read_text())
         markdown = re.sub(r"`[^`\n]*`", "", markdown)
         for match in re.finditer(r"\[[^\]]+\]\(([^)]+)\)", markdown):

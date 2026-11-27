@@ -150,12 +150,14 @@ def slab_plc(source,low,high,*,lower_cap=None,upper_cap=None,axis=2,length_scale
             'cap_contract':'one PSLG triangulation, material sides from oriented interfaces; no centroid-image region assignment'})
 
 
-def assemble_slabs(paths,path,*,length_scale=1.,quantization=1e9):
+def assemble_slabs(paths,path,*,length_scale=1.,quantization=1e9,preserve_material_jumps=False):
     """Stream conforming TetGen artifacts into ONE mesh, checking every cap.
 
     Input slabs must be ordered and adjacent. Only the preceding cap has a
     Python coordinate map. Interior partition faces are omitted from physical
-    boundary entities. No material is reassigned by position or interpolation.
+    boundary entities. With preserve_material_jumps, coincident cap triangles
+    may have different material labels on opposite sides: they become ONE
+    physical material interface. No material is reassigned by position.
     """
     import h5py,json
     from pathlib import Path
@@ -209,12 +211,25 @@ def assemble_slabs(paths,path,*,length_scale=1.,quantization=1e9):
                     except KeyError as e:raise ArithmeticError('Adjacent cap node mismatch') from e
                     if len(shared)!=len(previous) or len(np.unique(shared))!=len(shared):raise ArithmeticError('Cap node sets differ')
                     ids[bottom]=shared
-                    # Include physical phase, not only face-node coincidence.
                     local_pairs=geo['interface_pairs']
                     labels=np.array([max(local_pairs[str(int(k))]) for k in m[bottom_face]])
                     actual=canonical(np.column_stack((np.sort(ids[f[bottom_face]],axis=1),labels)))
-                    if not np.array_equal(actual,previous_faces):raise ArithmeticError('Adjacent cap triangle/material mismatch')
-                    checks.append({'left_part':index-1,'right_part':index,'shared_nodes':len(shared),'identical_material_faces':len(actual)})
+                    if not np.array_equal(actual[:,:3],previous_faces[:,:3]):
+                        raise ArithmeticError('Adjacent cap triangle mismatch')
+                    changed=actual[:,3]!=previous_faces[:,3]
+                    if changed.any() and not preserve_material_jumps:
+                        raise ArithmeticError('Adjacent cap triangle/material mismatch')
+                    if changed.any():
+                        jump_pairs=np.sort(np.column_stack((actual[changed,3],previous_faces[changed,3])),axis=1)
+                        jump_markers=np.empty(len(jump_pairs),np.int32)
+                        for pair in np.unique(jump_pairs,axis=0):
+                            key=tuple(map(int,pair))
+                            if key not in pair_ids:
+                                k=len(pair_ids)+1;pair_ids[key]=k;pairs[str(k)]=list(key)
+                            jump_markers[np.all(jump_pairs==pair,axis=1)]=pair_ids[key]
+                        append(facets,actual[changed,:3]);append(markers,jump_markers)
+                    checks.append({'left_part':index-1,'right_part':index,'shared_nodes':len(shared),
+                        'identical_material_faces':int((~changed).sum()),'physical_material_jumps':int(changed.sum())})
                 append(nodes,p[fresh])
                 local_pairs=geo['interface_pairs'];names.update(geo.get('region_names',{}))
                 physical=np.ones(len(f),bool)
@@ -243,7 +258,9 @@ def assemble_slabs(paths,path,*,length_scale=1.,quantization=1e9):
                 out.attrs['parts_completed']=index+1;out.flush()
                 print(json.dumps({'assembled_parts':index+1,'nodes':len(nodes),'tetrahedra':len(cells)}),flush=True)
         report={'mesher':'conforming partitioned source-integrated TetGen1.6.0',
-            'geometry':{'interface_pairs':pairs,'region_names':names,'partition_contract':'identical material-labelled cap triangles and shared node IDs'},
+            'geometry':{'interface_pairs':pairs,'region_names':names,'partition_contract':
+                'identical geometric cap triangles and shared node IDs; material jumps retained once as physical interfaces'
+                if preserve_material_jumps else 'identical material-labelled cap triangles and shared node IDs'},
             'nodes':len(nodes),'tetrahedra':len(cells),'phase_volumes_m3':phase_volumes,
             'minimum_signed_volume_m3':minimum,'cap_checks':checks,
             'quality_limits_satisfied':False if False in quality_status else True if all(v is True for v in quality_status) else None,

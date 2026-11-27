@@ -22,6 +22,17 @@ def test_units_and_real_selection_objects(tmp_path,unit,factor):
     assert set(imported.phases)=={1,2}
 
 
+def test_qualification_report_never_passes_when_models_are_missing(tmp_path):
+    import subprocess,sys
+    from pathlib import Path
+    (tmp_path/'nmc_complex_gallery').mkdir()
+    script=Path(__file__).resolve().parents[1]/'scripts/report_complex_geometry.py'
+    subprocess.run([sys.executable,str(script),'--workspace',str(tmp_path)],check=True,capture_output=True,text=True)
+    report=json.loads((tmp_path/'nmc_complex_gallery/acceptance.json').read_text())
+    assert not report['all_shape_targets_passed'] and len(report['pending_models'])==8
+    assert 'All requested shape targets met.' not in (tmp_path/'nmc_complex_gallery/acceptance.html').read_text()
+
+
 def test_tiff_import_preserves_original_gray_labels_and_axes(tmp_path):
     import tifffile
     a=np.zeros((5,6,7),np.uint8);a[1:4]=128;a[2,2:4]=255

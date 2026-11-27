@@ -16,11 +16,12 @@ See [the complete bilingual workflow](07_complex_ct_layers_and_exchange.md).
 | `surface_nets_plc(model,iterations=8,constraint=.2,conserve_volumes=False,...)` | Optional VTK shared front end; smoothing geometry assumptions explicit / 共享界面 |
 | `cut_cap(points,faces,markers,pairs,plane,axis=2,...)` | One Triangle PSLG cap, labels from oriented physical interfaces / 统一切面 |
 | `slab_plc(source,low,high,lower_cap,upper_cap,axis=2,length_scale=...,origin=...)` | Clip original triangles + shared end caps; no geometry coarsening / 分块PLC |
-| `assemble_slabs(paths,path,length_scale=...)` | Stream one full mesh; assert common nodes and material faces / 严格拼接 |
+| `assemble_slabs(paths,path,length_scale=...,preserve_material_jumps=False)` | Stream one full mesh; assert common nodes and material faces / 严格拼接 |
 | `export_comsol(...,length_unit='m',selections=None,include_region_selections=True,preserve_domain_ids=False)` | Actual Mesh4 + Selection0; SI-to-export coordinate conversion / 真实命名选择与单位换算 |
 | `export_bundle(mesh,directory,region_names,selections,length_unit='m',formats=...)` | COMSOL/VTU/Gmsh/Medit/Abaqus, region and unit manifest + readback / 多软件交换 |
 | `export_from_toml(mesh,model,path,directory=None)` | Apply explicit `[exports]`; output remains outside source / TOML导出 |
-| `AdaptiveMeshView(...,maximum_embedded_faces=None,node_cache_bytes=...)` | Optional actual-face display sample, full HDF5 untouched / 显示抽样不改网格 |
+| `VoxelModel.viewer(...,slice_origin='upper')` | Physical voxel aspect; `lower` matches Cartesian sections, selectable region IDs and SI centre-plane coordinates / 物理比例、笛卡尔方向与体素中心坐标 |
+| `AdaptiveMeshView(...,maximum_embedded_faces=None,node_cache_bytes=...,section_fractions=(.5,.5,.5),surface_bounds_m=None)` | Optional actual-face display sample; three requested XYZ planes; full HDF5 untouched / 显示抽样、指定物理切面，不改网格 |
 | `MeshResolution(precision='balanced',target_cells=None,maximum_volume_m3=None,nominal_edge_m=None,vertex_fraction=None,maximum_phase_volume_error=None)` | Independent surface/volume fidelity, SI sizing; coarse/balanced/fine/very_fine / 独立曲面与内部尺寸 |
 | `controlled_tetgen(model,resolution,regions,surface_method,adaptive_options,tetgen_options,...)` | Same voxel source SHA, actual mesh counts and measured checks recorded / 同一体素多精度网格 |
 | `partitioned_tetgen(model,directory,surface_method='surface_nets',slab_depth=32,axis=0,...)` | Generic resumable whole-domain pipeline, common actual caps, explicit budgets / 通用全域分块、断点恢复和严格共形 |
@@ -29,6 +30,14 @@ See [the complete bilingual workflow](07_complex_ct_layers_and_exchange.md).
 | `build_mmg(workspace)` | Explicit one-job external CMake build; optional pip flag `MORQEX_BUILD_MMG=1` / 外部显式编译 |
 | `build_native_from_toml(path,workspace=None)` | Explicit `[native_build]` list of TetGen/ACVD/MMG; serial external builds / TOML统一编译 |
 | `remesh_from_toml(mesh,path,workspace=None)` | Apply explicit `[remeshing]` to existing Tet4 / TOML体网格重构 |
+
+`partitioned_tetgen` supports `surface_method='voxel_aligned'` (exact integer
+voxel partitions), `'voxel_plc'` (clipped original stair-step PLC) and
+`'surface_nets'` (explicitly approximated smooth shared surface). The aligned
+route preserves physical material jumps on cuts and verifies original labels
+at every cell centroid. Shape requests are reported separately; see the
+[complete bilingual contract](07_complex_ct_layers_and_exchange.md).
+三条路线分别保留；精确体素分区不代表自动获得优质单元，不得忽略实测形状失败。
 
 `from_toml` accepts `[geometry]`, optional `[[layers]]`, `[meshing]` and
 `[exports]`. It generates geometry only; call `mesh_from_toml` and

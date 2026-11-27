@@ -72,6 +72,16 @@ voxel Hex8/Tet4, streamed voxel and raw PLC routes remain independent choices.
 This is geometric adaptation, not a certified PDE-error estimator.
 这里的自适应是几何驱动，不等于严格的物理解误差估计。
 
+For a large **unchanged voxel segmentation**, the additional
+`partitioned_tetgen(..., surface_method='voxel_aligned')` route uses canonical
+integer-lattice cuts, retains material jumps across partitions and checks every
+output cell centroid against the original labels. It avoids cut-induced short
+edges without smoothing the source geometry. This exact stair-step route and
+the smooth adaptive routes remain separate, with independent shape checks.
+大体素可选精确体素边界分区：原数组不改动，计算切面上的真实材料界面保留，逐单元中心
+核对材料。精确阶梯与光滑自适应分别保留；体积守恒不能代替形状验收或物理收敛。
+See the [full bilingual guide](tutorials/07_complex_ct_layers_and_exchange.md).
+
 ## Install optional native kernels / 可选编译
 
 Python3.11+ and an external environment are required. To compile the integrated
@@ -102,20 +112,32 @@ the optional Surface Nets route, not for the original TetGen/ACVD workflow.
 ```python
 from pathlib import Path
 from morqex.modeling import (
-    resolved_electrode, adaptive_mesh, AdaptiveMeshOptions, export_comsol,
+    coated_electrode, partitioned_tetgen, export_comsol,
 )
 work = Path('/home/zephyrain/lw/morph_workspace/microelectrode_gallery/my_model')
 work.mkdir(parents=True,exist_ok=True)
-model = resolved_electrode('rods',size=256,spacing=0.5e-6,seed=20261127,
-                           cbd_thickness_voxels=4,minimum_feature_voxels=4)
+model = coated_electrode('rods',size=256,spacing=0.5e-6,seed=20261127,
+    active_fraction=0.5,cbd_thickness_voxels=3,pore_buffer_voxels=7)
 model.save(work/'geometry.h5')
-result = adaptive_mesh(model,regions=[0,1,2],
-                       options=AdaptiveMeshOptions.precision('balanced'))
-artifact = result.save_hdf5(work/'adaptive.h5')
-export_comsol(result,work/'adaptive.mphtxt',region_names=model.region_names)
-result.adaptive_viewer().save_html(work/'adaptive.html')
-print(result.report)
+artifact = partitioned_tetgen(model,work/'parts',content_addressed=True,
+    surface_method='voxel_aligned',slab_depth=32)
+export_comsol(artifact,work/'whole.mphtxt',length_unit='um',
+    region_names=model.region_names)
+model.viewer(maximum_3d_size=64).save_html(work/'voxels.html')
+artifact.adaptive_viewer(maximum_embedded_faces=450000,
+    node_cache_bytes=256*2**20).save_html(work/'actual_mesh.html')
+print(artifact.hdf5)  # complete volume; no display downsampling of the solve
 ```
+
+Run this whole256³ example under the external reference-memory profile below.
+It uses the exact voxel-boundary route exercised by the complete-gallery
+qualification. Smooth GEM/ACVD reconstruction remains available through
+`adaptive_mesh`, with the separate examples and controls in the tutorials.
+Inspect `validation.json` in the returned mesh directory: a completed mesh
+does not imply that its requested radius-edge or dihedral bounds passed.
+这个完整256³例子应在下方资源限制器的`--reference-memory`配置下运行；其精确边界路线
+已用于完整图库。光滑GEM/ACVD仍是独立接口。检查实际网格目录中的`validation.json`，
+不能将成功输出等同于形状请求达标。显示LOD不改变完整计算数据。
 
 Coarse/balanced/fine presets control geometric reconstruction independently of
 the original voxel size. New resolved-feature recipes cover granular, rods,
@@ -155,7 +177,7 @@ Numerical commands should run through the local resource launcher:
 ```bash
 WORK=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
 PY=$WORK/runtime/bin/python
-python scripts/run_local.py --workspace "$WORK" --label geometry_run -- \
+python scripts/run_local.py --workspace "$WORK" --label geometry_run --reference-memory -- \
   "$PY" /absolute/path/my_geometry_recipe.py
 ```
 

@@ -145,3 +145,25 @@ def test_uniform_display_preserves_actual_cells_and_source_ids(tmp_path,native):
         np.testing.assert_allclose(points[cells],mesh.points[mesh.cells[indices]])
         np.testing.assert_array_equal(data['phase'],mesh.phases[indices])
         assert data['sampling']=='uniform'
+
+
+@pytest.mark.parametrize('unique_facet_markers',[False,True])
+def test_constrained_face_output_matches_all_faces_without_volume_changes(native,unique_facet_markers):
+    """Native -f is output-only; retain interior material interfaces without it."""
+    from morqex.modeling.tetgen_backend import execute
+    a=np.zeros((6,7,8),np.uint8);a[:,:,4:]=7;a[2:4,2:5,1:3]=11
+    plc=voxel_plc(from_regions(a));low=plc.points.min(0);scale=np.ptp(plc.points,axis=0).max()
+    seeds=np.array([[*((point-low)/scale),i,-1] for i,k in enumerate(sorted(plc.seeds),1) for point in plc.seeds[k]])
+    markers=np.arange(1,len(plc.facets)+1,dtype=np.int32) if unique_facet_markers else plc.markers
+    args=((plc.points-low)/scale,plc.facets,markers,seeds,np.empty((0,3)))
+    switches='pq2/0AzQYMS30000CT1e-12'
+    all_faces=execute(*args,switches+'f',maximum_cells=100000)
+    constrained=execute(*args,switches,maximum_cells=100000)
+    for first,second in zip(all_faces[:3],constrained[:3]):np.testing.assert_array_equal(first,second)
+    def canonical(faces,labels):
+        rows=np.column_stack((np.sort(faces,axis=1),labels))
+        return rows[np.lexsort(tuple(rows[:,i] for i in (3,2,1,0)))]
+    faces,labels=all_faces[3:];chosen=labels>0
+    np.testing.assert_array_equal(canonical(faces[chosen],labels[chosen]),canonical(constrained[3],constrained[4]))
+    assert np.all(constrained[4]>0) and len(constrained[3])<len(faces)
+    assert set(constrained[4])==set(markers)

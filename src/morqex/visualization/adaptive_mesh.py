@@ -51,11 +51,17 @@ def section_polygons(mesh,axis=0,fraction=.5,*,node_cache_bytes=48*2**20):
 
 class AdaptiveMeshView:
     def __init__(self,mesh,*,sections=True,height=820,title='MORQEX finite-element mesh / 三维有限元网格',
-                 maximum_embedded_faces=None,node_cache_bytes=48*2**20):
+                 maximum_embedded_faces=None,node_cache_bytes=48*2**20,section_fractions=(.5,.5,.5),surface_bounds_m=None):
         from morqex.modeling.tetgen import SurfacePLC
         from morqex.modeling.meshing import MeshArtifact
         self.height=height;self.title=title;self.handle=None
+        fractions=np.asarray(section_fractions,dtype=float)
+        if fractions.shape!=(3,) or not np.isfinite(fractions).all() or np.any(fractions<=0) or np.any(fractions>=1):
+            raise ValueError('Three finite XYZ section fractions strictly between0 and1 required')
         if maximum_embedded_faces is not None and (type(maximum_embedded_faces) is not int or maximum_embedded_faces<1):raise ValueError('Positive display face budget required')
+        bounds=None if surface_bounds_m is None else np.asarray(surface_bounds_m,dtype=float)
+        if bounds is not None and (bounds.shape!=(2,3) or not np.isfinite(bounds).all() or np.any(bounds[0]>=bounds[1])):
+            raise ValueError('Finite increasing surface bounds (lower XYZ, upper XYZ) in metres required')
         if isinstance(mesh,SurfacePLC):
             points=mesh.points;markers=mesh.markers;report=mesh.metadata;faces=[]
             diagnostics={'geometry':report,'scope':'surface only; no volume mesh'}
@@ -69,25 +75,48 @@ class AdaptiveMeshView:
             with h5py.File(mesh.hdf5) as f:
                 points=f['mesh/points_m'][:];faces=f['mesh/facets'][:];markers=f['mesh/facet_markers'][:]
                 diagnostics=json.loads(f.attrs['report']);report=diagnostics['geometry']
-            cuts=[section_polygons(mesh,axis,node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
+            cuts=[section_polygons(mesh,axis,fraction=float(fractions[axis]),node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
         else:
             points=mesh.points;faces=mesh.facets;markers=mesh.facet_markers;diagnostics=mesh.report;report=diagnostics['geometry']
-            cuts=[section_polygons(mesh,axis,node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
-        complete_faces=len(faces);source_face_ids=None
-        if maximum_embedded_faces is not None and len(faces)>maximum_embedded_faces:
-            source_face_ids=np.linspace(0,len(faces)-1,maximum_embedded_faces,dtype=np.int64)
+            cuts=[section_polygons(mesh,axis,fraction=float(fractions[axis]),node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
+        source_complete_faces=len(faces);source_face_ids=None;selection_tolerance=None
+        if bounds is not None:
+            selection_tolerance=16*np.finfo(float).eps*max(float(np.abs(bounds).max()),float(np.ptp(points,axis=0).max()))
+            inside=np.all((points>=bounds[0]-selection_tolerance)&(points<=bounds[1]+selection_tolerance),axis=1)
+            selected=[]
+            for first in range(0,len(faces),50000):
+                keep=inside[faces[first:first+50000]].all(axis=1)
+                selected.append(first+np.flatnonzero(keep))
+            source_face_ids=np.concatenate(selected)
+            if not len(source_face_ids):raise ValueError('No complete actual boundary triangles inside requested surface ROI')
             faces=faces[source_face_ids];markers=markers[source_face_ids]
+        complete_faces=len(faces);sampled=False
+        if maximum_embedded_faces is not None and len(faces)>maximum_embedded_faces:
+            ids=np.linspace(0,len(faces)-1,maximum_embedded_faces,dtype=np.int64)
+            source_face_ids=ids if source_face_ids is None else source_face_ids[ids]
+            faces=faces[ids];markers=markers[ids];sampled=True
         used,inverse=np.unique(faces,return_inverse=True);points=points[used];faces=inverse.reshape(-1,3)
+        pairs=report.get('interface_pairs',{})
+        if bounds is not None:pairs={str(int(k)):pairs[str(int(k))] for k in np.unique(markers)}
+        display_scope='display-only actual-face sample; complete source volume and interfaces remain in HDF5' if sampled else 'all actual faces'
+        if bounds is not None:
+            display_scope=('Sampled actual triangles' if sampled else 'All complete actual triangles')+' within this display-only ROI; no artificial cut caps; source computation is not cropped.'
+        self.source_surface_faces=source_complete_faces
+        self.selected_surface_faces=complete_faces
+        self.embedded_surface_faces=len(faces)
         def pack(a,dtype):return base64.b64encode(gzip.compress(np.asarray(a,dtype=dtype).tobytes(),compresslevel=1)).decode()
         render_origin=points.min(axis=0)
         payload={'points':pack(points-render_origin,'<f4'),'origin_m':render_origin.tolist(),
             'faces':pack(faces,'<u4'),'markers':pack(markers,'<u4'),
-            'pairs':report.get('interface_pairs',{}),'names':report.get('region_names',{}),
+            'pairs':pairs,'names':report.get('region_names',{}),
             'sections':[],
             'sections_gzip':base64.b64encode(gzip.compress(json.dumps(cuts,separators=(',',':')).encode(),compresslevel=1)).decode(),
             'title':title,'report':diagnostics,'point_count':len(points),'face_count':len(faces),
             'complete_surface_face_count':complete_faces,
-            'display_scope':'all actual faces' if source_face_ids is None else 'display-only actual-face sample; complete source volume and interfaces remain in HDF5',
+            'source_complete_surface_face_count':source_complete_faces,
+            'surface_bounds_m':None if bounds is None else bounds.tolist(),
+            'surface_selection_tolerance_m':selection_tolerance,
+            'display_scope':display_scope,
             'source_face_ids':None if source_face_ids is None else pack(source_face_ids,'<u4')}
         template=Path(__file__).with_name('adaptive_mesh.html').read_text()
         self.document=template.replace('__DATA__',json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c'))

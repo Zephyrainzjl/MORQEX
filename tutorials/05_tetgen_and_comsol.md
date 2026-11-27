@@ -270,6 +270,14 @@ positive-volume, seed/region and element-count checks always apply.
 最大体积不是仅传给后端就算完成；实测超限时收紧输入尺寸重算，最多三次，仍失败则报错。
 
 `maximum_cells` is a post-solve output cap, not a native memory allocator cap.
+Native PLC calls retain constrained subfaces, including internal material
+interfaces, and omit TetGen's `-f` option. That option additionally exports every
+ordinary interior volume face, which MORQEX would discard immediately. Native
+equivalence tests check identical nodes, volume cells and attributes, plus an
+identical marked-face set, with and without `-f`. This reduces temporary output
+memory; it does not change mesh quality or eliminate the volume solver's memory
+cost. 原生接口不再申请全部普通内部面，仍保留外边界和材料界面；测试独立核对体网格
+及带标签界面不变。这项优化针对临时输出，不代表求解器内存与单元数量无关。
 For a hard workstation limit use the local runner; the native mesher can need
 more intermediate memory than the final arrays. Input facet limits are checked
 before native meshing. Use one job, bounded surfaces and inspection of resource

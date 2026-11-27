@@ -20,7 +20,10 @@ def interface_tetgen(plc,options,workspace=None):
     if not pairs:raise ValueError('Explicit interface material pairs required')
     start=time.perf_counter();low=plc.points.min(0);scale=float(np.ptp(plc.points,axis=0).max())
     source=(plc.points-low)/scale
-    flags=f'p{options.facet_separation_angle:.8f}q{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzfQYMS{options.maximum_steiner}T{options.coplanarity_tolerance:.8g}'
+    # TetGen's default PLC output already contains ALL constrained subfaces,
+    # including internal material interfaces. -f additionally allocates every
+    # interior volume face, which this algorithm would immediately discard.
+    flags=f'p{options.facet_separation_angle:.8f}q{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzQYMS{options.maximum_steiner}T{options.coplanarity_tolerance:.8g}'
     if options.consistency_check:flags+='C'
     p,t,a,faces,markers=execute(source,plc.facets,np.arange(1,len(plc.facets)+1,dtype=np.int32),
         np.empty((0,5)),(plc.holes-low)/scale,flags,workspace=workspace,maximum_cells=options.maximum_cells)
@@ -88,7 +91,12 @@ def interface_tetgen(plc,options,workspace=None):
             material[vote[:,0]]=vote[:,1]
     phases=material[geometric]
     if np.any(phases<0) or set(map(int,np.unique(phases)))!=set(plc.seeds):raise ArithmeticError('Unlabelled or missing physical compartment')
-    signed=np.linalg.det(p[t[:,1:]]-p[t[:,:1]]);t[signed<0]=t[signed<0][:,[1,0,2,3]]
+    # Keep orientation checks bounded for whole-electrode meshes. A single
+    # (N_tet,3,3) FP64 determinant buffer otherwise needs gigabytes by itself.
+    for begin in range(0,len(t),50000):
+        block=t[begin:begin+50000]
+        reverse=np.linalg.det(p[block[:,1:]]-p[block[:,:1]])<0
+        block[reverse]=block[reverse][:,[1,0,2,3]]
     p=p*scale+low;quality,volumes=tetra_quality(p,t)
     errors={str(k):abs(float(volumes[phases==k].sum())/v-1) for k,v in plc.region_volumes.items()}
     if errors and max(errors.values())>1e-8:raise ArithmeticError(f'Exact interface-labelled PLC volume error: {errors}')

@@ -227,3 +227,73 @@ def test_adaptive_tetgen_retains_a_shallow_bump_volume(native):
     plc=SurfacePLC(p,faces,seeds={7:[[.5e-6]*3]},region_volumes={7:expected})
     mesh=tetgen_mesh(plc,options=TetGenOptions.for_adaptive())
     assert mesh.signed_volumes().sum()==pytest.approx(expected,rel=1e-9)
+
+
+@pytest.mark.parametrize('saved_artifact',[False,True])
+def test_requested_section_planes_match_physical_cube_areas(tmp_path,saved_artifact):
+    import base64,gzip,json
+    from morqex.modeling import TetGenMesh,material_interfaces
+    from morqex.visualization.adaptive_mesh import AdaptiveMeshView
+    model=from_regions(np.ones((4,5,6),np.uint8),spacing=(2e-6,3e-6,5e-6),origin=(7e-6,-2e-6,3e-6))
+    regular=model.tetrahedralize();faces,markers,pairs=material_interfaces(regular.cells,regular.phases)
+    volume=TetGenMesh(regular.points,regular.cells,regular.phases,facets=faces,facet_markers=markers,
+        report={'geometry':{'interface_pairs':pairs,'region_names':model.region_names}})
+    mesh=volume.save_hdf5(tmp_path/'cube.h5') if saved_artifact else volume
+    fractions=(.25,.4,.75);view=AdaptiveMeshView(mesh,section_fractions=fractions)
+    data=json.loads(view.document.split('const D=',1)[1].split(',$=',1)[0])
+    cuts=json.loads(gzip.decompress(base64.b64decode(data['sections_gzip'])))
+    lengths=np.asarray(model.regions.shape[::-1])*np.asarray(model.spacing[::-1])
+    for axis,cut in enumerate(cuts):
+        expected=model.origin[2-axis]+fractions[axis]*lengths[axis]
+        assert cut['plane_m']==pytest.approx(expected,rel=1e-12,abs=1e-20)
+        area=0.
+        for polygon in cut['polygons']:
+            p=np.asarray(polygon);area+=abs(np.sum(p[:,0]*np.roll(p[:,1],-1)-p[:,1]*np.roll(p[:,0],-1)))/2
+        assert area==pytest.approx(float(np.prod(np.delete(lengths,axis))),rel=1e-10,abs=1e-24)
+    with pytest.raises(ValueError,match='section fractions'):
+        AdaptiveMeshView(mesh,section_fractions=(.5,1.,.5))
+
+
+@pytest.mark.parametrize('saved_artifact',[False,True])
+@pytest.mark.parametrize('physical_units',[False,True])
+def test_display_roi_contains_the_complete_real_material_plane_and_preserves_source(tmp_path,saved_artifact,physical_units):
+    import base64,gzip,json,re
+    from morqex.modeling import TetGenMesh,material_interfaces
+    a=np.zeros((6,6,6),np.uint8);a[:,:,3:]=7
+    spacing=np.array((.7e-6,.8e-6,1e-6) if physical_units else (1.,)*3)
+    origin=np.array((3e-6,-2e-6,5e-6) if physical_units else (0.,)*3)
+    base=from_regions(a,spacing=spacing,origin=origin).tetrahedralize()
+    faces,markers,pairs=material_interfaces(base.cells,base.phases)
+    result=TetGenMesh(base.points,base.cells,base.phases,facets=faces,facet_markers=markers,
+        report={'nodes':len(base.points),'tetrahedra':len(base.cells),
+            'geometry':{'interface_pairs':pairs,'region_names':{0:'left',7:'right'}}})
+    model=result.save_hdf5(tmp_path/'whole.h5') if saved_artifact else result
+    stamp=model.hdf5.stat().st_mtime_ns if saved_artifact else None
+    bounds=origin[::-1]+np.array(((2.9,0.,0.),(3.1,6.,6.)))*spacing[::-1]
+    view=model.adaptive_viewer(sections=False,surface_bounds_m=bounds)
+    d=json.loads(re.search(r'const D=(.*?),\$=',view.document).group(1))
+    def unpack(name,dtype):return np.frombuffer(gzip.decompress(base64.b64decode(d[name])),dtype=dtype)
+    ids=unpack('source_face_ids','<u4')
+    assert d['face_count']==d['complete_surface_face_count']==72
+    assert d['source_complete_surface_face_count']==len(faces)
+    assert d['report']['tetrahedra']==len(base.cells)
+    assert all(pair==[0,7] for pair in d['pairs'].values())
+    p=unpack('points','<f4').reshape(-1,3)+d['origin_m'];f=unpack('faces','<u4').reshape(-1,3)
+    np.testing.assert_allclose(p[f],base.points[faces[ids]],rtol=0,atol=spacing.max()*1e-6)
+    np.testing.assert_allclose(p[:,0],origin[2]+3*spacing[2],rtol=0,atol=spacing.max()*1e-6)
+    area=np.linalg.norm(np.cross(p[f[:,1]]-p[f[:,0]],p[f[:,2]]-p[f[:,0]]),axis=1).sum()/2
+    assert area==pytest.approx(36.*spacing[0]*spacing[1],rel=5e-7,abs=0.)
+    assert 'not cropped' in d['display_scope'] and 'no artificial cut caps' in d['display_scope']
+    if saved_artifact:assert model.hdf5.stat().st_mtime_ns==stamp
+
+
+def test_surface_roi_rejects_invalid_or_empty_physical_selection():
+    from morqex.modeling import TetGenMesh,material_interfaces
+    base=from_regions(np.ones((2,2,2),np.uint8),spacing=(1.,)*3).tetrahedralize()
+    f,m,p=material_interfaces(base.cells,base.phases)
+    model=TetGenMesh(base.points,base.cells,base.phases,facets=f,facet_markers=m,
+        report={'geometry':{'interface_pairs':p}})
+    for bounds in [((0,0,0),(0,1,1)),((0,0,0),(1,np.nan,1)),(0,1)]:
+        with pytest.raises(ValueError,match='bounds'):model.adaptive_viewer(sections=False,surface_bounds_m=bounds)
+    with pytest.raises(ValueError,match='No complete actual'):
+        model.adaptive_viewer(sections=False,surface_bounds_m=((10,10,10),(11,11,11)))

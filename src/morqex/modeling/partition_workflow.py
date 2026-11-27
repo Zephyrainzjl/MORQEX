@@ -47,14 +47,17 @@ def partitioned_tetgen(model,directory,*,surface_method='surface_nets',slab_dept
     if not isinstance(model,VoxelModel):raise TypeError('VoxelModel required')
     if regions is not None and set(map(int,regions))!=set(map(int,np.unique(model.regions))):
         raise ValueError('Partitioning requires the complete labelled domain, including pore/electrolyte phases')
-    if surface_method not in ('voxel_plc','surface_nets'):raise ValueError('Choose shared voxel_plc or surface_nets')
+    if surface_method not in ('voxel_plc','surface_nets','voxel_aligned'):
+        raise ValueError('Choose shared voxel_plc, surface_nets or exact voxel_aligned')
     if axis not in (0,1,2) or type(slab_depth) is not int or slab_depth<2:raise ValueError('ZYX axis and slab_depth>=2 required')
     if type(maximum_reconciliations) is not int or maximum_reconciliations<1:raise ValueError('Positive reconciliation budget required')
     if type(content_addressed) is not bool:raise ValueError('content_addressed must be a bool')
     options=tetgen_options or TetGenOptions.for_adaptive(preserve_surface=True,merge_coplanar=False,
-        region_labelling='seeds' if surface_method=='voxel_plc' else 'interfaces',coplanarity_tolerance=1e-15,
+        region_labelling='interfaces' if surface_method=='surface_nets' else 'seeds',coplanarity_tolerance=1e-15,
         maximum_cells=8000000,maximum_steiner=800000,native_timeout_seconds=240)
     if not options.preserve_surface:raise ValueError('Conforming partitioning requires preserve_surface=True')
+    if set(options.region_maximum_volumes)-set(map(int,np.unique(model.regions))):
+        raise ValueError('Unknown region maximum-volume keys')
     config=_configuration(model,surface_method,slab_depth,axis,options,maximum_facets)
     # JSON normalization turns option dict keys/tuples into the same on-disk form.
     config=json.loads(json.dumps(config));signature=hashlib.sha256(json.dumps(config,sort_keys=True).encode()).hexdigest()
@@ -79,6 +82,27 @@ def partitioned_tetgen(model,directory,*,surface_method='surface_nets',slab_dept
     if (root/'validation.json').exists():
         report=json.loads((root/'validation.json').read_text())
         if report.get('configuration_sha256')!=signature:raise ArithmeticError('Validation fingerprint mismatch')
+        return MeshArtifact.load(root/'mesh.h5')
+    if surface_method=='voxel_aligned':
+        # Exact array subblocks avoid cutting stair-step faces at half-grid
+        # locations. Canonical lattice diagonals define the same cap from
+        # either side, even when the two adjacent voxels have different phases.
+        bounds=np.r_[np.arange(0,model.regions.shape[axis],slab_depth,dtype=int),model.regions.shape[axis]]
+        (root/'bounds.json').write_text(json.dumps(bounds.tolist()))
+        for i in range(len(bounds)-1):
+            if not (root/f'part_{i:02}.json').exists():
+                if (root/f'part_{i:02}.h5').exists():
+                    old=root/'rejected'/str(time.time_ns());old.mkdir(parents=True)
+                    for suffix in ('.h5','.xdmf','.json'):
+                        target=root/f'part_{i:02}{suffix}'
+                        if target.exists():target.rename(old/target.name)
+                run('aligned-part',i)
+        if (root/'mesh.h5').exists():
+            old=root/'rejected'/str(time.time_ns());old.mkdir(parents=True)
+            for name in ('mesh.h5','mesh.xdmf'):
+                target=root/name
+                if target.exists():target.rename(old/name)
+        run('aligned-assemble')
         return MeshArtifact.load(root/'mesh.h5')
     if not (root/'surface.h5').exists():run('surface')
     n=model.regions.shape[axis];bounds=np.r_[0.,np.arange(slab_depth-.5,n,slab_depth),float(n)]
@@ -143,6 +167,54 @@ def _worker(root,job,index):
             f.attrs.update(metadata=json.dumps(surface.metadata),seeds=json.dumps({k:v.tolist() for k,v in surface.seeds.items()}))
         pending.rename(target);return
     bounds=np.array(json.loads((root/'bounds.json').read_text()))*step
+    if job=='aligned-part':
+        model=VoxelModel.load(root/'geometry.h5');direction=config['axis_zyx']
+        begin,end=map(int,np.rint(bounds[index:index+2]/step));selection=[slice(None)]*3
+        selection[direction]=slice(begin,end);labels=model.regions[tuple(selection)]
+        local_origin=np.array(model.origin);local_origin[direction]+=begin*model.spacing[direction]
+        block=VoxelModel(labels,model.spacing,tuple(local_origin),
+            {int(k):model.region_names[int(k)] for k in np.unique(labels)})
+        raw=voxel_plc(block,maximum_facets=config['maximum_facets']);q=np.asarray(raw.facets)
+        # Point IDs are lexicographic ZYX lattice coordinates. Both sides use
+        # the diagonal through the lexicographically smallest quad corner.
+        first=np.argmin(q,axis=1);q=np.take_along_axis(q,(first[:,None]+np.arange(4))%4,axis=1)
+        metadata=dict(raw.metadata);metadata.update(partition_axis_xyz=axis,
+            slab_bounds_grid_units=bounds[index:index+2].tolist(),origin_xyz_m=origin.tolist(),
+            cap_contract='canonical unit-voxel quad diagonals; opposite material labels allowed')
+        part=SurfacePLC(raw.points,np.stack((q[:,[0,1,2]],q[:,[0,2,3]]),axis=1).reshape(-1,3),
+            raw.seeds,np.repeat(raw.markers,2),raw.holes,raw.region_volumes,metadata)
+        options=dict(config['tetgen_options']);options['region_maximum_volumes']={int(k):v for k,v in options['region_maximum_volumes'].items() if int(k) in raw.seeds}
+        del raw,model,block,q,labels
+        mesh=tetgen_mesh(part,options=TetGenOptions(**options),maximum_facets=config['maximum_facets'])
+        mesh.save_hdf5(root/f'part_{index:02}.h5');(root/f'part_{index:02}.json').write_text(json.dumps(mesh.report,indent=2));return
+    if job=='aligned-assemble':
+        model=VoxelModel.load(root/'geometry.h5')
+        expected={int(k):float(np.count_nonzero(model.regions==k)*np.prod(model.spacing)) for k in np.unique(model.regions)}
+        pending=root/'mesh.pending'
+        if pending.exists():pending.rename(root/('rejected_assembly_'+str(time.time_ns())+'.h5'))
+        artifact=assemble_slabs([root/f'part_{j:02}.h5' for j in range(len(bounds)-1)],root/'mesh.h5',
+            length_scale=scale,preserve_material_jumps=True)
+        with h5py.File(artifact.hdf5,'r+') as f:
+            report=json.loads(f.attrs['report']);actual=report['phase_volumes_m3']
+            errors={str(k):abs(actual[str(k)]/v-1) for k,v in expected.items()}
+            if set(actual)!=set(map(str,expected)) or max(errors.values())>1e-8:
+                raise ArithmeticError('Aligned assembly changed source voxel phase volumes')
+            checked=0;points=f['mesh/points_m'][:]
+            for start in range(0,len(f['mesh/tetrahedra']),50000):
+                cells=f['mesh/tetrahedra'][start:start+50000]
+                centre=points[cells].mean(1)[:,::-1]
+                ijk=np.floor((centre-np.asarray(model.origin))/model.spacing).astype(np.int64)
+                if np.any(ijk<0) or np.any(ijk>=np.array(model.regions.shape)):
+                    raise ArithmeticError('Aligned mesh cell centroid outside original voxel domain')
+                if not np.array_equal(model.regions[tuple(ijk.T)],f['mesh/phase'][start:start+len(cells)]):
+                    raise ArithmeticError('Aligned mesh material disagrees with original voxel at a cell centroid')
+                checked+=len(cells)
+            report.update(source_voxel_phase_volume_errors=errors,source_plc_phase_volume_errors=errors,
+                source_voxel_cell_centroids_checked=checked,
+                configuration_sha256=hashlib.sha256(json.dumps(config,sort_keys=True).encode()).hexdigest(),
+                scope='exact source voxel geometry; cap conformity, positive cells, per-phase volume and every cell centroid checked; no FE convergence claim')
+            f.attrs['report']=json.dumps(report)
+        (root/'validation.json').write_text(json.dumps(report,indent=2));return
     if job=='part':
         surface=_surface(root/'surface.h5');grid=(surface.points-origin)/scale;caps=[]
         for j in (index,index+1):
