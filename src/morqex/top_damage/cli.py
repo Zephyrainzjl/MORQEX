@@ -79,9 +79,38 @@ def main(argv=None):
     reference.add_argument('--output')
     report = sub.add_parser('report')
     report.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    particle = sub.add_parser('paper-particle', help='Bounded monolithic Ai-2022 particle equation experiment')
+    particle.add_argument('config')
+    particle.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    particle.add_argument('--steps', type=int, default=20)
+    particle.add_argument('--resume', action='store_true')
+    particle.add_argument('--output')
+    particle_report = sub.add_parser('paper-report', help='Accepted particle fields and explicit reproduction gates')
+    particle_report.add_argument('directory')
+    particle_report.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    particle_report.add_argument('--reference')
+    particle_report.add_argument('--output', default='MORQEX_Ai2022_reproduction.html')
+    paper_reference = sub.add_parser('paper-reference', help='Digitize verified published Figure 5 PDF paths')
+    paper_reference.add_argument('pdf')
+    paper_reference.add_argument('--workspace', default=os.environ.get('MORQEX_WORKSPACE'))
+    paper_reference.add_argument('--output', default='ai2022_figure5.json')
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'paper-particle':
+        if not args.workspace:p.error('An external workspace is required')
+        from .paper_particle_run import run_particle
+        print(json.dumps(run_particle(args.config, Workspace(args.workspace), steps=args.steps, resume=args.resume, output=args.output),indent=2))
+    elif args.action == 'paper-report':
+        if not args.workspace:p.error('An external workspace is required')
+        from .paper_report import build_paper_report
+        print(json.dumps(build_paper_report(args.directory,Workspace(args.workspace),reference=args.reference,output=args.output),indent=2))
+    elif args.action == 'paper-reference':
+        if not args.workspace:p.error('An external workspace is required')
+        from .paper_reference import extract_figure5
+        target=Workspace(args.workspace).path('references',args.output)
+        result=extract_figure5(args.pdf,target)
+        print(json.dumps(dict(output=str(target),kind=result['kind'],doi=result['doi']),indent=2))
     elif args.action == 'build-resolved':
         if not args.workspace:p.error('An external workspace is required')
         from .resolved_echem import build_resolved

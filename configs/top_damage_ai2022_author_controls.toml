@@ -1,0 +1,39 @@
+schema_version = 1
+[material]
+# Values audited from the author's full COMSOL 5.6 model, NOT its 8C demo.
+young_Pa = 93e9
+poisson = 0.3
+diffusivity_m2_s = 7.08e-15
+molar_volume_m3_mol = 3.497e-6
+cmax_mol_m3 = 22900.0
+toughness_J_m2 = 10.0
+temperature_K = 300.0
+radius_m = 5e-6
+length_m = 1e-8
+residual_stiffness = 1e-5
+reference_soc = 0.9
+[experiment]
+name = "ai2022_author_controls_independent"
+geometry = "sphere"
+c_rate = 5.0
+cycles = 300
+steps_per_half_cycle = 40
+initial_soc = 0.9
+crack_fraction = 0.02
+fatigue = true
+stress_feedback = true
+phase_form = "author_helmholtz"
+toughness_floor = 0.01
+seed_width_over_length = 2.5
+# Explicit remaining deviations; this profile is NOT yet qualified reproduction.
+damage_constraint = "irreversible_vi"
+linearization = "chord"
+boundary_policy = "surface_limits"
+concentration_domain = "dilute_diagnostic"
+save_stride = 40
+newton_tolerance = 1e-10
+[mesh]
+crack_h_over_ell = 0.5
+bulk_h_over_radius = 0.08
+seed_h_over_ell = 0.125
+initial_crack_fraction = 0.02

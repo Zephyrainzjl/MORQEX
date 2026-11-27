@@ -2813,3 +2813,54 @@ $PY $ROOT/scripts/run_local.py --label fields --render -- $PY -m morqex.top_dama
 
 HTML 可切换时间、固相/液相浓度、电势、应力、损伤增量、疲劳和力学化学势，
 完整 HDF5/VTI/PVD/XDMF 均在输入结果目录。损伤场没有被自动改成孔隙。
+
+## Ai2022 独立颗粒复现接口
+
+目标文献：Ai, Wu, Martínez-Pañeda, *Journal of Power Sources* 544 (2022),
+231805，DOI `10.1016/j.jpowsour.2022.231805`。本接口为独立实现，没有复制作者
+COMSOL 模型源码，不需要 COMSOL 许可。外部可选依赖见 `paper-particle` extra；
+Gmsh 为独立安装的 GPL 工具，scikit-fem 为 BSD-3-Clause，pypdf 为 BSD-3-Clause。
+作者模型、PDF 和研究数据只保存在外部工作区，保留各自权利和来源。
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+# 本机 Gmsh wheel 的 GLU 已安装在外部目录；系统有 GLU 时不需要此设置。
+export LD_LIBRARY_PATH=/home/zephyrain/lw/morph_workspace/runtime/glu/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}
+$PY scripts/run_local.py --label paper_probe -- $PY -m morqex.top_damage paper-particle /home/zephyrain/lw/MORQEX/configs/top_damage_paper_sphere.toml --steps 20 --output paper_probe
+# 每次追加有限步数；严格核对配置、求解器源码、依赖版本身份，不手改检查点身份。
+$PY scripts/run_local.py --label paper_resume -- $PY -m morqex.top_damage paper-particle /home/zephyrain/lw/MORQEX/configs/top_damage_paper_sphere.toml --steps 20 --resume --output paper_probe
+$PY scripts/run_local.py --label paper_reference -- $PY -m morqex.top_damage paper-reference /home/zephyrain/lw/morph_workspace/cache/ai2022_article.pdf
+$PY scripts/run_local.py --label paper_html -- $PY -m morqex.top_damage paper-report /home/zephyrain/lw/morph_workspace/results/top_damage/paper_reproduction/paper_probe --reference /home/zephyrain/lw/morph_workspace/references/ai2022_figure5.json
+```
+
+`PaperParticle(mesh, ParticleMaterial(...), ...)` 接收无量纲 r/R,z/R 的 P1 三角形网格。
+`advance(accepted, dt_s, outward_flux_mol_m2_s)` 返回新不可变接受态与残差、实际通量、
+守恒、浓度界、裂纹域和疲劳指标。正通量是脱锂。位移按 R 缩放，浓度按 cmax 缩放；
+能量密度、历史场按 E 缩放。`fields` 的应力按 E 缩放；报告转为 MPa。
+HDF5 含全部 u/c/d 和积分点历史，不能把积分点历史误当体素或节点数据。
+HTML 是轴对称子午面及裂纹附近放大图，不能冒充任意三维 CT 的相场解。
+
+`configs/top_damage_paper_sphere.toml` 使用原文参数与散度形式相场，默认严格浓度检查；
+失败保留 `failure.json` 和上一个接受态。`top_damage_ai2022_author_controls.toml`
+则核对公开完整模型的 300 K、参考 SOC 0.9、初始宽度 2.5ell、韧度下限 0.01 和
+Helmholtz 形式。此配置的 `dilute_diagnostic` 明确允许记录 c>cmax 的诊断结果，
+**不能用于声称物理浓度门槛通过**。两种相场形式在空间非均匀疲劳下并不等价。
+两条路线目前都使用 P1、Backward Euler、瞬时反向及可选不可逆 VI，
+未实现作者高阶单元、BDF 和 Do Carmo/Galeão crosswind 稳定化的逐项等价。
+
+`boundary_policy="surface_limits"` 对表面通量施加浓度互补条件，输出实际通量与
+名义通量比值，守恒使用实际边界反力。它是独立定义的闭合，不是已证实的作者截断操作。
+无论哪种模式，都不在求解后裁剪浓度。`linearization="chord"` 重用稀疏分解，
+每次迭代仍重算完整非线性残差和从上个接受态出发的历史；失败刷新切线。
+短十步同网格对照曾测得约 3.29 倍加速，不能外推为长期或 GPU 加速。
+
+`benchmarks/validate_ai2022_time.py` 在同网格上执行两循环时间细化并比较完整场，
+对照必须具有相同物理配置和求解器版本。输出浓度、损伤、疲劳差异和独立物理门槛，
+不因浓度误差小而把疲劳标为收敛。PDF 曲线使用 SHA256 和轴标定追踪，读图容差
+不等于原作者数值误差界。300 循环曲线、J 积分、原 CT 颗粒和 140 循环三维复现仍未验收。
+
+报告可复用外部 OFL 中文字体：`scripts/fetch_report_font.py` 下载到
+`morph_workspace/data/report_font`，`paper-report` 会嵌入改名后的字体子集，避免离线设备
+显示方框。空间对照入口为 `benchmarks/validate_ai2022_space.py COARSE_DIR FINE_DIR --step 80`，
+同样经 `run_local.py` 启动。它在共同体积积分点比较 P1 场并报告排除体积，使用网格定位器
+避免全体积分点与全部单元两两搜索的内存爆炸；两个网格不能单独确立渐近收敛阶。

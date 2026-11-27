@@ -1,0 +1,32 @@
+schema_version = 1
+[material]
+# Ai, Wu, Martinez-Paneda, JPS 544 (2022) 231805, Table 1.
+young_Pa = 93e9
+poisson = 0.3
+diffusivity_m2_s = 7.08e-15
+molar_volume_m3_mol = 3.497e-6
+cmax_mol_m3 = 22900.0
+toughness_J_m2 = 10.0
+temperature_K = 298.0
+radius_m = 5e-6
+length_m = 1e-8
+residual_stiffness = 1e-5
+reference_soc = 0.0
+[experiment]
+name = "ai2022_sphere_paper_equations"
+geometry = "sphere"
+c_rate = 5.0
+cycles = 300
+steps_per_half_cycle = 40
+initial_soc = 0.9
+crack_fraction = 0.02
+fatigue = true
+stress_feedback = true
+damage_constraint = "irreversible_vi"
+linearization = "chord"
+boundary_policy = "surface_limits"
+save_stride = 40
+newton_tolerance = 1e-9
+[mesh]
+crack_h_over_ell = 0.5
+bulk_h_over_radius = 0.08
