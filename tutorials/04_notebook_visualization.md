@@ -187,3 +187,21 @@ region and vertex coordinates, including for HDF5 artifacts. It is a display
 subset, not a new volume mesh or a conservative physical reduction. It cannot
 be used for integration, connected-component tests or solving the full domain.
 全域抽样保留单元原编号、材料与坐标，仅用于显示；不能代替完整积分、拓扑检查或体求解。
+
+
+## Real adaptive surfaces and interior sections / 自适应曲面与内部网格
+
+```python
+# Given a generated TetGenMesh / 已生成的体网格
+view = result.adaptive_viewer(title='Actual adaptive mesh / 真实自适应网格')
+view.display()
+view.save_html('/home/zephyrain/lw/morph_workspace/microelectrode_gallery/adaptive.html')
+```
+
+This viewer retains the full marked boundary surface and exact3D-element
+plane intersections. It provides material selection, rotation, wireframe,
+face-display budgets and YZ/XZ/XY interior sections. These are not a display
+made from voxel splitting or a replacement finite-element mesh.
+该查看器保存完整计算边界及真实体单元切面，支持材料选择、旋转、线框及内部疏密查看；
+不会把体素图或其他网格冒充计算结果。详细API见
+[完整教程](06_gemsim_adaptive_meshing.md)。

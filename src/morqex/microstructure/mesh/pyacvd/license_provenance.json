@@ -1,0 +1,7 @@
+{
+  "license": "MIT",
+  "source": "https://raw.githubusercontent.com/pyvista/pyacvd/main/LICENSE",
+  "sha256": "064cb18ffa4855db00bdded589de00883001af9fb65a776591e5cc8bc9e39cc3",
+  "scope": "PyACVD lineage; original GEMsim modified drivers/kernels retained, GEMsim has no declared top-level license",
+  "checked": "2026-11-27"
+}

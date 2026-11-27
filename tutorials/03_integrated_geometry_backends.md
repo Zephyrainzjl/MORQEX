@@ -179,3 +179,13 @@ RasterMesh = framework('tessellation').RasterMesh
 当前已执行统一数组、预设、原语、TOML、回调和分块Tet4测试；不宣称每个可选上游
 算法、原生网格引擎和MATLAB重构脚本都已在本机验证。先检查依赖，再对目标流程
 做独立几何、统计和物理验证。
+
+
+## Weighted ACVD native backend / 加权ACVD原生后端
+
+The source-integrated GEMsim weighted Cython kernel and original `Clustering`
+driver now have an independent opt-in native build: `MORQEX_BUILD_ACVD=1`.
+The complete geometric pipeline is public through `morqex.modeling.adaptive_mesh`,
+not the unsafe legacy face/cell-deletion fallback. See the bilingual
+[adaptive tutorial](06_gemsim_adaptive_meshing.md).
+原始加权ACVD内核与驱动已接入独立编译入口，整个几何流程使用统一API；不调用旧版删面/删体单元的兜底分支。

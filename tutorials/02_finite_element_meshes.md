@@ -2,6 +2,21 @@
 
 [中文版本](02_finite_element_meshes.md#zh) · [Tutorial index](README.md)
 
+## Recommended geometric-adaptive route / 几何自适应新路线
+
+Use `model.adaptive_mesh(...)` or `mesh(model,method='gemsim_adaptive',...)`
+for the GEMsim-style multiresolution residual → weighted ACVD → TetGen
+workflow. It reconstructs a nonuniform unstructured surface before volume
+meshing. The older routes below remain available for their own purposes.
+新路线先重建疏密变化的非规则曲面，再用 TetGen 划分体域；下面的体素精确剖分和原始 PLC
+等路线保留，但不应混称为 GEMsim 自适应重网格。
+
+Read the complete bilingual [adaptive tutorial](06_gemsim_adaptive_meshing.md)
+for precision presets, arbitrary region arrays, shared/nested material
+interfaces, user density callbacks, whole-surface visualization, exact volume
+sections and the ten complete256³ cases.
+完整参数、精度、材料界面、自定义密度及十种256³样例见自适应教程。
+
 ## Available methods and their differences / 全部现有网格路线
 
 This inventory covers the mesh-generation routes currently present in MORQEX;
@@ -16,6 +31,7 @@ claim that every backend or every topology has passed numerical qualification.
 |Streamed voxel Tet4 / 分块体素四面体|`model.mesh_to(path,...)` or `mesh(method='streamed_tetrahedral',path=...)`|Complete shared-node HDF5/XDMF / 全量共享节点|Bounded slab cells; global node map / 分层流式|
 |Exact shared PLC / 精确共享多相面|`voxel_plc(model,regions=...)`|Planar quads+seeds+holes / 四边形界面及种子|Surface construction, not volume mesh / 只是界面构造|
 |Single-phase contour / 单相轮廓|`marching_cubes_plc(model,region=...,step_size=...)`|Closed triangle PLC / 闭合三角面|scikit-image; approximate geometry / 几何近似|
+|GEMsim adaptive / 自适应重网格|`model.adaptive_mesh`, `adaptive_surface`, `mesh(method='gemsim_adaptive')`|Weighted ACVD surface + graded TetGen volume / 加权曲面与非均匀体网格|Optional original ACVD + TetGen native kernels / 集成原生内核|
 |TetGen volume / TetGen 体网格|`model.tetgen(...)`, `tetgen_mesh(...)`, `mesh(method='tetgen')`|Region-labelled Tet4 with actual quality / 带分区和实测质量|Optional C++ compile; shared PLC / 可选源码编译|
 |Custom surface PLC / 自定义面模型|`SurfacePLC(points,facets,seeds,markers,holes)` → `tetgen_mesh`|User geometry→Tet4 / 自定义贴体网格|Explicit interfaces and valid closed surfaces / 明确材料界面|
 |Legacy GEM contour and ACVD / 旧 GEM 曲面及重网格|`framework('finite_elements').TriMesh.from_vol(...)`, `.TetMesh.from_vol(...)`, `.TetMesh.from_sur(...)`|Legacy mesh classes / 旧网格对象|Original Cython+ACVD+TetGen extensions; not the new tested native route / 依赖原扩展|

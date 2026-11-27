@@ -409,3 +409,24 @@ configuration file. Generated files are rejected inside the source tree.
 `/home/zephyrain/lw/MORQEX/configs/modeling_rods256.toml`。同一入口还支持从已保存几何
 生成网格和查询能力。TOML中相对`.npy`路径相对于配置文件定位。API拒绝把生成文件
 保存到源码目录内。
+
+
+## Resolved-feature geometry for adaptive meshing / 适合自适应重网格的新配方
+
+```python
+from morqex.modeling import resolved_electrode
+model = resolved_electrode('rods',size=256,spacing=0.5e-6,seed=20261127,
+    cbd_thickness_voxels=4,minimum_feature_voxels=4,cbd_bridges=True)
+model.show(maximum_3d_size=48)
+```
+
+This is separate from `electrode`: minimum-feature operations, coating and
+CBD bridges are explicit generation assumptions recorded in metadata. It does
+not smooth or replace an imported user segmentation. All three phases are
+saved on the complete grid. Geometry masks do not automatically determine
+conductivity, porosity inside CBD or electrochemical accessibility.
+新配方记录最小特征、包覆及CBD桥接等假设，不修改用户导入的分区数据；完整三相格点均保存。
+形态标签不自动决定导电、CBD内部孔隙或电化学可达性。
+See [GEMsim adaptive geometry](06_gemsim_adaptive_meshing.md) for all ten
+families, custom phase chains, shared junctions, precision and mesh visualization.
+十种形态、自定义材料顺序、共享交线及网格精度见该完整教程。

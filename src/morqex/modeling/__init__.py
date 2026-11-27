@@ -10,9 +10,13 @@ from .interfaces import register_generator,generate,from_toml,register_mesher,me
 from .tetgen import SurfacePLC,TetGenOptions,TetGenMesh,voxel_plc,marching_cubes_plc,tetgen_mesh,tetra_quality
 from .tetgen_backend import build_tetgen
 from .comsol import export_comsol,read_comsol
+from .adaptive import AdaptiveMeshOptions,adaptive_surface,adaptive_mesh,multiresolution_weights
+from .acvd_backend import build_acvd
+from .resolved_presets import resolved_electrode
 
 __all__=['VoxelModel','Shape','from_regions','from_shapes','framework','capabilities',
          'tetrahedralize','stream_tetrahedralize','MeshArtifact','electrode','PRESETS',
          'register_generator','generate','from_toml','register_mesher','mesh',
          'SurfacePLC','TetGenOptions','TetGenMesh','voxel_plc','marching_cubes_plc','tetgen_mesh',
-         'tetra_quality','build_tetgen','export_comsol','read_comsol','mesh_from_toml']
+         'tetra_quality','build_tetgen','export_comsol','read_comsol','mesh_from_toml',
+         'AdaptiveMeshOptions','adaptive_surface','adaptive_mesh','multiresolution_weights','build_acvd','resolved_electrode']

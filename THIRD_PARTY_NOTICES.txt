@@ -85,3 +85,17 @@ uses MORQEX_BUILD_TETGEN=1, without Cython, PyVista or the legacy ACVD extension
 Opting out of native compilation does not remove the bundled third-party source
 or its licensing obligations. No general redistribution license for the entire
 combined research repository is inferred from the TetGen license.
+
+GEMsim weighted ACVD integration (2026-11-27)
+Verified private upstream commit:6fd789c78d58d49ef645c539414567fc2a2bc171;
+src/gem/mesh/elements.py blob1ef3e7ffb75ee50d4311dec8c94c226dc66f869e.
+The original integrated pyacvd/cython/_clustering.pyx and clustering.py are reused
+without rewriting the clustering kernel. PyACVD's MIT license and provenance
+are retained under microstructure/mesh/pyacvd. The parent GEMsim repository has
+no declared top-level license; its owner authorized this local integration.
+The new adapter ports multiresolution median residual weighting into bounded
+arrays and adds positive/bounded numerical density, physical coordinate rules,
+local topological retention, shared-junction/nested-interface checks, and
+explicit geometric validation. It does not use legacy skipped-face or
+low-quality-volume-element deletion. These are adaptations of existing methods,
+not a claim that ACVD, TetGen or residual-weighted remeshing is a new invention.

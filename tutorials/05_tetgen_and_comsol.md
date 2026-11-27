@@ -9,6 +9,11 @@ Coordinates of mesh vertices and PLC seeds are **XYZ metres**; voxel arrays,
 `spacing`, `origin` and shape parameters use **ZYX metres**.
 网格顶点及 PLC 种子用 **XYZ 米**；体素数组、间距、原点及形状参数用 **ZYX 米**。
 
+For the newly requested GEMsim-style adaptive surface reconstruction, see
+[weighted ACVD → TetGen](06_gemsim_adaptive_meshing.md). This file documents the
+lower-level TetGen PLC/voxel routes, which remain available independently.
+新要求的 GEMsim 自适应曲面重建见该教程；本文件描述保留的底层 TetGen/PLC/体素路线。
+
 ## 1. Installation choices / 安装时选择是否编译
 
 A normal installation stays Python-only. TetGen's original C++ source is
@@ -241,9 +246,14 @@ plc = SurfacePLC(points,facets,seeds={1:[[5e-6,5e-6,5e-6]]})
 |`region_maximum_volumes`|{}|Original region ID → max volume / 分相体积上限|
 |`maximum_steiner`|300000|Native added-point budget / 新增点预算|
 |`maximum_cells`|2000000|Output acceptance cap, checked after native solve / 输出单元上限|
+|`merge_coplanar`|True|False adds M to retain every facet / 是否合并近共面面片|
 |`preserve_surface`|False|`Y`; forbids boundary splitting and may impede quality / 不细分表面|
+|`facet_separation_angle`|179.9°|p-angle for facet merging; for_adaptive uses179.99999° / 面片合并角|
+|`coplanarity_tolerance`|1e-12|Normalized TetGen T tolerance, independent of output volume acceptance / 内部共面容差|
 |`consistency_check`|True|TetGen `C` consistency checks / 内部一致性检查|
 |`require_quality`|False|Reject measured quality missing requested ratios/angles / 实测不达标则拒绝|
+|`isolated`|False; True for `for_adaptive()`|Native worker process; preserve caller on native abort / 原生进程隔离|
+|`native_timeout_seconds`|180|Wall-time budget of an isolated call / 隔离调用的时间预算|
 
 Requested `q` bounds can be unattainable at small PLC angles or when a Steiner
 budget is exhausted. A returned valid mesh is not automatically a high-quality
@@ -265,6 +275,14 @@ more intermediate memory than the final arrays. Input facet limits are checked
 before native meshing. Use one job, bounded surfaces and inspection of resource
 manifests before scaling up.
 单元上限是求解后门槛，不是硬内存上限；硬内存与时间限制应使用资源启动器。
+
+For a notebook or service, prefer `TetGenOptions.for_adaptive()` or explicitly
+set `isolated=True`. Native failures then raise a Python exception instead of
+terminating the notebook kernel. This path uses temporary HDF5 files in the
+external workspace and needs h5py. It does not relax any geometric checks and
+does not impose an independent memory cap; use the process-tree resource
+launcher as well. Low-level in-process execution remains available.
+Notebook或服务建议使用隔离选项；不放宽验收，也不代替整个进程树的内存限制。
 
 ## 7. TOML and CLI / TOML 与命令行
 

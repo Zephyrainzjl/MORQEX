@@ -36,6 +36,7 @@ from morqex.modeling import (
 |`SurfacePLC(points,facets,seeds,markers,holes,region_volumes,metadata)`|XYZ SI points/seeds, original integer region IDs / XYZ米及原始分区标签|
 |`tetgen_mesh(geometry,regions,surface_method,step_size,maximum_facets,options,workspace)`|`VoxelModel` or `SurfacePLC` to `TetGenMesh`; no face deletion / 贴体体网格，不删面|
 |`VoxelModel.tetgen(**kwargs)`|Same typed entry / 同一原生入口|
+|`TetGenOptions.for_adaptive(**overrides)`|Strict facet-merge-angle policy, native-process isolation, full volume checks / 严格共面合并角、原生隔离及体积检查|
 |`TetGenOptions(...)`|Sizing/quality/Steiner/output caps; see complete table in tutorial / 尺寸、质量与资源门槛|
 |`TetGenMesh.report`|Actual quality, time, region-volume errors and geometry convention / 实测质量及几何范围|
 |`MeshArtifact.load(path)`|Reopen complete voxel/TetGen HDF5 without loading all cells / 不加载全部单元重新打开|
@@ -51,6 +52,35 @@ Detailed bilingual instructions, pip options and validation limits are in
 [TetGen and COMSOL](05_tetgen_and_comsol.md). A successful format round-trip
 is not a claim that a local COMSOL application has imported/solved the file.
 详细双语说明见教程；格式读回不等于已在本机 COMSOL 中导入求解。
+
+GEMsim residual-weighted adaptive geometry / GEMsim几何自适应：
+
+```python
+from morqex.modeling import (
+    AdaptiveMeshOptions,adaptive_surface,adaptive_mesh,multiresolution_weights,
+    build_acvd,resolved_electrode,
+)
+```
+
+|API / 接口|Contract / 契约|
+|---|---|
+|`build_acvd(workspace)`|Explicit external single-job compilation of the original weighted kernel / 原始加权内核外部编译|
+|`resolved_electrode(preset,size,spacing,seed,cbd_thickness_voxels,minimum_feature_voxels,cbd_bridges)`|New ten-family resolved-feature synthetic geometry;96..256³ / 十类新配方|
+|`AdaptiveMeshOptions.precision(name,**overrides)`|coarse/balanced/fine geometry gates and target densities / 三种几何精度|
+|`adaptive_surface(model,regions,options,workspace)`|Full-resolution interfaces→weighted ACVD→validated SurfacePLC / 曲面重构|
+|`adaptive_mesh(model,regions,options,tetgen_options,workspace)`|Full adaptive pipeline→TetGenMesh / 完整网格流程|
+|`VoxelModel.adaptive_surface`, `.adaptive_mesh`|Same public implementations / 同一公开实现|
+|`mesh(model,method='gemsim_adaptive',...)`|Shared registry entry / 统一注册入口|
+|`multiresolution_weights(model,points,options)`|Numerical surface density at XYZ SI points / 数值曲面密度|
+|`SurfacePLC.viewer/show`|Actual whole surface viewer / 真实完整曲面|
+|`TetGenMesh.adaptive_viewer(sections=True,height,title)`|Complete marked surface plus exact Tet4-plane sections / 完整曲面及真实体切面|
+|`morqex.visualization.adaptive_mesh.section_polygons(mesh,axis,fraction)`|Actual volume-cell intersections;XYZ axis0..2 / 真实体单元截面|
+
+All adaptive option fields, typed TOML, compilation details and the ten256³
+protocol are in the complete bilingual [adaptive tutorial](06_gemsim_adaptive_meshing.md).
+An adaptive tetrahedron has no unique parent voxel; centroid lookup is not a
+conservative field-transfer operator.
+完整参数及复现流程见教程；自适应单元跨多个体素，不能把质心查询当成守恒场映射。
 
 Public geometry fields use ZYX arrays and SI spacing/origin. FEM vertices use
 XYZ in SI metres. `VoxelModel.mesh_to` supports full256³ region arrays through

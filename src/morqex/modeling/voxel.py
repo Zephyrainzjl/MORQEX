@@ -55,6 +55,14 @@ class VoxelModel:
         from .tetgen import tetgen_mesh
         return tetgen_mesh(self,**kwargs)
 
+    def adaptive_surface(self,**kwargs):
+        from .adaptive import adaptive_surface
+        return adaptive_surface(self,**kwargs)
+
+    def adaptive_mesh(self,**kwargs):
+        from .adaptive import adaptive_mesh
+        return adaptive_mesh(self,**kwargs)
+
     def mesh_to(self,path,**kwargs):
         from .meshing import stream_tetrahedralize
         return stream_tetrahedralize(self,path,**kwargs)
@@ -170,7 +178,10 @@ def capabilities():
     from .tetgen_backend import library_path
     try:tetgen={'compiled':True,'library':str(library_path())}
     except RuntimeError:tetgen={'compiled':False,'enable':'MORQEX_BUILD_TETGEN=1 pip install . or build_tetgen(workspace)'}
-    return {'frameworks':BACKENDS,'tetgen':tetgen,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
+    from .acvd_backend import load_acvd
+    try:acvd={'compiled':True,'library':str(load_acvd().__file__)}
+    except RuntimeError:acvd={'compiled':False,'enable':'MORQEX_BUILD_ACVD=1 pip install . or build_acvd(workspace)'}
+    return {'frameworks':BACKENDS,'tetgen':tetgen,'weighted_acvd':acvd,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
         'native_reconstruction':{'matlab':shutil.which('matlab'),'Rscript':shutil.which('Rscript'),
             'status':'Integrated MATLAB/R source; native execution requires original licensed runtimes and packages'},
         'optional':{name:importlib.util.find_spec(name) is not None for name in ['pyvoro','meshpy','gmsh','meshio','h5py']}}

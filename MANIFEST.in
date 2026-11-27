@@ -1,0 +1,2 @@
+include build_backend.py
+include THIRD_PARTY_NOTICES.txt

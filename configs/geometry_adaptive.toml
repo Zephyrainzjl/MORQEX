@@ -1,0 +1,42 @@
+[geometry]
+method = "resolved_electrode"
+preset = "granular"
+size = 96
+spacing = 5e-7
+seed = 20261127
+cbd_thickness_voxels = 2
+minimum_feature_voxels = 2
+cbd_bridges = true
+
+[meshing]
+method = "gemsim_adaptive"
+regions = [0, 1, 2]
+
+[meshing.options]
+vertex_fraction = 0.25
+levels = 3
+sigma = 1.0
+weight_power = 2.0
+weight_floor = 0.2
+weight_strength = 3.0
+maximum_weight_ratio = 16.0
+iterations = 20
+topology_retries = 3
+maximum_facets = 4000000
+maximum_phase_volume_error = 0.03
+surface_method = "auto"
+phase_order = [0, 2, 1]
+project_surface = false
+retry_without_facet_merging = true
+
+[meshing.tetgen_options]
+radius_edge_ratio = 2.0
+minimum_dihedral = 0.0
+maximum_steiner = 300000
+maximum_cells = 3000000
+require_quality = false
+coplanarity_tolerance = 1e-12
+merge_coplanar = true
+facet_separation_angle = 179.99999
+isolated = true
+native_timeout_seconds = 180

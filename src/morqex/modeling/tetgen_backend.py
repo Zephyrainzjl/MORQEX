@@ -55,8 +55,8 @@ def library_path(workspace=None):
 
 def execute(points,facets,markers,regions,holes,switches,*,workspace=None,maximum_cells=2000000):
     points=np.ascontiguousarray(points,dtype=np.float64);markers=np.ascontiguousarray(markers,dtype=np.int32)
-    sizes=np.ascontiguousarray([len(f) for f in facets],dtype=np.int32)
-    faces=np.ascontiguousarray(np.concatenate(facets),dtype=np.int32)
+    sizes=np.full(len(facets),facets.shape[1],np.int32) if isinstance(facets,np.ndarray) and facets.ndim==2 else np.ascontiguousarray([len(f) for f in facets],dtype=np.int32)
+    faces=np.ascontiguousarray(facets.reshape(-1) if isinstance(facets,np.ndarray) else np.concatenate(facets),dtype=np.int32)
     regions=np.ascontiguousarray(regions,dtype=np.float64).reshape(-1,5)
     holes=np.ascontiguousarray(holes,dtype=np.float64).reshape(-1,3)
     lib=ct.CDLL(str(library_path(workspace)));dp=ct.POINTER(ct.c_double);ip=ct.POINTER(ct.c_int)

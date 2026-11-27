@@ -6,6 +6,7 @@ belongs in MORQEX; generated arrays, meshes, environments and HTML belong in
 
 |Module / 模块|English|中文|
 |---|---|---|
+|Adaptive / GEMsim自适应网格|[Weighted ACVD + TetGen](06_gemsim_adaptive_meshing.md)|[同页中英完整教程](06_gemsim_adaptive_meshing.md)|
 |Geometry / 几何与体素|[Geometry and voxels](01_geometry_and_voxels.md)|[几何与体素建模](01_geometry_and_voxels.md#zh)|
 |Meshing / 有限元网格|[Finite-element meshes](02_finite_element_meshes.md)|[有限元网格生成](02_finite_element_meshes.md#zh)|
 |Backends / 集成与扩展|[Integrated frameworks](03_integrated_geometry_backends.md)|[集成框架与API](03_integrated_geometry_backends.md#zh)|

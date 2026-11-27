@@ -20,23 +20,42 @@ class SurfacePLC:
     region_volumes: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
 
+    def viewer(self,**kwargs):
+        from morqex.visualization.adaptive_mesh import AdaptiveMeshView
+        return AdaptiveMeshView(self,**kwargs)
+
+    def show(self,**kwargs):return self.viewer(**kwargs).display()
+
     def __post_init__(self):
         self.points=np.asarray(self.points,dtype=float)
         if self.points.ndim!=2 or self.points.shape[1]!=3 or len(self.points)<4 or not np.isfinite(self.points).all():
             raise ValueError('Finite (N,3) XYZ points required')
-        raw=list(self.facets)
-        if not raw:raise ValueError('PLC facets are empty')
-        if any(np.asarray(f).dtype.kind not in 'iu' or np.asarray(f).size<3 or
-               np.asarray(f).min()<0 or np.asarray(f).max()>=len(self.points) for f in raw):
+        raw=self.facets if isinstance(self.facets,np.ndarray) and self.facets.ndim==2 else list(self.facets)
+        if not len(raw):raise ValueError('PLC facets are empty')
+        invalid=(raw.dtype.kind not in 'iu' or raw.shape[1]<3 or raw.min()<0 or raw.max()>=len(self.points)) if isinstance(raw,np.ndarray) else any(
+               np.asarray(f).dtype.kind not in 'iu' or np.asarray(f).size<3 or
+               np.asarray(f).min()<0 or np.asarray(f).max()>=len(self.points) for f in raw)
+        if invalid:
             raise ValueError('Valid integer facet indices required')
-        self.facets=[np.asarray(f,dtype=np.int32) for f in raw]
-        for f in self.facets:
-            if f.ndim!=1 or len(f)<3 or len(set(f))!=len(f) or f.min()<0 or f.max()>=len(self.points):
-                raise ValueError('Invalid PLC polygon indices')
-            p=self.points[f]-self.points[f[0]];scale=np.max(np.linalg.norm(p,axis=1))
-            cross=np.cross(p[1:-1],p[2:]);normal=cross[np.argmax(np.linalg.norm(cross,axis=1))]
-            if not scale or np.linalg.norm(normal)<=scale**2*1e-12:raise ValueError('Degenerate PLC facet')
-            if np.max(np.abs(p@normal))>1e-9*scale*np.linalg.norm(normal):raise ValueError('Nonplanar PLC facet')
+        self.facets=np.asarray(raw,dtype=np.int32) if isinstance(raw,np.ndarray) else [np.asarray(f,dtype=np.int32) for f in raw]
+        if isinstance(self.facets,np.ndarray):
+            if self.facets.shape[1]<3:raise ValueError('At least3 vertices per facet')
+            for start in range(0,len(raw),50000):
+                f=self.facets[start:start+50000]
+                if np.any(np.diff(np.sort(f,axis=1),axis=1)==0):raise ValueError('Repeated facet vertex')
+                p=self.points[f]-self.points[f[:,:1]];scale=np.linalg.norm(p,axis=2).max(axis=1)
+                cross=np.cross(p[:,1:-1],p[:,2:]);norm=np.linalg.norm(cross,axis=2)
+                normal=cross[np.arange(len(p)),norm.argmax(axis=1)]
+                n=np.linalg.norm(normal,axis=1)
+                if np.any(n<=scale**2*1e-12):raise ValueError('Degenerate PLC facet')
+                if np.any(np.abs(np.einsum('nki,ni->nk',p,normal)).max(axis=1)>1e-9*scale*n):raise ValueError('Nonplanar PLC facet')
+        else:
+            for f in self.facets:
+                if f.ndim!=1 or len(f)<3 or len(set(f))!=len(f):raise ValueError('Invalid PLC polygon indices')
+                p=self.points[f]-self.points[f[0]];scale=np.max(np.linalg.norm(p,axis=1))
+                cross=np.cross(p[1:-1],p[2:]);normal=cross[np.argmax(np.linalg.norm(cross,axis=1))]
+                if not scale or np.linalg.norm(normal)<=scale**2*1e-12:raise ValueError('Degenerate PLC facet')
+                if np.max(np.abs(p@normal))>1e-9*scale*np.linalg.norm(normal):raise ValueError('Nonplanar PLC facet')
         self.markers=np.ones(len(raw),np.int32) if self.markers is None else np.asarray(self.markers)
         if self.markers.shape!=(len(raw),) or self.markers.dtype.kind not in 'iu' or np.any(self.markers<=0):
             raise ValueError('One positive integer marker per facet required')
@@ -123,6 +142,7 @@ def marching_cubes_plc(model,*,region,step_size=1,maximum_facets=500000):
     holes=_component_seeds(~mask,np.asarray(model.spacing),np.asarray(model.origin),bounded=True)
     return SurfacePLC(points,faces,seeds,holes=holes,metadata={
         'surface_method':'marching_cubes','step_size':step_size,'region_names':model.region_names,
+        'interface_pairs':{'1':[-1,int(region)]},
         'voxel_volume_m3':float(mask.sum()*np.prod(model.spacing)),
         'geometry':'approximate level0.5 contour, not exact voxel boundaries'})
 
@@ -138,6 +158,16 @@ class TetGenOptions:
     preserve_surface: bool = False
     consistency_check: bool = True
     require_quality: bool = False
+    coplanarity_tolerance: float = 1e-12
+    merge_coplanar: bool = True
+    facet_separation_angle: float = 179.9
+    isolated: bool = False
+    native_timeout_seconds: float = 180.
+
+    @classmethod
+    def for_adaptive(cls,**overrides):
+        """Merge only practically coplanar facets, retaining curved geometry."""
+        return cls(**({'facet_separation_angle':179.99999,'isolated':True}|overrides))
 
     def __post_init__(self):
         if not np.isfinite(self.radius_edge_ratio) or self.radius_edge_ratio<1.:
@@ -148,6 +178,9 @@ class TetGenOptions:
             if v is not None and (not np.isfinite(v) or v<=0):raise ValueError('Positive finite maximum volume in m3 required')
         if type(self.maximum_steiner) is not int or self.maximum_steiner<0:raise ValueError('Nonnegative Steiner budget required')
         if type(self.maximum_cells) is not int or self.maximum_cells<1:raise ValueError('Positive cell budget required')
+        if not np.isfinite(self.coplanarity_tolerance) or not 0<self.coplanarity_tolerance<=1e-6:raise ValueError('coplanarity_tolerance must be positive and<=1e-6')
+        if not np.isfinite(self.facet_separation_angle) or not 0<self.facet_separation_angle<=180:raise ValueError('facet_separation_angle must be in(0,180] degrees')
+        if not np.isfinite(self.native_timeout_seconds) or self.native_timeout_seconds<=0:raise ValueError('Positive finite native time budget required')
 
 
 @dataclass
@@ -161,6 +194,10 @@ class TetGenMesh(FEMesh):
         return MeshView(self,**kwargs)
 
     def show(self,**kwargs):return self.viewer(**kwargs).display()
+
+    def adaptive_viewer(self,**kwargs):
+        from morqex.visualization.adaptive_mesh import AdaptiveMeshView
+        return AdaptiveMeshView(self,**kwargs)
 
     def save_hdf5(self,path):
         from .voxel import external_path
@@ -229,7 +266,7 @@ def _verify_seeds(points,cells,attributes,seeds):
         low,high=bounds
         candidates=np.flatnonzero(np.all((low-1e-10<=seed[:3])&(high+1e-10>=seed[:3]),axis=1))
         if not len(candidates) or not contains(candidates):
-            raise ArithmeticError('A region seed is not contained in its requested material; inspect holes, contours and region labels')
+            raise ArithmeticError(f'A region seed is not contained in its requested material: encoded region{int(seed[3])}, normalized XYZ{seed[:3].tolist()}; inspect holes, contours and region labels')
 
 
 def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
@@ -250,6 +287,9 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
         else:raise ValueError('surface_method must be voxel_plc or marching_cubes')
     else:raise TypeError('VoxelModel or SurfacePLC required')
     if len(plc.facets)>maximum_facets:raise ValueError('PLC facet budget exceeded')
+    if options.isolated:
+        from .tetgen_worker import isolated_mesh
+        return isolated_mesh(plc,options,workspace,maximum_facets)
     centre=plc.points.min(axis=0);scale=float(np.ptp(plc.points,axis=0).max())
     if scale<=0:raise ValueError('Degenerate geometry')
     labels=sorted(plc.seeds);decode=np.array(labels,dtype=np.int64)
@@ -261,10 +301,11 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
     if any(np.any((np.asarray(plc.seeds[k])<plc.points.min(axis=0))|
                   (np.asarray(plc.seeds[k])>plc.points.max(axis=0))) for k in labels):
         raise ValueError('A region seed is outside the PLC bounding box')
-    switches=f'pq{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzfQS{options.maximum_steiner}'
+    switches=f'p{options.facet_separation_angle:.8f}q{options.radius_edge_ratio:.8g}/{options.minimum_dihedral:.8g}AzfQS{options.maximum_steiner}T{options.coplanarity_tolerance:.8g}'
     if options.maximum_volume is not None or options.region_maximum_volumes:switches+='a'
     if options.preserve_surface:switches+='Y'
     if options.consistency_check:switches+='C'
+    if not options.merge_coplanar:switches+='M'
     seed_array=np.array(seeds);refinement_attempts=0
     # TetGen's quality refinement may leave small residual volume violations.
     # Re-run with tighter *input* sizes, keeping the caller's acceptance limit.

@@ -36,7 +36,21 @@ extern "C" void *mq_tetgen_run(int np,const double *points,int nf,const int *fac
     std::string options(switches);tetrahedralize(options.data(),&input,output.get());
     if(output->numberofcorners!=4)throw std::runtime_error("Only linear Tet4 output is supported");
     return output.release();
-  }catch(int code){if(error&&capacity>0)std::snprintf(error,capacity,"TetGen error%d; PLC was rejected, no faces removed",code);}
+  }catch(int code){
+    // Meanings follow terminatetetgen() in the bundled TetGen header. In
+    // particular code2 is an INTERNAL error, not proof of an invalid PLC.
+    const char *cause="native failure";
+    switch(code){
+      case 1:cause="out of memory";break;
+      case 2:cause="internal TetGen error";break;
+      case 3:cause="self-intersecting input surface";break;
+      case 4:cause="very small input feature";break;
+      case 5:cause="very close input facets";break;
+      case 10:cause="input error";break;
+      case 200:cause="boundary Steiner points conflict with YY";break;
+    }
+    if(error&&capacity>0)std::snprintf(error,capacity,"TetGen error%d (%s); no mesh accepted, no faces removed",code,cause);
+  }
    catch(const std::exception &e){if(error&&capacity>0)std::snprintf(error,capacity,"%s",e.what());}
   return nullptr;
 }

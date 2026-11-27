@@ -13,7 +13,8 @@ requirements.
 [Voxel modelling](tutorials/01_geometry_and_voxels.md) ·
 [Finite-element meshing](tutorials/02_finite_element_meshes.md) ·
 [Integrated backends](tutorials/03_integrated_geometry_backends.md) ·
-[TetGen + COMSOL / 原生编译与导出](tutorials/05_tetgen_and_comsol.md)
+[TetGen + COMSOL / 原生编译与导出](tutorials/05_tetgen_and_comsol.md) ·
+[GEMsim adaptive / 自适应重网格](tutorials/06_gemsim_adaptive_meshing.md)
 
 中文教程：[几何与体素](tutorials/01_geometry_and_voxels.md#zh) ·
 [有限元网格](tutorials/02_finite_element_meshes.md#zh) ·
@@ -22,111 +23,99 @@ requirements.
 [Notebook实时二维/三维可视化](tutorials/04_notebook_visualization.md) ·
 [Executable notebook / 可执行示例](tutorials/notebooks/geometry_workflow.ipynb)。
 
-## Optional native TetGen / 可选原生网格
-
-The integrated TetGen C++ core can be compiled during a regular pip install:
-已集成的 TetGen C++ 核心可以在 pip 安装时选择编译：
-
-```bash
-export MORQEX_WORKSPACE=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
-MORQEX_BUILD_TETGEN=1 python -m pip install '.[modeling,geometry]'
-```
-
-Omit the environment flag for a Python-only build. Use an external environment;
-native editable (`-e`) builds are rejected to keep binaries out of `src`.
-不设该开关则不编译；环境及构建产物均放在源码外，原生可编辑安装会被拒绝。
-
-```python
-from morqex.modeling import mesh,export_comsol
-# Given a VoxelModel / 已有统一体素对象
-# result = mesh(model,method='tetgen',regions=[1,2],surface_method='voxel_plc')
-# result.save_hdf5('/external/tetgen.h5')
-# export_comsol(result,'/external/tetgen.mphtxt',region_names=model.region_names)
-```
-
-Exact shared multiphase PLC, approximate single-phase contours and custom
-closed surfaces are distinct choices. Quality and per-material volume are
-measured. Native COMSOL mesh export preserves explicit domain/boundary maps.
-The [tutorial](tutorials/05_tetgen_and_comsol.md) covers installation, licenses,
-TOML, all sizing options, notebook visuals and COMSOL import steps. COMSOL
-application import has not been run without an installed COMSOL runtime.
-精确共享多相 PLC、单相近似轮廓和自定义面均有独立入口及误差说明；教程提供完整步骤。
-
-## Geometry workflow
+## Adaptive geometry workflow / 自适应几何流程
 
 ```text
-Physical shapes / statistical recipes / segmented region arrays
-                              │
-                       VoxelModel (ZYX)
-                              │
-           explicit material regions + SI spacing/origin
-                              │
-             GEM voxel-to-Tet4 / streamed global meshing
-                              │
-              HDF5 + XDMF + parent-voxel association
-                              │
-          interactive geometry inspection / research solvers
+Shapes / statistical recipes / user region arrays
+                   ↓
+          Complete VoxelModel (ZYX, SI)
+                   ↓
+  Multiresolution geometric residual → weighted ACVD
+                   ↓
+    Checked common or nested material interfaces
+                   ↓
+      TetGen nonuniform unstructured volume mesh
+                   ↓
+       HDF5/XDMF · COMSOL · actual mesh HTML
 ```
 
-- **One modelling API:** `morqex.modeling` for arrays, shapes, presets, TOML,
-  generator extensions and mesh generation.
-- **Custom regions:** nonnegative integer IDs with explicit names; active
-  material, CBD, pores and additional phases can be represented separately.
-- **Irregular presets:** granular, elongated rods, platelets, dendritic
-  scaffolds, hollow shells, agglomerates, fibres, bicontinuous networks,
-  gradient lamellae and curved channels.
-- **Large voxel grids:** directly evaluated256×256×256 geometry; complete
-  conforming Tet4 meshes are streamed to disk with compact global shared nodes.
-- **Traceable geometry:** physical units, region labels, source metadata and
-  element-to-original-voxel mapping remain available in the exported files.
-- **Interactive inspection:** offline HTML with whole-domain display LOD,
-  original-resolution slices and exact local tetrahedral mesh views.
+The `gemsim_adaptive` API reuses the original source-integrated weighted ACVD
+kernel and reconstructs a nonuniform surface before calling TetGen. The old
+voxel Hex8/Tet4, streamed voxel and raw PLC routes remain independent choices.
+新入口先重构疏密变化的曲面，再生成贴体体网格。旧规则体素及原始PLC路线保留为独立接口。
+This is geometric adaptation, not a certified PDE-error estimator.
+这里的自适应是几何驱动，不等于严格的物理解误差估计。
 
-## Quick start
+## Install optional native kernels / 可选编译
 
-Python3.11 or newer is required. A minimal scientific environment needs NumPy,
-SciPy, h5py, Matplotlib, Pillow, pyquaternion and lsq-ellipse. The optional
-geometry, statistics and report dependencies are declared in `pyproject.toml`.
-Keep the environment and generated files outside this source directory.
+Python3.11+ and an external environment are required. To compile the integrated
+TetGen and weighted ACVD sources during a normal pip installation:
+使用源码外环境，并可在pip安装时显式编译两个内核：
 
 ```bash
 cd /home/zephyrain/lw/MORQEX
-python -m venv --system-site-packages ../morph_workspace/microelectrode_gallery/runtime
-../morph_workspace/microelectrode_gallery/runtime/bin/python -m pip install -e '.[modeling,notebook,report]'
+export MORQEX_WORKSPACE=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
+python -m venv --system-site-packages "$MORQEX_WORKSPACE/runtime"
+PY="$MORQEX_WORKSPACE/runtime/bin/python"
+MORQEX_BUILD_TETGEN=1 MORQEX_BUILD_ACVD=1 \
+  "$PY" -m pip install '.[adaptive-meshing,notebook]'
 ```
 
-Create an irregular electrode and generate its full mesh:
+Omit both flags for a Python-only installation. Cython/NumPy build headers are
+requested only for the opt-in ACVD/legacy geometry builds. No PyVista/VTK is
+required. Native editable installs are rejected to keep binaries out of `src`.
+不设置开关则不编译；构建依赖按需安装，二进制、构建目录及大型输出均留在源码外。
+
+## Quick start / 快速开始
 
 ```python
-from morqex.modeling import electrode
-
-model, source_regions = electrode(
-    'rods', size=256, spacing=0.5e-6, seed=20261127,
-    cbd_fraction=0.12,
+from pathlib import Path
+from morqex.modeling import (
+    resolved_electrode, adaptive_mesh, AdaptiveMeshOptions, export_comsol,
 )
-mesh = model.mesh_to(
-    '/home/zephyrain/lw/morph_workspace/microelectrode_gallery/rods.h5',
-    regions=[1, 2], slab_depth=2,
-)
-print(mesh.xdmf, mesh.nodes, mesh.tetrahedra)
+work = Path('/home/zephyrain/lw/morph_workspace/microelectrode_gallery/my_model')
+work.mkdir(parents=True,exist_ok=True)
+model = resolved_electrode('rods',size=256,spacing=0.5e-6,seed=20261127,
+                           cbd_thickness_voxels=4,minimum_feature_voxels=4)
+model.save(work/'geometry.h5')
+result = adaptive_mesh(model,regions=[0,1,2],
+                       options=AdaptiveMeshOptions.precision('balanced'))
+artifact = result.save_hdf5(work/'adaptive.h5')
+export_comsol(result,work/'adaptive.mphtxt',region_names=model.region_names)
+result.adaptive_viewer().save_html(work/'adaptive.html')
+print(result.report)
 ```
 
-Or supply your own region array:
+Coarse/balanced/fine presets control geometric reconstruction independently of
+the original voxel size. New resolved-feature recipes cover granular, rods,
+platelets, dendritic, hollow, agglomerates, fibres, bicontinuous, lamellar and
+channels. All three material domains can be meshed. These are synthetic
+geometries with explicit coating/bridge assumptions, not calibrated CT data.
+新配方直接生成十类三维结构，粗/中/细重构与体素分辨率独立；结构是具有明确包覆/桥接假设
+的合成几何，不冒充真实CT或已经校准的电极。
+
+User arrays remain supported via `from_regions`. General triple-junction data
+uses shared-interface constraints; explicitly nested material domains can use
+separated contours. See the full [bilingual tutorial](tutorials/06_gemsim_adaptive_meshing.md)
+for custom density functions, TOML, units, all options, quality checks, exact
+volume sections and the ten256³ gallery commands.
+用户数组、一般三相交界、显式包覆结构、自定义密度及全部参数见同页双语教程。
+
+For an exact voxel-reference discretization, retain the original API:
+需要精确保留体素台阶和父体素映射时，使用原参考路线：
 
 ```python
-from morqex.modeling import from_regions
-
-model = from_regions(
-    my_labels_zyx, spacing=(0.5e-6,)*3,
-    region_names={0:'pore', 1:'active material', 2:'CBD'},
-)
-mesh = model.mesh_to('/external/workspace/custom.h5', regions=[1,2])
+# model.tetrahedralize(regions=[1,2])                 # small in memory
+# model.mesh_to('/external/voxel.h5',regions=[1,2])  # complete streamed volume
+# model.tetgen(regions=[1,2],surface_method='voxel_plc')  # raw shared PLC
 ```
 
-Open the generated `.xdmf` in ParaView while keeping its `.h5` sibling beside
-it. Full256³ meshes can contain tens of millions of elements; use HDF5 slices
-or a local mesh view for inspection. Geometry generation and a feasible
-full-field mechanical solve are separate resource requirements.
+Adaptive tetrahedra have no unique parent voxel; conservative field transfer
+requires intersections/integration, not a centroid-label guess. Geometry and
+COMSOL read-back checks are distinct from mechanical/electrochemical validation.
+COMSOL application import is untested without an installed COMSOL runtime.
+自适应单元没有唯一父体素，守恒场传递需要交叠积分；几何导出验收不等于力学/电化学验收，
+本机没有COMSOL，因此未宣称实际软件导入通过。
 
 ## Resource-controlled execution
 
@@ -158,7 +147,7 @@ src/morqex/
   visualization/     geometry and computed-field HTML exporters
   vendor/            pinned third-party source with notices and licenses
 src/pybamm/          source-integrated electrochemical solver
-tutorials/           English module tutorials and API reference
+tutorials/           bilingual module tutorials and API reference
 configs/             TOML examples and resource settings
 scripts/             generation, checking and reproducibility entry points
 tests/               targeted mathematical and software checks
@@ -182,7 +171,9 @@ convergence or long-term battery-life validation.
 The workspace was cleared on request before creating the new geometry atlas.
 Earlier run outputs and numerical environments are not included in the source
 repository and must be regenerated when needed. Current geometry outputs live
-under `../morph_workspace/microelectrode_gallery/atlas256/`.
+under `../morph_workspace/microelectrode_gallery/adaptive_gallery256_gemsim/`.
+The earlier voxel-reference atlas remains in `atlas256/`; it is a different
+mesh method, not the adaptive gallery.
 
 Third-party source provenance, copyright and licenses are retained in
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) and the corresponding source
