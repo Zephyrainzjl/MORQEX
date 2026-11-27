@@ -1,8 +1,10 @@
 """Optional integrated Cython geometry build; all generated files stay external."""
 import os
 import hashlib
+import sysconfig
 from pathlib import Path
 from setuptools import Extension, setup
+from setuptools.command.build_ext import build_ext
 
 root = Path(__file__).resolve().parent
 workspace = Path(os.environ.get("MORQEX_WORKSPACE", root.parent / "morph_workspace")).resolve()
@@ -11,6 +13,8 @@ if workspace == root or root in workspace.parents:
 # Source snapshots deliberately normalize mtimes. A shared timestamp-based
 # build/lib can silently reuse old files, so isolate by actual package content.
 signature=hashlib.sha256()
+signature.update(repr((sysconfig.get_platform(), sysconfig.get_config_var('SOABI'),
+    os.environ.get('MORQEX_BUILD_GEOMETRY'), os.environ.get('MORQEX_BUILD_TETGEN'))).encode())
 for path in [root/'setup.py',root/'pyproject.toml',*sorted((root/'src').rglob('*'))]:
     if not path.is_file() or '__pycache__' in path.parts or path.suffix=='.pyc':continue
     signature.update(str(path.relative_to(root)).encode()+b'\0'+path.read_bytes()+b'\0')
@@ -18,6 +22,12 @@ build = workspace / "build/packages" / signature.hexdigest()[:24]
 metadata = build / "metadata"
 metadata.mkdir(parents=True, exist_ok=True)
 extensions = []
+if os.environ.get("MORQEX_BUILD_TETGEN") == "1":
+    tet = Path("src/morqex/microstructure/mesh/tetgen/cython/tetgen")
+    extensions.append(Extension("morqex._tetgen_native",
+        ["src/morqex/modeling/native_tetgen/bridge.cpp", str(tet / "tetgen.cxx"), str(tet / "predicates.cxx")],
+        include_dirs=[str(tet)], define_macros=[("TETLIBRARY", None), ("MORQEX_PYTHON_EXTENSION", "1")],
+        language="c++", extra_compile_args=["/O2", "/std:c++17"] if os.name == "nt" else ["-O2", "-std=c++17"]))
 if os.environ.get("MORQEX_BUILD_GEOMETRY") == "1":
     import numpy as np
     from Cython.Build import cythonize
@@ -37,7 +47,13 @@ if os.environ.get("MORQEX_BUILD_GEOMETRY") == "1":
     extensions.append(extension("mesh.pyacvd._clustering", [base / "mesh/pyacvd/cython/_clustering.pyx"]))
     extensions = cythonize(extensions, compiler_directives={"language_level": 3}, build_dir=str(build / "cython"))
 
-setup(ext_modules=extensions, options={
+class ExternalBuildExt(build_ext):
+    def run(self):
+        if self.inplace and self.extensions:
+            raise RuntimeError('Native editable builds would put binaries in src. Use a non-editable pip install with MORQEX_WORKSPACE outside source, or build_tetgen(workspace).')
+        super().run()
+
+setup(ext_modules=extensions, cmdclass={"build_ext": ExternalBuildExt}, options={
     "build": {"build_base": str(build / "python")},
     "egg_info": {"egg_base": str(metadata)},
     "bdist_wheel": {"bdist_dir": str(build / "wheel")},

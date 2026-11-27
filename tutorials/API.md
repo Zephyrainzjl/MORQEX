@@ -18,6 +18,40 @@ from morqex.modeling import (
 )
 ```
 
+Native meshing and COMSOL / 原生网格与COMSOL：
+
+```python
+from morqex.modeling import (
+    SurfacePLC, TetGenOptions, TetGenMesh, voxel_plc, marching_cubes_plc,
+    tetgen_mesh, build_tetgen, tetra_quality, export_comsol, read_comsol,
+    mesh_from_toml,
+)
+```
+
+|API / 接口|Contract / 契约|
+|---|---|
+|`build_tetgen(workspace)`|Explicit single-job CMake build outside source; optional pip build uses `MORQEX_BUILD_TETGEN=1` / 单核外部编译|
+|`voxel_plc(model,regions,maximum_facets)`|Exact common multiphase interfaces and interior/hole seeds / 精确共享多相界面及种子|
+|`marching_cubes_plc(model,region,step_size,maximum_facets)`|Approximate closed single-phase contour; correct voxel-centre coordinates / 单相近似闭合轮廓|
+|`SurfacePLC(points,facets,seeds,markers,holes,region_volumes,metadata)`|XYZ SI points/seeds, original integer region IDs / XYZ米及原始分区标签|
+|`tetgen_mesh(geometry,regions,surface_method,step_size,maximum_facets,options,workspace)`|`VoxelModel` or `SurfacePLC` to `TetGenMesh`; no face deletion / 贴体体网格，不删面|
+|`VoxelModel.tetgen(**kwargs)`|Same typed entry / 同一原生入口|
+|`TetGenOptions(...)`|Sizing/quality/Steiner/output caps; see complete table in tutorial / 尺寸、质量与资源门槛|
+|`TetGenMesh.report`|Actual quality, time, region-volume errors and geometry convention / 实测质量及几何范围|
+|`MeshArtifact.load(path)`|Reopen complete voxel/TetGen HDF5 without loading all cells / 不加载全部单元重新打开|
+|`TetGenMesh.save_hdf5(path)`|Complete Tet4+marked facets in HDF5/XDMF / 全量网格和标记面|
+|`TetGenMesh.viewer/show`|Actual Tet4 display subset, offline notebook/HTML / 真实单元可视化|
+|`tetra_quality(points,cells)`|Measured radius ratio, dihedral and positive volumes / 实测形状指标|
+|`export_comsol(mesh,path,region_names,chunk_size,include_boundaries)`|Tet4/Hex8 to `.mphtxt` + explicit `.regions.json`; MeshArtifact accepted / COMSOL原生文本|
+|`FEMesh.save_comsol`, `MeshArtifact.export_comsol`|Same exporter / 同一导出器|
+|`read_comsol(path)`|Strict numerical read-back of emitted3D linear subset / 导出子集的严格读回|
+|`mesh_from_toml(model,path)`|Apply `[meshing]` and `[meshing.options]` recipe / TOML网格配方|
+
+Detailed bilingual instructions, pip options and validation limits are in
+[TetGen and COMSOL](05_tetgen_and_comsol.md). A successful format round-trip
+is not a claim that a local COMSOL application has imported/solved the file.
+详细双语说明见教程；格式读回不等于已在本机 COMSOL 中导入求解。
+
 Public geometry fields use ZYX arrays and SI spacing/origin. FEM vertices use
 XYZ in SI metres. `VoxelModel.mesh_to` supports full256³ region arrays through
 bounded slab processing. See the tutorials for the input/output contracts,
@@ -481,33 +515,33 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 ## 13. 模块索引
 
 <!-- GENERATED_API_INDEX -->
-### [morqex.acceleration.budget](src/morqex/acceleration/budget.py)
+### [morqex.acceleration.budget](../src/morqex/acceleration/budget.py)
 
 - `GpuBudget(self)`
 - `GpuBudget.batch(self)`
 - `GpuBudget.metadata(self)`
 - `GpuBudget.dot(self, a, b)`
 
-### [morqex.acceleration.coarse_elasticity](src/morqex/acceleration/coarse_elasticity.py)
+### [morqex.acceleration.coarse_elasticity](../src/morqex/acceleration/coarse_elasticity.py)
 
 - `coarse_matrix(phase, C, spacing, block=8)`
 - `CoarseElasticity(self, model, *, block=None, smoothing_steps=4)`
 - `CoarseElasticity.apply(self, r, out)`
 
-### [morqex.acceleration.coarse_transport](src/morqex/acceleration/coarse_transport.py)
+### [morqex.acceleration.coarse_transport](../src/morqex/acceleration/coarse_transport.py)
 
 - `coarse_matrix(phase, coefficient, spacing, block=8)`
 - `CoarseTransport(self, model, scaling, *, block=None, smoothing_steps=4)`
 - `CoarseTransport.matvec(self, x)`
 - `CoarseTransport.apply(self, r, out)`
 
-### [morqex.acceleration.diagonal](src/morqex/acceleration/diagonal.py)
+### [morqex.acceleration.diagonal](../src/morqex/acceleration/diagonal.py)
 
 - `Diagonal(self, model)`
 - `Diagonal.apply(self, r, out)`
 - `Diagonal.direction(self, p, z, beta)`
 
-### [morqex.acceleration.geometric](src/morqex/acceleration/geometric.py)
+### [morqex.acceleration.geometric](../src/morqex/acceleration/geometric.py)
 
 - `coarsen(a)`
 - `GeometricMultigrid(self, model)`
@@ -515,7 +549,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `GeometricMultigrid.cycle(self, k, rhs, out)`
 - `GeometricMultigrid.apply(self, r, out)`
 
-### [morqex.acceleration.macro_control](src/morqex/acceleration/macro_control.py)
+### [morqex.acceleration.macro_control](../src/morqex/acceleration/macro_control.py)
 
 - `StressControlledStencil(self, *args, stress_Pa=(0.0,) * 6, **kwargs)`
 - `StressControlledStencil.macro_strain(self, u, c, T=0.0)`
@@ -524,32 +558,32 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `StressControlledStencil.residual(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
 - `StressControlledStencil.stress(self, u, concentration, macro=(0.0,) * 6, temperature=0.0, out=None)`
 
-### [morqex.acceleration.pcg](src/morqex/acceleration/pcg.py)
+### [morqex.acceleration.pcg](../src/morqex/acceleration/pcg.py)
 
 - `solve_pcg(model, c, macro, T, *, rtol, maxiter, checkpoint)`
 
-### [morqex.acceleration.phase_coarse](src/morqex/acceleration/phase_coarse.py)
+### [morqex.acceleration.phase_coarse](../src/morqex/acceleration/phase_coarse.py)
 
 - `assemble(phase, C, spacing, block, counts=None)`
 - `PhaseCoarse(self, model, *, block=None)`
 
-### [morqex.acceleration.poisson](src/morqex/acceleration/poisson.py)
+### [morqex.acceleration.poisson](../src/morqex/acceleration/poisson.py)
 
 - `FastPoisson(self, model)`
 - `FastPoisson.transfer(self, array, target, transpose=False)`
 - `FastPoisson.apply(self, r, out)`
 - `FastPoisson.direction(self, p, z, beta)`
 
-### [morqex.acceleration.refinement](src/morqex/acceleration/refinement.py)
+### [morqex.acceleration.refinement](../src/morqex/acceleration/refinement.py)
 
 - `solve_refined(model, c, macro, T, *, rtol, maxiter, checkpoint)`
 
-### [morqex.acceleration.residual_space](src/morqex/acceleration/residual_space.py)
+### [morqex.acceleration.residual_space](../src/morqex/acceleration/residual_space.py)
 
 - `minimum_residual_weights(residuals, *, chunk=131072)`
 - `archive_iterate(checkpoint, destination)` — Hard-link immutable u plus its physical fingerprint, without a data copy.
 
-### [morqex.acceleration.transport](src/morqex/acceleration/transport.py)
+### [morqex.acceleration.transport](../src/morqex/acceleration/transport.py)
 
 - `ScalarPoisson(self, model, scaling)`
 - `ScalarPoisson.apply(self, r, out)`
@@ -558,11 +592,11 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PeriodicTransport.apply(self, u, out)`
 - `PeriodicTransport.solve(self, axis_xyz=0, *, rtol=1e-08, maxiter=2000, preconditioner='coarse')`
 
-### [morqex.acceleration.verification](src/morqex/acceleration/verification.py)
+### [morqex.acceleration.verification](../src/morqex/acceleration/verification.py)
 
 - `manufactured_periodic(n)`
 
-### [morqex.acceleration.voxel](src/morqex/acceleration/voxel.py)
+### [morqex.acceleration.voxel](../src/morqex/acceleration/voxel.py)
 
 - `NativeStencil(self, phase, C, beta=None, alpha=None, spacing=(1.0, 1.0, 1.0), *, backend='cpu', budget=None, preconditioner='fft')`
 - `NativeStencil.dims(self)`
@@ -574,7 +608,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `NativeStencil.mean_stress(self, u=None, concentration=None, macro=(0.0,) * 6, temperature=0.0)`
 - `NativeStencil.solve(self, concentration, macro=(0.0,) * 6, temperature=0.0, *, rtol=1e-07, maxiter=1500, mixed_preconditioner=True, checkpoint=None, low_memory=None)`
 
-### [morqex.adaptive_transport](src/morqex/adaptive_transport.py)
+### [morqex.adaptive_transport](../src/morqex/adaptive_transport.py)
 
 - `AdaptiveBudgetError()`
 - `AdaptiveGradientDiagnostics()`
@@ -584,13 +618,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `AdaptiveGradientTransport.save_checkpoint(self, state, workspace, name)`
 - `AdaptiveGradientTransport.load_checkpoint(cls, system, path)`
 
-### [morqex.adaptivity](src/morqex/adaptivity.py)
+### [morqex.adaptivity](../src/morqex/adaptivity.py)
 
 - `AdaptiveResponseResult()`
 - `AdaptiveResponse(self, builder, basis)`
 - `AdaptiveResponse.evaluate(self, q, *, absolute_energy_tolerance)`
 
-### [morqex.bases](src/morqex/bases.py)
+### [morqex.bases](../src/morqex/bases.py)
 
 - `GeometricBasis()`
 - `GeometricBasis.build(self, electrode, target)`
@@ -601,12 +635,12 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PortBasis()` — Connected greedy partition from mechanical chemical-potential rows.
 - `PortBasis.build(self, electrode, target)`
 
-### [morqex.capabilities](src/morqex/capabilities.py)
+### [morqex.capabilities](../src/morqex/capabilities.py)
 
 - `BackendCapabilities()`
 - `BackendCapabilities.require(self, features)`
 
-### [morqex.certification](src/morqex/certification.py)
+### [morqex.certification](../src/morqex/certification.py)
 
 - `tree_poincare_lower_bound(diffusion)` — Positive lower bound on nonzero generalized graph eigenvalues.
 - `DiffusionErrorBound()`
@@ -623,7 +657,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `CertifiedControlledDiffusion.initialize(self, initial_deviation, *, error_tolerance)`
 - `CertifiedControlledDiffusion.step(self, state, dt, channel_flux, *, error_tolerance)`
 
-### [morqex.cohesive](src/morqex/cohesive.py)
+### [morqex.cohesive](../src/morqex/cohesive.py)
 
 - `CohesiveResponse()`
 - `CohesiveResponse.retention(self, d)`
@@ -632,12 +666,12 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `CohesiveResponse.recover(self, q, d)`
 - `build_cohesive(electrode, P, *, normal_stiffness=1000000000000000.0, tangent_stiffness=500000000000000.0, residual=0.001)`
 
-### [morqex.cohesive_reduction](src/morqex/cohesive_reduction.py)
+### [morqex.cohesive_reduction](../src/morqex/cohesive_reduction.py)
 
 - `compress_cohesive(response, *, tolerance=1e-06, maximum_damage=0.85, maximum_modes=80, training_points=17)` — Return a variational response, plus an independent residual certificate.
 - `cohesive_certificate(cohesive, arrays, q, damage)` — Residual bounds in exact arithmetic, with a declared roundoff allowance.
 
-### [morqex.concentration](src/morqex/concentration.py)
+### [morqex.concentration](../src/morqex/concentration.py)
 
 - `component_constants(diffusion)`
 - `ConcentrationBasis()`
@@ -653,11 +687,11 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ControlledDiffusion(self, diffusion, basis, flux_patterns, *, reference_concentration, maximum_concentration)` — Low-dimensional stepping for a declared face-flux channel library.
 - `ControlledDiffusion.step(self, coefficients, dt, channel_flux)`
 
-### [morqex.concentration_modes.full_volume](src/morqex/concentration_modes/full_volume.py)
+### [morqex.concentration_modes.full_volume](../src/morqex/concentration_modes/full_volume.py)
 
 - `project_volume(directory, *, extra_nodes=8, chunk=32768)`
 
-### [morqex.concentration_modes.positive](src/morqex/concentration_modes/positive.py)
+### [morqex.concentration_modes.positive](../src/morqex/concentration_modes/positive.py)
 
 - `ComponentBasis()`
 - `ComponentBasis.dimension(self)`
@@ -667,23 +701,23 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ComponentBasis.from_metadata(cls, data)`
 - `full_features(arrays)`
 
-### [morqex.concentration_modes.pou_operator](src/morqex/concentration_modes/pou_operator.py)
+### [morqex.concentration_modes.pou_operator](../src/morqex/concentration_modes/pou_operator.py)
 
 - `POUOperator()`
 - `POUOperator.metadata(self)`
 - `POUOperator.detach(self)`
 - `build_pou_operator(full, *, target, transport_law, relax_transverse=False)`
 
-### [morqex.concentration_modes.spatial_ports](src/morqex/concentration_modes/spatial_ports.py)
+### [morqex.concentration_modes.spatial_ports](../src/morqex/concentration_modes/spatial_ports.py)
 
 - `build_spatial_ports(directory, *, bins=5, chunk=32768)`
 
-### [morqex.concentration_modes.tail](src/morqex/concentration_modes/tail.py)
+### [morqex.concentration_modes.tail](../src/morqex/concentration_modes/tail.py)
 
 - `TailBasis()` — Geometry-only offline loads select stress-sensitive observables.
 - `TailBasis.build(self, electrode, target)`
 
-### [morqex.coupling](src/morqex/coupling.py)
+### [morqex.coupling](../src/morqex/coupling.py)
 
 - `bind_chemical_modes(solver, diffusion, basis, expansion)`
 - `CoupledState()`
@@ -696,14 +730,14 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `CoupledTransport.save_state(self, state, workspace, name)`
 - `CoupledTransport.load_state(self, path)`
 
-### [morqex.ct](src/morqex/ct.py)
+### [morqex.ct](../src/morqex/ct.py)
 
 - `SegmentedCT()`
 - `SegmentedCT.build(self, workspace=None)`
 - `ArrayGeometry()`
 - `ArrayGeometry.build(self, workspace=None)`
 
-### [morqex.degradation](src/morqex/degradation.py)
+### [morqex.degradation](../src/morqex/degradation.py)
 
 - `Reservoir()`
 - `SideContribution()`
@@ -728,7 +762,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `DegradationOptions()`
 - `standard_registry()`
 
-### [morqex.doping](src/morqex/doping.py)
+### [morqex.doping](../src/morqex/doping.py)
 
 - `DopantLaw()`
 - `RegionalChemistry()`
@@ -746,7 +780,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `DopedOperator.build(self, electrode, partition)`
 - `composition_materials(structure, active_fractions, law, base_catalog)` — Refine active phase labels and their fixed mechanical properties.
 
-### [morqex.electrochemistry.aging_cache](src/morqex/electrochemistry/aging_cache.py)
+### [morqex.electrochemistry.aging_cache](../src/morqex/electrochemistry/aging_cache.py)
 
 - `CohesiveOnline()`
 - `CohesiveOnline.hessian(self, d)`
@@ -756,7 +790,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `AgingLocalization.recover(self, c, E, theta, d)`
 - `load_cohesive_certificate(path)` — Load small residual coefficients without loading localization fields.
 
-### [morqex.electrochemistry.aging_dfn](src/morqex/electrochemistry/aging_dfn.py)
+### [morqex.electrochemistry.aging_dfn](../src/morqex/electrochemistry/aging_dfn.py)
 
 - `age(d, name, k=None)`
 - `EnergyKernel()`
@@ -792,16 +826,16 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `AgingThermal.set_rhs(self, v)`
 - `build_aging_dfn(stack, kernels, config, *, feedback=1.0, factories=None, control=None)`
 
-### [morqex.electrochemistry.cathodes](src/morqex/electrochemistry/cathodes.py)
+### [morqex.electrochemistry.cathodes](../src/morqex/electrochemistry/cathodes.py)
 
 - `cathode_parameters(family)`
 
-### [morqex.electrochemistry.cell_design](src/morqex/electrochemistry/cell_design.py)
+### [morqex.electrochemistry.cell_design](../src/morqex/electrochemistry/cell_design.py)
 
 - `CellDesign()`
 - `CellDesign.apply(self, parameters, *, active_fractions=None)`
 
-### [morqex.electrochemistry.conservative_ports](src/morqex/electrochemistry/conservative_ports.py)
+### [morqex.electrochemistry.conservative_ports](../src/morqex/electrochemistry/conservative_ports.py)
 
 - `ConservativePorts()`
 - `ConservativePorts.site_chemical_potential(self, energy_gradient)` — g=dW/da is not a pointwise chemical potential; first solve M mu=g.
@@ -812,7 +846,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ConservativePorts.audit(self, energy_gradient, macro_potential, site_current, faraday=96485.33212)`
 - `nodal_ports(weights, area_by_mode_macro, macro_volumes, *, provenance)`
 
-### [morqex.electrochemistry.dfn](src/morqex/electrochemistry/dfn.py)
+### [morqex.electrochemistry.dfn](../src/morqex/electrochemistry/dfn.py)
 
 - `RVEParticleMechanics(self, param, options, stack, feedback=1.0)`
 - `RVEParticleMechanics.get_coupled_variables(self, variables)`
@@ -827,13 +861,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `EnergeticThermal.add_events_from(self, variables)`
 - `build_model(stack, *, feedback=1.0, thermal=True)`
 
-### [morqex.electrochemistry.linear_port](src/morqex/electrochemistry/linear_port.py)
+### [morqex.electrochemistry.linear_port](../src/morqex/electrochemistry/linear_port.py)
 
 - `LinearPort(self, weights, *children)`
 - `LinearPort.create_copy(self, new_children=None, perform_simplifications=True)`
 - `linear_combination(weights, values)`
 
-### [morqex.electrochemistry.mechanical_closure](src/morqex/electrochemistry/mechanical_closure.py)
+### [morqex.electrochemistry.mechanical_closure](../src/morqex/electrochemistry/mechanical_closure.py)
 
 - `ElectrodeClosure()`
 - `ElectrodeClosure.dfn_H(self)`
@@ -843,7 +877,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `AxialStackClosure(self, negative, positive, parameters, *, constraint='pressure', pressure_Pa=0.0, thickness_change_m=0.0, separator_modulus_Pa=100000000.0)` — Plane-strain electrode/separator stack, common axial traction.
 - `AxialStackClosure.traction(self, mean_deviations, temperature_deviation)`
 
-### [morqex.electrochemistry.microstructure_cache](src/morqex/electrochemistry/microstructure_cache.py)
+### [morqex.electrochemistry.microstructure_cache](../src/morqex/electrochemistry/microstructure_cache.py)
 
 - `OnlineMicrostructureOperator()` — No mesh, fine diffusion graph, basis or mechanical solver retained.
 - `OnlineMicrostructureOperator.dimension(self)`
@@ -861,7 +895,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `LocalizationMap(self, path)`
 - `LocalizationMap.recover(self, concentration, axial_strain, temperature_deviation, *, selection=None)`
 
-### [morqex.electrochemistry.microstructure_dfn](src/morqex/electrochemistry/microstructure_dfn.py)
+### [morqex.electrochemistry.microstructure_dfn](../src/morqex/electrochemistry/microstructure_dfn.py)
 
 - `key(domain, region, quantity)`
 - `dot(a, b)`
@@ -891,7 +925,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PortThermal.add_events_from(self, variables)`
 - `build_microstructure_dfn(stack, *, feedback=1.0, thermal=True)`
 
-### [morqex.electrochemistry.microstructure_operator](src/morqex/electrochemistry/microstructure_operator.py)
+### [morqex.electrochemistry.microstructure_operator](../src/morqex/electrochemistry/microstructure_operator.py)
 
 - `phase_transport(volume, phases, axis_xyz=0, phase_factors=None)` — Unit-conductivity TPFA cell problem, Dirichlet x ends/insulated sides.
 - `MicrostructureOperator()`
@@ -915,11 +949,11 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `MicrostructureElectrode.partition(self, target, strategy='geometry')`
 - `MicrostructureElectrode.reduce(self, partition=None, strategy='full')`
 
-### [morqex.electrochemistry.microstructure_parameters](src/morqex/electrochemistry/microstructure_parameters.py)
+### [morqex.electrochemistry.microstructure_parameters](../src/morqex/electrochemistry/microstructure_parameters.py)
 
 - `microstructure_parameters(*, value_tolerance_V=2e-05, relative_slope_tolerance=0.05, source_parameter_set='OKane2022', allow_idealization=False)`
 
-### [morqex.electrochemistry.microstructure_runtime](src/morqex/electrochemistry/microstructure_runtime.py)
+### [morqex.electrochemistry.microstructure_runtime](../src/morqex/electrochemistry/microstructure_runtime.py)
 
 - `MicrostructureDFNRuntime(self, operator_paths, parameters, *, nx=4, feedback=1.0, constraint='pressure')` — Warm online stepping retains compact operators, never a fine FEM solver.
 - `MicrostructureDFNRuntime.solution(self)`
@@ -932,13 +966,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `MicrostructureDFNRuntime.restore(self, path)`
 - `MicrostructureDFNRuntime.enrich(self, new_paths)`
 
-### [morqex.electrochemistry.microstructure_validation](src/morqex/electrochemistry/microstructure_validation.py)
+### [morqex.electrochemistry.microstructure_validation](../src/morqex/electrochemistry/microstructure_validation.py)
 
 - `ocp_primitive(parameters, domain, concentration)` — Primitive of pinned phase.U, including its endpoint asymptote terms.
 - `macro_weights(processed_variable)`
 - `thermodynamic_observables(solution, stack, parameters, *, feedback=1.0)`
 
-### [morqex.electrochemistry.open_materials](src/morqex/electrochemistry/open_materials.py)
+### [morqex.electrochemistry.open_materials](../src/morqex/electrochemistry/open_materials.py)
 
 - `PchipFunction(self, curve, child, *, entropy=False, order=0)`
 - `PchipFunction.create_copy(self, new_children=None, perform_simplifications=True)`
@@ -955,7 +989,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `OpenMaterialCard.host_card(cls, host, **kwargs)`
 - `tabulate_parameter_ocps(parameters, *, knots=513, domain=(0.001, 0.999), sampled_tolerance_V=0.0001)` — Sample native/callable curves with a separate midpoint error audit.
 
-### [morqex.electrochemistry.open_particle](src/morqex/electrochemistry/open_particle.py)
+### [morqex.electrochemistry.open_particle](../src/morqex/electrochemistry/open_particle.py)
 
 - `TransportLaw()`
 - `law_for(op)`
@@ -967,26 +1001,26 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `OpenParticle.get_coupled_variables(self, v)`
 - `build_open_dfn(stack, kernels, config, *, parameters, feedback=1.0, factories=None, control=None, temperature_interval_K=(273.15, 333.15))` — Compose raw OCP/positive mobility particles with the degradation ports.
 
-### [morqex.electrochemistry.open_validation](src/morqex/electrochemistry/open_validation.py)
+### [morqex.electrochemistry.open_validation](../src/morqex/electrochemistry/open_validation.py)
 
 - `chemical_primitives(parameters, domain, concentration, temperature_K)`
 - `open_observables(solution, stack, parameters, config, *, feedback=1.0)`
 
-### [morqex.electrochemistry.parameters](src/morqex/electrochemistry/parameters.py)
+### [morqex.electrochemistry.parameters](../src/morqex/electrochemistry/parameters.py)
 
 - `convex_parameters(name='OKane2022', *, slope_floor_V=0.01, points=4001, allow_idealization=False)`
 
-### [morqex.electrochemistry.protocol](src/morqex/electrochemistry/protocol.py)
+### [morqex.electrochemistry.protocol](../src/morqex/electrochemistry/protocol.py)
 
 - `shared_control(v)`
 - `add_protocol_event(model)`
 - `solve_protocol(simulation, *, kind, cycles=1, current_A=1.0, lower_V=3.5, upper_V=4.0, duration_s=120.0, period_s=30.0, rest_s=300.0, cv_stop_A=0.25, pulse_discharge_A=0.5)`
 
-### [morqex.electrochemistry.validation](src/morqex/electrochemistry/validation.py)
+### [morqex.electrochemistry.validation](../src/morqex/electrochemistry/validation.py)
 
 - `check_protocol(solution, *, cycles, steps_per_cycle, lower_V, upper_V, current_A, rest_s=600.0)`
 
-### [morqex.energy](src/morqex/energy.py)
+### [morqex.energy](../src/morqex/energy.py)
 
 - `EnergyResponse()`
 - `EnergyResponse.dimension(self)`
@@ -1009,20 +1043,20 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ResidualCertificate.energy_norm_squared_density(self, q)`
 - `ResidualCertificate.potential_error_density(self, q)`
 
-### [morqex.error_dynamics](src/morqex/error_dynamics.py)
+### [morqex.error_dynamics](../src/morqex/error_dynamics.py)
 
 - `SpectralErrorSpace(self, system, retained_modes)`
 - `SpectralErrorSpace.configure_bounds(self, system)`
 - `SpectralErrorSpace.decompose(self, error, null_basis)`
 - `SpectralErrorSpace.advance(self, previous, slow_residual, tail_residual_norm, dt, padding)`
 
-### [morqex.error_estimation.aging_port](src/morqex/error_estimation/aging_port.py)
+### [morqex.error_estimation.aging_port](../src/morqex/error_estimation/aging_port.py)
 
 - `compile_reaction_certificate(kernel_path, destination=None)` — Offline only: integrate conjugate stress and QR regional area norms.
 - `AgingReactionCertificate(self, path, kernel_path)`
 - `AgingReactionCertificate.bound(self, q, damage, j0, eta, temperature, *, feedback=1.0, mechanical_residual=None, film_residual=None, film_resistance=None)`
 
-### [morqex.extensions](src/morqex/extensions.py)
+### [morqex.extensions](../src/morqex/extensions.py)
 
 - `GeometryProvider()`
 - `GeometryProvider.build(self, workspace)`
@@ -1041,7 +1075,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `validate_partition(electrode, labels)`
 - `build_operator(electrode, basis: BasisBuilder, operator: OperatorBuilder, target)`
 
-### [morqex.gemsim](src/morqex/gemsim.py)
+### [morqex.gemsim](../src/morqex/gemsim.py)
 
 - `GEMsim(self, workspace: Workspace)`
 - `GEMsim.from_volume(self, volume, *, phase_kinds: dict[int, str])`
@@ -1050,12 +1084,12 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `GEMsim.random_field(self, *, phase_kinds, **kwargs)` — GEMsim's CPU random-field baseline, not a trained CT reconstruction.
 - `GEMsim.mesh(self, structure: MicrostructureData, *, cell_type='tetra', phases=None)`
 
-### [morqex.geometry](src/morqex/geometry.py)
+### [morqex.geometry](../src/morqex/geometry.py)
 
 - `MicrostructureData()`
 - `MicrostructureData.fingerprint(self)`
 
-### [morqex.gradient_transport](src/morqex/gradient_transport.py)
+### [morqex.gradient_transport](../src/morqex/gradient_transport.py)
 
 - `immutable(value)`
 - `EnergyAccuracyError(self, error_bound, tolerance)`
@@ -1079,13 +1113,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PortGradientModel.transfer_to(self, previous, new_model)`
 - `PortGradientModel.transfer_preserving_state(self, previous, new_model)` — Non-nested restart only when its space contains the current field.
 
-### [morqex.macroscale](src/morqex/macroscale.py)
+### [morqex.macroscale](../src/morqex/macroscale.py)
 
 - `StackState()`
 - `LayerStack(self, responses, thicknesses)`
 - `LayerStack.solve(self, coefficients, *, lateral_strain=(0.0, 0.0, 0.0), pressure=None, thickness_change=None)`
 
-### [morqex.materials](src/morqex/materials.py)
+### [morqex.materials](../src/morqex/materials.py)
 
 - `Phase()`
 - `Phase.isotropic(cls, name, kind, young, poisson, **kwargs)`
@@ -1099,17 +1133,17 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PhaseCatalog.porosity(self, structure)`
 - `PhaseCatalog.metadata(self)`
 
-### [morqex.mechanics.constraints](src/morqex/mechanics/constraints.py)
+### [morqex.mechanics.constraints](../src/morqex/mechanics/constraints.py)
 
 - `ConstraintMap()`
 - `constraints(mesh, boundary)`
 
-### [morqex.mechanics.matrix_free](src/morqex/mechanics/matrix_free.py)
+### [morqex.mechanics.matrix_free](../src/morqex/mechanics/matrix_free.py)
 
 - `MatrixFreeElasticitySolver(self, mesh, stiffness, *, boundary='kubc', relative_tolerance=1e-11, maximum_iterations=3000)`
 - `MatrixFreeElasticitySolver.solve_reduced(self, rhs)`
 
-### [morqex.mechanics.mesh](src/morqex/mechanics/mesh.py)
+### [morqex.mechanics.mesh](../src/morqex/mechanics/mesh.py)
 
 - `TetMesh()`
 - `TetMesh.from_volume(cls, volume, solid_phases=None)`
@@ -1120,7 +1154,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `TetMesh.pressure_load(self, pressure, face_mask=None)`
 - `TetMesh.body_load(self, body_force)`
 
-### [morqex.mechanics.reference](src/morqex/mechanics/reference.py)
+### [morqex.mechanics.reference](../src/morqex/mechanics/reference.py)
 
 - `MechanicalSolveError()`
 - `ElasticState()`
@@ -1129,7 +1163,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ElasticitySolver.eigenstrain_load(self, eigenstrain)`
 - `ElasticitySolver.solve(self, eigenstrain=0.0, *, macro_strain=None, prescribed_displacement=None, force=None, tolerance=1e-09)`
 
-### [morqex.mechanics.tensors](src/morqex/mechanics/tensors.py)
+### [morqex.mechanics.tensors](../src/morqex/mechanics/tensors.py)
 
 - `to_mandel(tensor)`
 - `from_mandel(vector)`
@@ -1138,17 +1172,17 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `rotate_stiffness(stiffness, rotation)`
 - `elastic_energy_and_mu(strain, concentration, stiffness, expansion, *, stiffness_derivative=None, eigenstrain_reference=None, reference_concentration=0.0)` — Local fixed-strain energy and mechanical mu, c in mol/m^3, beta in m^3/mol.
 
-### [morqex.microstructure.analysis](src/morqex/microstructure/analysis.py)
+### [morqex.microstructure.analysis](../src/morqex/microstructure/analysis.py)
 
 - `describe(volume)`
 - `two_point(volume, phase=1, axis=0)` — Nonperiodic directional S2 with unbiased overlap normalization.
 - `compare(reference, generated)`
 
-### [morqex.microstructure.cli](src/morqex/microstructure/cli.py)
+### [morqex.microstructure.cli](../src/morqex/microstructure/cli.py)
 
 - `main()`
 
-### [morqex.microstructure.core.distributions](src/morqex/microstructure/core/distributions.py)
+### [morqex.microstructure.core.distributions](../src/morqex/microstructure/core/distributions.py)
 
 - `DiscreteDnsFunc()` — 离散分布
 - `smooth(self, p=[])` — 数据平滑分布
@@ -1165,13 +1199,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `smooth.cdf(self, kx)` — 概率分布函数
 - `same()` — 和数据保持完全相同的分布
 
-### [morqex.microstructure.core.graph_codec](src/morqex/microstructure/core/graph_codec.py)
+### [morqex.microstructure.core.graph_codec](../src/morqex/microstructure/core/graph_codec.py)
 
 - `dfs(node, graph, visited, stack)`
 - `transpose(graph)`
 - `get_sccs(graph)`
 
-### [morqex.microstructure.core.particle_graph](src/morqex/microstructure/core/particle_graph.py)
+### [morqex.microstructure.core.particle_graph](../src/morqex/microstructure/core/particle_graph.py)
 
 - `auto_check(func)` — 函数修饰器 在调用函数前检查依赖是否改变
 - `auto_memo(func)` — 自动缓存函数调用结果, 根据key函数返回的值标识状态
@@ -1694,7 +1728,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PolyVoro.discrete(self, reg: Region, rnd_mark=True)` — 离散到域
 - `Generator(self, objs)` — 物体生成器
 
-### [morqex.microstructure.core.rasterization](src/morqex/microstructure/core/rasterization.py)
+### [morqex.microstructure.core.rasterization](../src/morqex/microstructure/core/rasterization.py)
 
 - `shperef_mask(d)` — 获取一定直径球表面的体素掩膜
 - `shperef_rcoord(d)` — 获取一定直径球表面的相对中心坐标
@@ -1715,7 +1749,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `Voxelizer.discrete_check_axis(self, centers, rads, axis, marks)` — 统一体素化函数,按照self.bound_funcs进行周期性边界处理
 - `Voxelizer.discrete_volume_axis(self, vol, centers, rads, marks, axis, periods)`
 
-### [morqex.microstructure.core.voxel_fields](src/morqex/microstructure/core/voxel_fields.py)
+### [morqex.microstructure.core.voxel_fields](../src/morqex/microstructure/core/voxel_fields.py)
 
 - `dist_trans(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, measure_func=distance_transform_edt)`
 - `fedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
@@ -1838,33 +1872,33 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `calculate_3d_autocorrelation(voxel_grid)` — 计算三维体素网格的自相关函数和相关长度
 - `find_correlation_length(acf_1d, center_index)` — 从一维自相关函数中找到相关长度
 
-### [morqex.microstructure.design](src/morqex/microstructure/design.py)
+### [morqex.microstructure.design](../src/morqex/microstructure/design.py)
 
 - `random_field(shape=(64, 64, 64), fractions=(0.3, 0.7), length_scale=(3.0, 3.0, 3.0), seed=0, spacing=(1.0, 1.0, 1.0))`
 
-### [morqex.microstructure.full_volume](src/morqex/microstructure/full_volume.py)
+### [morqex.microstructure.full_volume](../src/morqex/microstructure/full_volume.py)
 
 - `periodic_components(mask)`
 - `periodic_distance(mask, *, halo=32, slab=24)` — Exact EDT when the returned interior distances stay below halo.
 - `prepare_full_volume(source, destination, *, halo=32)`
 - `positive_basis(features, *, orders=(2, 2, 2), xp=np)` — Tensor Bernstein partition of unity; eight nodes for (2,2,2).
 
-### [morqex.microstructure.generate.conditioning](src/morqex/microstructure/generate/conditioning.py)
+### [morqex.microstructure.generate.conditioning](../src/morqex/microstructure/generate/conditioning.py)
 
 - `composition_potential(scores, fractions, temperature=0.1, iterations=18, max_points=65536)` — Return biased scores and auditable soft/hard composition diagnostics.
 
-### [morqex.microstructure.generate.config](src/morqex/microstructure/generate/config.py)
+### [morqex.microstructure.generate.config](../src/morqex/microstructure/generate/config.py)
 
 - `GANConfig()`
 - `GANConfig.legacy_dict(self)`
 - `train_gan(config)`
 - `sample_gan(config, checkpoint=True, return_raw=False, spacing=(1.0, 1.0, 1.0))`
 
-### [morqex.microstructure.generate.constraints](src/morqex/microstructure/generate/constraints.py)
+### [morqex.microstructure.generate.constraints](../src/morqex/microstructure/generate/constraints.py)
 
 - `surface_coating(volume, substrate, coating, matrix, coating_fraction, seed=0, roughness=0.15)` — Project a binder phase onto the exterior of an active-material skeleton.
 
-### [morqex.microstructure.generate.hybrid](src/morqex/microstructure/generate/hybrid.py)
+### [morqex.microstructure.generate.hybrid](../src/morqex/microstructure/generate/hybrid.py)
 
 - `Generator(self, phases, noise_channels=16, width=64, residual=False, tri_reference=False, normalize_reference=False, zero_reference=False)`
 - `Generator.forward(self, z, reference, fractions)`
@@ -1874,13 +1908,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `distill(teacher_checkpoint, paths, run_dir, config=None)`
 - `sample_student(checkpoint, fractions=None, seed=42, device='cuda', size=None, exact_fractions=False, paths=None, composition_guidance=False, composition_temperature=0.05)`
 
-### [morqex.microstructure.generate.reconstruction](src/morqex/microstructure/generate/reconstruction.py)
+### [morqex.microstructure.generate.reconstruction](../src/morqex/microstructure/generate/reconstruction.py)
 
 - `Reconstructor()`
 - `Reconstructor.load(cls, manifest, workspace=None)`
 - `Reconstructor.generate(self, fractions=None, size=64, seed=42, device='cuda', spacing=(1.0, 1.0, 1.0), **overrides)`
 
-### [morqex.microstructure.generate.selection](src/morqex/microstructure/generate/selection.py)
+### [morqex.microstructure.generate.selection](../src/morqex/microstructure/generate/selection.py)
 
 - `Candidate()`
 - `rve_references(ct, size=64, partition='validation', count=4, seed=42, observation_planes=None)` — Disjoint z halves for validation/test; same-size statistical comparison.
@@ -1888,7 +1922,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `error(reference, generated)`
 - `benchmark(candidates, ct, output, seeds=(0, 1, 2), partition='validation', size=64, baseline=None, observation_planes=None)` — Preset score weights; reports each metric and avoids hiding failures in score.
 
-### [morqex.microstructure.generate.spatial](src/morqex/microstructure/generate/spatial.py)
+### [morqex.microstructure.generate.spatial](../src/morqex/microstructure/generate/spatial.py)
 
 - `VoxelDiffusionConfig()`
 - `Residual(self, cin, cout, padding_mode='circular')`
@@ -1905,15 +1939,15 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `fit_volume(images, run_dir, config=None, resume=None)` — Train a new 3D diffusion model from one/three 2D phase-label images.
 - `draw_volume(checkpoint, size=256, seed=42, device='cuda', spacing=(1.0, 1.0, 1.0))` — Native-size 3D diffusion chain; no numerical property input/postprojection.
 
-### [morqex.microstructure.generate.v0.adversarial](src/morqex/microstructure/generate/v0/adversarial.py)
+### [morqex.microstructure.generate.v0.adversarial](../src/morqex/microstructure/generate/v0/adversarial.py)
 
 - `Trainer(config_path)`
 
-### [morqex.microstructure.generate.v0.evaluation_images](src/morqex/microstructure/generate/v0/evaluation_images.py)
+### [morqex.microstructure.generate.v0.evaluation_images](../src/morqex/microstructure/generate/v0/evaluation_images.py)
 
 - `batch_crop_two_slice_folders(input_dir1: str, input_dir2: str, output_dir1: str, output_dir2: str, crop_size: Optional[Tuple[int, int]]=None, use_smaller_common_size: bool=True, max_slices: Optional[int]=None, crop_mode: str='center', allowed_exts: Optional[Tuple[str, ...]]=None, sort_key=None, keep_original_names: bool=True, output_format: Optional[str]=None, tif_compression: Optional[str]=None, verbose: bool=True)` — 对两个文件夹中的切片图像进行批量裁剪，并输出到两个新文件夹。
 
-### [morqex.microstructure.generate.v0.fields](src/morqex/microstructure/generate/v0/fields.py)
+### [morqex.microstructure.generate.v0.fields](../src/morqex/microstructure/generate/v0/fields.py)
 
 - `dist_trans(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, measure_func=distance_transform_edt)`
 - `fedt(obj_vol, periods=[False, False, False], return_indices=False, return_distances=True, parallel=n_para)`
@@ -2036,7 +2070,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `calculate_3d_autocorrelation(voxel_grid)` — 计算三维体素网格的自相关函数和相关长度
 - `find_correlation_length(acf_1d, center_index)` — 从一维自相关函数中找到相关长度
 
-### [morqex.microstructure.generate.v0.inference](src/morqex/microstructure/generate/v0/inference.py)
+### [morqex.microstructure.generate.v0.inference](../src/morqex/microstructure/generate/v0/inference.py)
 
 - `generator(config_path)`
 - `generator_checkpoint(config_path)`
@@ -2046,7 +2080,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `smooth_voxel_domains_iterative(input_data, kernel_size=3, iterations=5, save_path=None)` — 对三维体素进行迭代式区域平滑。
 - `remove_small_islands(data, min_size=27)` — 强力模式：直接移除小于 min_size (例如27个像素) 的所有连通域。
 
-### [morqex.microstructure.generate.v0.operations](src/morqex/microstructure/generate/v0/operations.py)
+### [morqex.microstructure.generate.v0.operations](../src/morqex/microstructure/generate/v0/operations.py)
 
 - `load_config(config_path)` — 读取 YAML 配置文件并返回参数 dict，
 - `mkdr(proj, proj_dir, Training)` — When training, creates a new project directory or overwrites an existing directory according to user input. When testing, returns the full project path
@@ -2060,11 +2094,11 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `generate_img_checkpoint(pth, img_type, netG, nz=64, lf=4, periodic=False, device='cuda')` — 为已训练或正在训练的生成器保存测试卷
 - `generate_img_cond(pth, img_type, netG, phi, nz=64, lf=4, periodic=False)` — 为已训练或正在训练的生成器保存测试卷（条件：孔隙率 phi）
 
-### [morqex.microstructure.generate.v0.patches](src/morqex/microstructure/generate/v0/patches.py)
+### [morqex.microstructure.generate.v0.patches](../src/morqex/microstructure/generate/v0/patches.py)
 
 - `CreateTensorDataset(data_path, data_type, image_size, scale)` — 从训练微观结构中随机生成张量数据集
 
-### [morqex.microstructure.generate.v0.restoration](src/morqex/microstructure/generate/v0/restoration.py)
+### [morqex.microstructure.generate.v0.restoration](../src/morqex/microstructure/generate/v0/restoration.py)
 
 - `advanced_denoising_pipeline(img)`
 - `sota_detail_preserving_pipeline(img)`
@@ -2072,7 +2106,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `final_advanced_pipeline(img)`
 - `snap_to_closest(arr)` — 输入: 任意维度的 numpy 数组或列表
 
-### [morqex.microstructure.generate.v0.settings](src/morqex/microstructure/generate/v0/settings.py)
+### [morqex.microstructure.generate.v0.settings](../src/morqex/microstructure/generate/v0/settings.py)
 
 - `ConfigDict(self, *args, **kwargs)` — 一个辅助类，让字典可以通过点符号访问属性 (config.project.name)
 - `ConfigProcessor(self, config_path)`
@@ -2080,11 +2114,11 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `ConfigProcessor.show_all(self)` — 格式化输出所有当前变量
 - `ConfigProcessor.check_consistency(self)` — 根据 YAML 中的注释逻辑检查参数一致性
 
-### [morqex.microstructure.generate.v0.stacks](src/morqex/microstructure/generate/v0/stacks.py)
+### [morqex.microstructure.generate.v0.stacks](../src/morqex/microstructure/generate/v0/stacks.py)
 
 - `save_3d_tif_to_2d_slices(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
 
-### [morqex.microstructure.generate.v0.synthesis](src/morqex/microstructure/generate/v0/synthesis.py)
+### [morqex.microstructure.generate.v0.synthesis](../src/morqex/microstructure/generate/v0/synthesis.py)
 
 - `AdaptiveUpsample3D(self, in_channels, out_channels, upscale_factor, kernel_size=3)` — 3D自适应上采样模块（基于光流/特征预测的思想）
 - `AdaptiveUpsample3D.forward(self, x)`
@@ -2095,7 +2129,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `upsample_net(pth, Training, imtype, d_kernel, d_stride, d_feature_channels, d_padding, g_scale, g_feature_channels)`
 - `upsample_net_conv(pth, Training, imtype, d_kernel, d_stride, d_feature_channels, d_padding, g_scale, g_feature_channels)` — complex_net
 
-### [morqex.microstructure.generate.v0.unavailable_conditioned](src/morqex/microstructure/generate/v0/unavailable_conditioned.py)
+### [morqex.microstructure.generate.v0.unavailable_conditioned](../src/morqex/microstructure/generate/v0/unavailable_conditioned.py)
 
 - `generator(config_path, phi)`
 - `save_3d_tif_to_2d_slices(input_tif_path: str, output_folder: str, slice_prefix: str='slice', check_dim_order: bool=False)` — 将三维TIF文件分割为二维切片并保存到指定文件夹
@@ -2104,14 +2138,14 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `smooth_voxel_domains_iterative(input_data, kernel_size=3, iterations=5, save_path=None)` — 对三维体素进行迭代式区域平滑。
 - `remove_small_islands(data, min_size=27)` — 强力模式：直接移除小于 min_size (例如27个像素) 的所有连通域。
 
-### [morqex.microstructure.generate.v1](src/morqex/microstructure/generate/v1.py)
+### [morqex.microstructure.generate.v1](../src/morqex/microstructure/generate/v1.py)
 
 - `DiffusionConfig()`
 - `train(paths, run_dir, config=None, resume=None)` — Crops on device, BF16 AMP, EMA, deadline, full optimizer/RNG resumption.
 - `sample(checkpoint, paths=None, fractions=None, size=None, steps=50, guidance=1.5, seed=42, device='cuda', slice_batch=16, spacing=(1.0, 1.0, 1.0), exact_fractions=False, prior=None, strength=1.0, overlap=16, composition_guidance=False, composition_temperature=0.05, composition_start=0.35)` — One/three 2D conditions -> 3D labels. Optional GAN volume as diffusion prior.
 - `tune_batch_size(config, target_fraction=0.88, maximum=512)` — Measure actual forward/backward peak; leave headroom for optimizer/EMA.
 
-### [morqex.microstructure.helper.desktop](src/morqex/microstructure/helper/desktop.py)
+### [morqex.microstructure.helper.desktop](../src/morqex/microstructure/helper/desktop.py)
 
 - `float_repr(x)`
 - `custom_display_hook(value)`
@@ -2332,7 +2366,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `jsonlize(obj)` — 转换为json序列对象
 - `objectlize(js)` — 转换为python对象
 
-### [morqex.microstructure.helper.persistence](src/morqex/microstructure/helper/persistence.py)
+### [morqex.microstructure.helper.persistence](../src/morqex/microstructure/helper/persistence.py)
 
 - `Config()`
 - `Config.load(self, load_cfg)`
@@ -2345,7 +2379,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `save_vol(self, path_str)`
 - `load_vol(cls, path_str, *args)`
 
-### [morqex.microstructure.helper.plotting](src/morqex/microstructure/helper/plotting.py)
+### [morqex.microstructure.helper.plotting](../src/morqex/microstructure/helper/plotting.py)
 
 - `Config()`
 - `Config.load(self, load_cfg)`
@@ -2383,19 +2417,19 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `error_plt(avg, std, alpha=0.5, x=[], label=None)`
 - `curve_error(x1, y1, x2, y2)`
 
-### [morqex.microstructure.image](src/morqex/microstructure/image.py)
+### [morqex.microstructure.image](../src/morqex/microstructure/image.py)
 
 - `load_stack(directory, spacing=(1.0, 1.0, 1.0))`
 - `segment(array, thresholds=None, phases=2)`
 - `clean(volume, minimum_size=16)`
 - `save_slices(volume, directory, axis='z', prefix='slice')`
 
-### [morqex.microstructure.io](src/morqex/microstructure/io.py)
+### [morqex.microstructure.io](../src/morqex/microstructure/io.py)
 
 - `load_legacy(path)` — Load the user's trusted PCG pickle, without installing global import aliases.
 - `convert_legacy_volume(path, output, spacing=(1.0, 1.0, 1.0))`
 
-### [morqex.microstructure.legacy_generator.network](src/morqex/microstructure/legacy_generator/network.py)
+### [morqex.microstructure.legacy_generator.network](../src/morqex/microstructure/legacy_generator/network.py)
 
 - `ResBlock3D(self, channels)` — 3D 残差块，用于生成器
 - `ResBlock3D.forward(self, x)`
@@ -2406,19 +2440,19 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `Discriminator(self, dim=64, in_channels=1)`
 - `Discriminator.forward(self, x)`
 
-### [morqex.microstructure.legacy_generator.train](src/morqex/microstructure/legacy_generator/train.py)
+### [morqex.microstructure.legacy_generator.train](../src/morqex/microstructure/legacy_generator/train.py)
 
 - `create_dummy_data_if_not_exists()` — 如果没有训练图片，生成一张模拟的多孔结构图
 - `load_data()`
 - `main_process()`
 
-### [morqex.microstructure.legacy_generator.utils](src/morqex/microstructure/legacy_generator/utils.py)
+### [morqex.microstructure.legacy_generator.utils](../src/morqex/microstructure/legacy_generator/utils.py)
 
 - `compute_gradient_penalty(D, real_samples, fake_samples, device)` — 计算 WGAN-GP 的梯度惩罚
 - `post_process_output(generated_vol, reference_img)` — 后处理：将生成的[-1, 1]连续体积映射回参考图像的整数分布 (相分布)
 - `save_checkpoint(netG, netD, epoch, path='checkpoint.pth')`
 
-### [morqex.microstructure.mesh.elements](src/morqex/microstructure/mesh/elements.py)
+### [morqex.microstructure.mesh.elements](../src/morqex/microstructure/mesh/elements.py)
 
 - `set_float_precision(value_arr, precision=12, zero_th=1e-32)`
 - `hex_id(obj)`
@@ -2528,7 +2562,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `VoronoiMesh.write_poly(voro_mesh, fname='')` — 写voronoi线性多面体网格文件(tetgen的poly)
 - `VoronoiMesh.calc_tetra_tetgen(voro_mesh, min_angle=14)`
 
-### [morqex.microstructure.mesh.pyacvd.clustering](src/morqex/microstructure/mesh/pyacvd/clustering.py)
+### [morqex.microstructure.mesh.pyacvd.clustering](../src/morqex/microstructure/mesh/pyacvd/clustering.py)
 
 - `Clustering(self, points, faces, weights=[])` — Uniform point clustering based on ACVD.
 - `Clustering.cluster(self, nclus, maxiter=100, debug=False, iso_try=10)` — Cluster points
@@ -2543,7 +2577,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `compute_face_normals(vertices, faces)` — 计算三角形面的法向量
 - `compute_vertex_normals(vertices, faces)` — 计算三角表面网格的顶点法向量
 
-### [morqex.microstructure.mesh.pyacvd.clustering_bk](src/morqex/microstructure/mesh/pyacvd/clustering_bk.py)
+### [morqex.microstructure.mesh.pyacvd.clustering_bk](../src/morqex/microstructure/mesh/pyacvd/clustering_bk.py)
 
 - `Clustering(self, verts, faces, weights)` — Uniform point clustering based on ACVD.
 - `Clustering.cluster(self, nclus, maxiter=100, debug=False, iso_try=10)` — Cluster points
@@ -2557,23 +2591,23 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `weighted_points(mesh, return_weighted=True, additional_weights=None)` — Returns point weight based on area weight and weighted points.
 - `neighbors_from_mesh(mesh)` — Assemble neighbor array.  Assumes all-triangular mesh.
 
-### [morqex.microstructure.mesh.tetgen.pytetgen](src/morqex/microstructure/mesh/tetgen/pytetgen.py)
+### [morqex.microstructure.mesh.tetgen.pytetgen](../src/morqex/microstructure/mesh/tetgen/pytetgen.py)
 
 - `TetGen(self, *args)` — Input, clean, and tetrahedralize surface meshes using TetGen.
 - `TetGen.tetrahedralize(self, plc=True, psc=0.0, refine=0.0, quality=True, nobisect=False, cdt=0.0, cdtrefine=7.0, coarsen=0.0, weighted=0.0, brio_hilbert=1.0, flipinsert=0.0, metric=0.0, varvolume=0.0, fixedvolume=0.0, regionattrib=0.0, insertaddpoints=0.0, diagnose=0.0, convex=0.0, nomergefacet=0.0, nomergevertex=0.0, noexact=0.0, nostaticfilter=0.0, zeroindex=0.0, facesout=0.0, edgesout=0.0, neighout=0.0, voroout=0.0, meditview=0.0, vtkview=0.0, vtksurfview=0.0, nobound=0.0, nonodewritten=0.0, noelewritten=0.0, nofacewritten=0.0, noiterationnum=0.0, nojettison=0.0, docheck=0.0, quiet=0.0, nowarning=0.0, verbose=0.0, vertexperblock=4092.0, tetrahedraperblock=8188.0, shellfaceperblock=2044.0, supsteiner_level=2.0, addsteiner_algo=1.0, coarsen_param=0.0, weighted_param=0.0, fliplinklevel=-1.0, flipstarsize=-1.0, fliplinklevelinc=1.0, opt_max_flip_level=3.0, opt_scheme=7.0, opt_iterations=3.0, smooth_cirterion=1.0, smooth_maxiter=7.0, delmaxfliplevel=1.0, order=1.0, reversetetori=0.0, steinerleft=100000.0, unflip_queue_limit=1000.0, no_sort=0.0, hilbert_order=52.0, hilbert_limit=8.0, brio_threshold=64.0, brio_ratio=0.125, epsilon=1e-08, facet_separate_ang_tol=179.9, collinear_ang_tol=179.9, facet_small_ang_tol=15.0, maxvolume=-1.0, maxvolume_length=-1.0, minratio=2.0, opt_max_asp_ratio=1000.0, opt_max_edge_ratio=100.0, mindihedral=0.0, optmaxdihedral=177.0, metric_scale=1.0, smooth_alpha=0.3, coarsen_percent=1.0, elem_growth_ratio=0.0, refine_progress_ratio=0.333, switches=None)` — Generates tetrahedrals interior to the surface mesh
 
-### [morqex.microstructure.mesh.voxel](src/morqex/microstructure/mesh/voxel.py)
+### [morqex.microstructure.mesh.voxel](../src/morqex/microstructure/mesh/voxel.py)
 
 - `FEMesh()`
 - `FEMesh.signed_volumes(self)`
 - `FEMesh.boundary_faces(self)`
 - `FEMesh.save(self, path)`
-- `FEMesh.save_comsol(self, path)` — Delegate established COMSOL mphtxt ordering/selection writer; retain phase map.
+- `FEMesh.save_comsol(self, path, **kwargs)` — Unified streaming COMSOL Mesh-class4 writer; explicit material/domain mapping, no GUI dependency.
 - `voxel_to_hex(volume, phases=None)`
 - `voxel_to_tetra(volume, phases=None)`
 - `surface(volume, phase=1)`
 
-### [morqex.microstructure.pipeline](src/morqex/microstructure/pipeline.py)
+### [morqex.microstructure.pipeline](../src/morqex/microstructure/pipeline.py)
 
 - `Microstructure()`
 - `Microstructure.load(cls, path, **kwargs)`
@@ -2584,20 +2618,20 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `Microstructure.show(self)`
 - `Microstructure.homogenize(self, coefficients, order=2)`
 
-### [morqex.microstructure.reporting](src/morqex/microstructure/reporting.py)
+### [morqex.microstructure.reporting](../src/morqex/microstructure/reporting.py)
 
 - `structure_html(volume, path, title='GEM v1 三维微结构', phase_names=None, max_triangles=120000, reference=None)`
 
-### [morqex.microstructure.simulate.cell](src/morqex/microstructure/simulate/cell.py)
+### [morqex.microstructure.simulate.cell](../src/morqex/microstructure/simulate/cell.py)
 
 - `discharge(model='DFN', parameter_set='Chen2020', c_rate=1.0, duration=3600.0, points=101, updates=None)`
 - `microstructure_parameters(volume, pore_phase=0, electrode='Negative', tortuosity=None, active_phase=None)` — Map measured pore and active fractions consistently to a cell model.
 
-### [morqex.microstructure.simulate.elasticity](src/morqex/microstructure/simulate/elasticity.py)
+### [morqex.microstructure.simulate.elasticity](../src/morqex/microstructure/simulate/elasticity.py)
 
 - `homogenize_elasticity(mesh, properties, order=1)` — Returns engineering-Voigt stiffness [xx,yy,zz,yz,xz,xy].
 
-### [morqex.microstructure.simulate.electrochemistry](src/morqex/microstructure/simulate/electrochemistry.py)
+### [morqex.microstructure.simulate.electrochemistry](../src/morqex/microstructure/simulate/electrochemistry.py)
 
 - `backend_info()` — Report the installed native build, independently of numerical validation.
 - `assemble_cell(anode, cathode, separator_voxels, anode_map, cathode_map)` — Assemble cathode|separator|anode along x, matching upstream boundary conventions.
@@ -2613,52 +2647,52 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `audit_solver(directory)` — Read actual convergence/mass evidence; never infer convergence from a curve.
 - `discharge_3d(anode, cathode, directory, anode_map, cathode_map, separator_voxels=4, settings=None, timeout=None, parameters=None)` — Fully coupled upstream microstructure-scale discharge; SI units required.
 
-### [morqex.microstructure.simulate.evolution](src/morqex/microstructure/simulate/evolution.py)
+### [morqex.microstructure.simulate.evolution](../src/morqex/microstructure/simulate/evolution.py)
 
 - `DiffusionHistory()`
 - `diffuse(mesh, coefficients, initial=1.0, dt=0.01, steps=10, order=2, dirichlet='', boundary_value=0.0, save_every=1)`
 
-### [morqex.microstructure.simulate.homogenization](src/morqex/microstructure/simulate/homogenization.py)
+### [morqex.microstructure.simulate.homogenization](../src/morqex/microstructure/simulate/homogenization.py)
 
 - `homogenize(volume, coefficients, order=2)`
 - `tortuosity(volume, pore_phase=0, axis='x', order=2)` — Pore-only RVE; isolated pores are removed to avoid singular FEM systems.
 
-### [morqex.microstructure.simulate.periodic](src/morqex/microstructure/simulate/periodic.py)
+### [morqex.microstructure.simulate.periodic](../src/morqex/microstructure/simulate/periodic.py)
 
 - `conductivity_tensor(volume, coefficients, order=2)`
 
-### [morqex.microstructure.simulate.transport](src/morqex/microstructure/simulate/transport.py)
+### [morqex.microstructure.simulate.transport](../src/morqex/microstructure/simulate/transport.py)
 
 - `to_ngsolve(mesh, periodic=False)`
 - `ConductionResult()`
 - `conduction(mesh, coefficients, axis='x', order=2)` — Unit potential difference; natural zero flux on lateral and pore boundaries.
 - `save_field(result, path)`
 
-### [morqex.microstructure.simulate.voxel_transport](src/morqex/microstructure/simulate/voxel_transport.py)
+### [morqex.microstructure.simulate.voxel_transport](../src/morqex/microstructure/simulate/voxel_transport.py)
 
 - `effective_diffusion(volume, phase=0, axis='z', device='cuda', tolerance=1e-05, max_iterations=50000)`
 
-### [morqex.microstructure.view](src/morqex/microstructure/view.py)
+### [morqex.microstructure.view](../src/morqex/microstructure/view.py)
 
 - `slices(volume, indices=None)`
 - `mesh(femesh, **kwargs)`
 - `raytrace(volume, phases=None, colors=None, start=True)` — Optional OptiX voxel rendering without hard-coded files or scene dimensions.
 
-### [morqex.microstructure.volume](src/morqex/microstructure/volume.py)
+### [morqex.microstructure.volume](../src/morqex/microstructure/volume.py)
 
 - `Volume()`
 - `Volume.fractions(self)`
 - `Volume.save(self, path)`
 - `Volume.load(cls, path, **kwargs)`
 
-### [morqex.microstructure.workspace](src/morqex/microstructure/workspace.py)
+### [morqex.microstructure.workspace](../src/morqex/microstructure/workspace.py)
 
 - `Workspace()`
 - `Workspace.default(cls)`
 - `Workspace.path(self, category, *parts)`
 - `Workspace.initialize(self)`
 
-### [morqex.runtime.aging](src/morqex/runtime/aging.py)
+### [morqex.runtime.aging](../src/morqex/runtime/aging.py)
 
 - `AgingRuntime(self, operator_paths, parameters, config, *, nx=3, feedback=1.0, configuration_manifest=None, rtol=1e-07, atol=1e-08)`
 - `AgingRuntime.advance(self, dt, current_A)`
@@ -2670,12 +2704,12 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `AgingRuntime.cohesive_error_bound(self, domain, *, x_index=0)` — Fixed-state compression bound; never a nonlinear trajectory bound.
 - `AgingRuntime.enrich(self, new_paths, *, relative_energy_tolerance=1e-05)` — Nested concentration and reaction-area reservoir transfer.
 
-### [morqex.solvers.pybamm_backend](src/morqex/solvers/pybamm_backend.py)
+### [morqex.solvers.pybamm_backend](../src/morqex/solvers/pybamm_backend.py)
 
 - `solver(*, rtol=1e-07, atol=1e-08)`
 - `provenance()`
 
-### [morqex.sparse_coupled](src/morqex/sparse_coupled.py)
+### [morqex.sparse_coupled](../src/morqex/sparse_coupled.py)
 
 - `sparse_bytes(a)`
 - `SparseCoupledState()`
@@ -2691,7 +2725,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `SparseChemoelasticSystem.retained_sparse_bytes(self)`
 - `SparseChemoelasticSystem.coupled_resolvent_basis(self, count, *, shifts=(0.01, 0.1, 1.0, 10.0), moments=3)` — Established rational Krylov responses of the actual coupled generator.
 
-### [morqex.statistics](src/morqex/statistics.py)
+### [morqex.statistics](../src/morqex/statistics.py)
 
 - `principal_tension(stress)`
 - `von_mises(stress)`
@@ -2704,7 +2738,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `StressEnvelope.build(cls, response, count, scales, *, radius=1.0, selection=None)`
 - `StressEnvelope.evaluate(self, q, *, probability=0.99, threshold=0.0)`
 
-### [morqex.streamed_rom](src/morqex/streamed_rom.py)
+### [morqex.streamed_rom](../src/morqex/streamed_rom.py)
 
 - `StreamedState()`
 - `OnlineEnergyKernel()`
@@ -2728,13 +2762,13 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `QuadraticStressStatistics(self, mean, second, von_mises_second, fingerprint)` — Exact selected-volume linear means and quadratic moments, O(m²) storage.
 - `QuadraticStressStatistics.moments(self, state)`
 
-### [morqex.tail](src/morqex/tail.py)
+### [morqex.tail](../src/morqex/tail.py)
 
 - `QuantileResult()`
 - `QuantileTree(self, response, *, scales=None, selection=None)`
 - `QuantileTree.query(self, q, *, probability=0.99, relative_tolerance=0.05, absolute_tolerance=1.0, scale_floor=1.0, threshold=0.0, maximum_nodes=None)`
 
-### [morqex.topology](src/morqex/topology.py)
+### [morqex.topology](../src/morqex/topology.py)
 
 - `PorousCBD()`
 - `PorousCBD.ionic_phases(self, structure)`
@@ -2742,7 +2776,7 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `PorousCBD.porosity(self, structure)`
 - `PorousCBD.metadata(self)`
 
-### [morqex.transport](src/morqex/transport.py)
+### [morqex.transport](../src/morqex/transport.py)
 
 - `ConcentrationInfeasible()`
 - `DiffusionState()`
@@ -2752,20 +2786,20 @@ $PY scripts/run_local.py --label ct_dfn -- $PY /home/zephyrain/lw/MORQEX/benchma
 - `VoxelDiffusion.expand(self, values, *, inactive=0.0)`
 - `conservative_box_projection(values, weights, target, *, lower=0.0, upper=1.0)` — Weighted L2 projection with exact weighted-mass equality and box bounds.
 
-### [morqex.visualization.full_volume](src/morqex/visualization/full_volume.py)
+### [morqex.visualization.full_volume](../src/morqex/visualization/full_volume.py)
 
 - `render_report(payload, destination, *, font_path=None, font_license=None)`
 
-### [morqex.visualization.report_font](src/morqex/visualization/report_font.py)
+### [morqex.visualization.report_font](../src/morqex/visualization/report_font.py)
 
 - `embed_font(html, path, license_text)`
 
-### [morqex.visualization.voxel_fields](src/morqex/visualization/voxel_fields.py)
+### [morqex.visualization.voxel_fields](../src/morqex/visualization/voxel_fields.py)
 
 - `file_hash(path)`
 - `export_reference_fields(model, u, c, directory, *, macro=(0.0,) * 6, temperature=0.0, chunk=131072)` — Exact discrete gradients/stress; no LOD in the saved numerical fields.
 
-### [morqex.workflow](src/morqex/workflow.py)
+### [morqex.workflow](../src/morqex/workflow.py)
 
 - `ElectrodeRecipe()`
 - `ElectrodeRecipe.prepare(self, workspace, parameters, domain, name)`
@@ -2795,7 +2829,7 @@ $PY scripts/run_local.py --label finite_cycle -- $PY -m morqex.top_damage dense-
 
 Repeat the last command to advance bounded accepted steps. Reusing an output with changed physical-source identity is rejected. Finite checkpoints additionally contain `finite/deformation_gradient`, `chemical_deformation_gradient`, `first_piola_Pa`, `cauchy_stress_Pa`, and `mechanical_chemical_potential_J_mol`; displayed strain is Green–Lagrange. This current cycle candidate retains the explicitly restricted radial concentration and diffuse conductivity closure, not physical pore creation.
 
-### [morqex.workspace](src/morqex/workspace.py)
+### [morqex.workspace](../src/morqex/workspace.py)
 
 - `Workspace()`
 - `Workspace.path(self, *parts: str)`

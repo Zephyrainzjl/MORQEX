@@ -6,8 +6,13 @@ Optional backends retain their own licenses, dependencies and model assumptions.
 from .voxel import VoxelModel,Shape,from_regions,from_shapes,framework,capabilities
 from .meshing import tetrahedralize,stream_tetrahedralize,MeshArtifact
 from .presets import electrode,PRESETS
-from .interfaces import register_generator,generate,from_toml,register_mesher,mesh
+from .interfaces import register_generator,generate,from_toml,register_mesher,mesh,mesh_from_toml
+from .tetgen import SurfacePLC,TetGenOptions,TetGenMesh,voxel_plc,marching_cubes_plc,tetgen_mesh,tetra_quality
+from .tetgen_backend import build_tetgen
+from .comsol import export_comsol,read_comsol
 
 __all__=['VoxelModel','Shape','from_regions','from_shapes','framework','capabilities',
          'tetrahedralize','stream_tetrahedralize','MeshArtifact','electrode','PRESETS',
-         'register_generator','generate','from_toml','register_mesher','mesh']
+         'register_generator','generate','from_toml','register_mesher','mesh',
+         'SurfacePLC','TetGenOptions','TetGenMesh','voxel_plc','marching_cubes_plc','tetgen_mesh',
+         'tetra_quality','build_tetgen','export_comsol','read_comsol','mesh_from_toml']

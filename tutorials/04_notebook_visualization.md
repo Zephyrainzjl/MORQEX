@@ -168,3 +168,22 @@ from morqex.visualization.notebook import MeshView
 preview = MeshView(small_fem_mesh,cell_count=300)
 preview.display()
 ```
+
+## Whole-mesh actual-cell sampling / 全域真实单元抽样
+
+```python
+# Spread a bounded set of actual Tet4 across the entire stored mesh.
+# 在整个真实网格中均匀抽取单元，适合观察多个颗粒的整体位置。
+mesh_view = artifact.viewer(cell_count=2500,sampling='uniform')
+mesh_view.display()
+mesh_view.save_html('/home/zephyrain/lw/morph_workspace/microelectrode_gallery/whole_mesh.html')
+
+# Default remains a contiguous local subset / 默认仍是连续局部单元
+local = artifact.viewer(first_cell=10000,cell_count=1000,sampling='contiguous')
+```
+
+Uniform display sampling keeps each selected element's real global cell ID,
+region and vertex coordinates, including for HDF5 artifacts. It is a display
+subset, not a new volume mesh or a conservative physical reduction. It cannot
+be used for integration, connected-component tests or solving the full domain.
+全域抽样保留单元原编号、材料与坐标，仅用于显示；不能代替完整积分、拓扑检查或体求解。

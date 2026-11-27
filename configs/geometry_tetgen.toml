@@ -1,0 +1,27 @@
+# ZYX shape and spacing; SI metres. Region0 is included deliberately.
+[geometry]
+method = "shapes"
+shape = [24, 24, 24]
+spacing = [1e-6, 1e-6, 1e-6]
+
+[[shapes]]
+kind = "ellipsoid"
+region = 1
+centre = [12e-6, 12e-6, 12e-6]
+axes = [7e-6, 6e-6, 5e-6]
+irregularity = 0.08
+
+[meshing]
+method = "tetgen"
+regions = [0, 1]
+surface_method = "voxel_plc"
+maximum_facets = 50000
+
+[meshing.options]
+radius_edge_ratio = 2.0
+minimum_dihedral = 0.0
+maximum_steiner = 100000
+maximum_cells = 400000
+# Quality requests do not guarantee bounds at constrained small PLC angles.
+# Set true to reject a mesh whose measured quality misses the requests.
+require_quality = false

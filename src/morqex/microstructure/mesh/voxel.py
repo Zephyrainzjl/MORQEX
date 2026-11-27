@@ -31,21 +31,11 @@ class FEMesh:
                      cell_data={'phase': [self.phases]}))
         return path
 
-    def save_comsol(self,path):
-        """Delegate established COMSOL mphtxt ordering/selection writer; retain phase map."""
-        import json
-        from morqex.microstructure.mesh.elements import Mesh
-        path = Path(path)
-        if path.suffix != '.mphtxt': raise ValueError('Use .mphtxt')
-        path.parent.mkdir(parents=True,exist_ok=True)
-        labels = np.unique(self.phases)
-        mapping = {int(p):i+1 for i,p in enumerate(labels)}
-        obj = Mesh(self.points,self.cells,cell_data=np.array([mapping[int(p)] for p in self.phases]))
-        obj.cell_type = self.cell_type
-        obj.write_mph(path=str(path.parent),name=path.stem,on=False)
-        path.with_name('Mesh-'+path.name).replace(path)
-        path.with_suffix('.phases.json').write_text(json.dumps(mapping,indent=2))
-        return path
+    def save_comsol(self,path,**kwargs):
+        """COMSOL Mesh-class4 writer, explicit region/domain mapping, no optional GUI dependencies."""
+        from morqex.modeling.comsol import export_comsol
+        return export_comsol(self,path,**kwargs)
+
 
 def voxel_to_hex(volume, phases=None):
     if not isinstance(volume, Volume):

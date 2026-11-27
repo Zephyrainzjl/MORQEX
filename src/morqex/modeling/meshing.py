@@ -16,11 +16,31 @@ class MeshArtifact:
     tetrahedra:int
     selected_regions:tuple
 
+    @classmethod
+    def load(cls,path):
+        """Open a complete voxel or TetGen HDF5 artifact without loading cells."""
+        path=Path(path).expanduser().resolve()
+        with h5py.File(path,'r') as f:
+            if not f.attrs.get('complete',False):raise ValueError('Incomplete mesh artifact')
+            points=f['mesh/points_m'];cells=f['mesh/tetrahedra']
+            if points.shape[1:]!=(3,) or cells.shape[1:]!=(4,) or len(f['mesh/phase'])!=len(cells):
+                raise ValueError('Invalid Tet4 artifact array shapes')
+            selected=f.attrs.get('selected_regions')
+            if selected is None:
+                labels=set();phase=f['mesh/phase']
+                for start in range(0,len(phase),65536):labels.update(map(int,np.unique(phase[start:start+65536])))
+                selected=sorted(labels)
+            return cls(path,path.with_suffix('.xdmf'),len(points),len(cells),tuple(map(int,selected)))
+
     def viewer(self,**kwargs):
         from morqex.visualization.notebook import MeshView
         return MeshView(self,**kwargs)
 
     def show(self,**kwargs):return self.viewer(**kwargs).display()
+
+    def export_comsol(self,path,**kwargs):
+        from .comsol import export_comsol
+        return export_comsol(self,path,**kwargs)
 
 
 def tetrahedralize(model,*,regions=None,maximum_voxels=262144):

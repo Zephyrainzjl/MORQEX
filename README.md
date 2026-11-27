@@ -12,7 +12,8 @@ requirements.
 [Tutorials](tutorials/README.md) · [API reference](tutorials/API.md) ·
 [Voxel modelling](tutorials/01_geometry_and_voxels.md) ·
 [Finite-element meshing](tutorials/02_finite_element_meshes.md) ·
-[Integrated backends](tutorials/03_integrated_geometry_backends.md)
+[Integrated backends](tutorials/03_integrated_geometry_backends.md) ·
+[TetGen + COMSOL / 原生编译与导出](tutorials/05_tetgen_and_comsol.md)
 
 中文教程：[几何与体素](tutorials/01_geometry_and_voxels.md#zh) ·
 [有限元网格](tutorials/02_finite_element_meshes.md#zh) ·
@@ -20,6 +21,36 @@ requirements.
 
 [Notebook实时二维/三维可视化](tutorials/04_notebook_visualization.md) ·
 [Executable notebook / 可执行示例](tutorials/notebooks/geometry_workflow.ipynb)。
+
+## Optional native TetGen / 可选原生网格
+
+The integrated TetGen C++ core can be compiled during a regular pip install:
+已集成的 TetGen C++ 核心可以在 pip 安装时选择编译：
+
+```bash
+export MORQEX_WORKSPACE=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
+MORQEX_BUILD_TETGEN=1 python -m pip install '.[modeling,geometry]'
+```
+
+Omit the environment flag for a Python-only build. Use an external environment;
+native editable (`-e`) builds are rejected to keep binaries out of `src`.
+不设该开关则不编译；环境及构建产物均放在源码外，原生可编辑安装会被拒绝。
+
+```python
+from morqex.modeling import mesh,export_comsol
+# Given a VoxelModel / 已有统一体素对象
+# result = mesh(model,method='tetgen',regions=[1,2],surface_method='voxel_plc')
+# result.save_hdf5('/external/tetgen.h5')
+# export_comsol(result,'/external/tetgen.mphtxt',region_names=model.region_names)
+```
+
+Exact shared multiphase PLC, approximate single-phase contours and custom
+closed surfaces are distinct choices. Quality and per-material volume are
+measured. Native COMSOL mesh export preserves explicit domain/boundary maps.
+The [tutorial](tutorials/05_tetgen_and_comsol.md) covers installation, licenses,
+TOML, all sizing options, notebook visuals and COMSOL import steps. COMSOL
+application import has not been run without an installed COMSOL runtime.
+精确共享多相 PLC、单相近似轮廓和自定义面均有独立入口及误差说明；教程提供完整步骤。
 
 ## Geometry workflow
 

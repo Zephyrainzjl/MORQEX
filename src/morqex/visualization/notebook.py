@@ -71,10 +71,13 @@ def show(model,**kwargs):return VoxelView(model,**kwargs).display()
 
 class MeshView(VoxelView):
     """Actual bounded Tet4 subset from FEMesh or full streamed MeshArtifact."""
-    def __init__(self,mesh,*,first_cell=0,cell_count=1000,height=620,title='Actual Tet4 / 真实四面体'):
+    def __init__(self,mesh,*,first_cell=0,cell_count=1000,height=620,title='Actual Tet4 / 真实四面体',sampling='contiguous'):
         if type(first_cell) is not int or first_cell<0 or type(cell_count) is not int or not 1<=cell_count<=5000:
             raise ValueError('Nonnegative first cell and1..5000 preview cells required')
         self.first_cell=first_cell;self.cell_count=cell_count;self.height=height;self.title=title;self.handle=None
+        if sampling not in ('contiguous','uniform'):raise ValueError('sampling must be contiguous or uniform')
+        if sampling=='uniform' and first_cell!=0:raise ValueError('Uniform display sampling covers the complete mesh; first_cell must be0')
+        self.sampling=sampling
         self._set(mesh)
 
     def _set(self,mesh):
@@ -85,18 +88,20 @@ class MeshView(VoxelView):
             with h5py.File(mesh.hdf5) as f:
                 total=len(f['mesh/tetrahedra']);end=min(total,self.first_cell+self.cell_count)
                 if self.first_cell>=end:raise ValueError('Preview outside stored mesh')
-                cells=f['mesh/tetrahedra'][self.first_cell:end];ids,inverse=np.unique(cells,return_inverse=True)
+                selected=np.linspace(0,total-1,min(self.cell_count,total),dtype=np.int64) if self.sampling=='uniform' else np.arange(self.first_cell,end)
+                cells=f['mesh/tetrahedra'][selected];ids,inverse=np.unique(cells,return_inverse=True)
                 points=f['mesh/points_m'][ids];cells=inverse.reshape(-1,4)
-                phase=f['mesh/phase'][self.first_cell:end]
+                phase=f['mesh/phase'][selected]
         elif isinstance(mesh,FEMesh) and mesh.cell_type=='tetra':
             total=len(mesh.cells);end=min(total,self.first_cell+self.cell_count)
             if self.first_cell>=end:raise ValueError('Preview outside mesh')
-            original=mesh.cells[self.first_cell:end];ids,inverse=np.unique(original,return_inverse=True)
-            points=mesh.points[ids];cells=inverse.reshape(-1,4);phase=mesh.phases[self.first_cell:end]
+            selected=np.linspace(0,total-1,min(self.cell_count,total),dtype=np.int64) if self.sampling=='uniform' else np.arange(self.first_cell,end)
+            original=mesh.cells[selected];ids,inverse=np.unique(original,return_inverse=True)
+            points=mesh.points[ids];cells=inverse.reshape(-1,4);phase=mesh.phases[selected]
         else:raise TypeError('MeshArtifact or tetrahedral FEMesh required')
         self.model=mesh
         payload={'points':points.tolist(),'cells':cells.tolist(),'phase':phase.tolist(),'total':total,
-            'first':self.first_cell,'title':self.title}
+            'first':self.first_cell,'title':self.title,'sampling':self.sampling,'cell_indices':selected.tolist()}
         self.document=Path(__file__).with_name('notebook_tetra.html').read_text().replace('__DATA__',json.dumps(payload,separators=(',',':')).replace('<','\\u003c'))
         workspace=Path(os.environ.get('MORQEX_WORKSPACE',Path(__file__).resolve().parents[4]/'morph_workspace/microelectrode_gallery'))
         font=workspace/'data/report_font/NotoSansCJKsc-Regular.otf'

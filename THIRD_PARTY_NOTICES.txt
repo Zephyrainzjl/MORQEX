@@ -71,3 +71,17 @@ InputParameter broadcast onto the current collector now preserves its physical
 primary-coordinate average. Upstream BSD-3 retained, local hashes recorded.
 The matching discretisation.py average denominator uses geometric broadcast
 unity rather than a vector sized from the symbolic shape-test placeholder.
+
+TetGen 1.6.0 optional native mesher (2026-11-27)
+Upstream: Hang Si / WIAS, https://tetgen.github.io/ ; source inherited from GEMsim
+in src/morqex/microstructure/mesh/tetgen/cython/tetgen. Original core files and
+headers remain unchanged. Official project lists version1.6.0 under AGPLv3,
+with separately obtainable commercial licensing. The AGPLv3 text and its source
+hash are now retained as LICENSE and license_provenance.json in that directory.
+This resolves the missing TetGen license text mentioned in the earlier audit;
+it does not resolve missing notices for other inherited optional components.
+The independent MORQEX bridge is in modeling/native_tetgen. Optional compilation
+uses MORQEX_BUILD_TETGEN=1, without Cython, PyVista or the legacy ACVD extension.
+Opting out of native compilation does not remove the bundled third-party source
+or its licensing obligations. No general redistribution license for the entire
+combined research repository is inferred from the TetGen license.
