@@ -1,0 +1,26 @@
+schema_version = 1
+
+[cycle]
+output = "network_nmc811_05C_v4"
+host = "NMC811"
+C_rate = 0.5
+cycles = 2
+nodes = 3
+increments_per_half_cycle = 24
+length_m = 1.5e-6
+graph_update_tolerance = 0.005
+# Numerical validation fixture, not calibrated NMC fatigue or open-crack flow.
+# All inventory states persist. The declared diffuse law never creates pores.
+
+[microstructure]
+name = "network_eight_particles_12"
+shape_zyx = [12, 12, 12]
+spacing_m = 0.75e-6
+particle_count = 8
+radius_voxels = 2.5
+radius_cv = 0.0
+minimum_gap_voxels = 1.0
+cbd_fraction = 0.35
+grains_per_particle = 2
+seed = 104
+grain_seed = 20261127

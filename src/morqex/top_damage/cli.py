@@ -22,7 +22,11 @@ def status():
                         'conservative regional DFN states with spatial mechanical-potential ports',
                         'TOML per-node finite-mechanics feedback probe and field visualization',
                         'source-integrated resolved 3D echemAMR/HYPRE and exact field-to-fatigue bridge',
-                        'accepted-state VTI/XDMF time series and bounded-memory HTML'],
+                        'accepted-state VTI/XDMF time series and bounded-memory HTML',
+                        'source-aware Kron graph condensation and passive-response event certificate',
+                        'dual electronic/ionic reachability with immutable disconnected lithium inventory',
+                        'spatial graph/area/diffusion DFN inputs and per-node finite-fatigue cycle checkpoints',
+                        'nested connected concentration aggregation and full-voxel reference option'],
         'not_qualified': ['polycrystal fatigue reference', 'phase-field-to-aperture topology update',
                           'dynamic tensor homogenization with fracture', 'topology-changing DFN restart',
                           'full long-cycle closure', 'cycle-jump error control', 'GPU fatigue backend'],
@@ -35,6 +39,15 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog='morqex top-damage')
     sub = p.add_subparsers(dest='action', required=True)
     sub.add_parser('status')
+    network_cycle=sub.add_parser('network-cycle',help='Conservative regional DFN / 3D finite fatigue / dual graph candidate')
+    network_cycle.add_argument('config')
+    network_cycle.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    network_cycle.add_argument('--steps',type=int,default=1)
+    network_report=sub.add_parser('network-report',help='Audit accepted network history and render offline fields/voltage')
+    network_report.add_argument('directory')
+    network_report.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
+    network_report.add_argument('--output')
+    network_report.add_argument('--export',action='store_true')
     resolved=sub.add_parser('build-resolved',help='Bounded source-integrated 3D echemAMR build; separate from DFN qualification')
     resolved.add_argument('config')
     resolved.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
@@ -97,6 +110,17 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.action == 'status':
         print(json.dumps(status(), indent=2, ensure_ascii=False))
+    elif args.action == 'network-cycle':
+        if not args.workspace:p.error('An external workspace is required')
+        from .network_cycle import run_network_cycle
+        print(json.dumps(run_network_cycle(args.config,Workspace(args.workspace),steps=args.steps),indent=2))
+    elif args.action == 'network-report':
+        if not args.workspace:p.error('An external workspace is required')
+        from .network_report import build_network_report
+        if args.export:
+            from .network_export import export_network_history
+            export_network_history(args.directory,Workspace(args.workspace))
+        print(json.dumps(build_network_report(args.directory,Workspace(args.workspace),output=args.output),indent=2))
     elif args.action == 'paper-particle':
         if not args.workspace:p.error('An external workspace is required')
         from .paper_particle_run import run_particle

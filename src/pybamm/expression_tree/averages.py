@@ -186,6 +186,19 @@ def x_average(symbol: pybamm.Symbol) -> pybamm.Symbol:
             return pybamm.PrimaryBroadcast(
                 x_average(symbol.orphans[0]), symbol.broadcast_domain
             )
+        elif (
+            isinstance(symbol, pybamm.SecondaryBroadcast)
+            and symbol.broadcast_domain == ["current collector"]
+            and all(dom in ["negative electrode", "separator", "positive electrode"]
+                    for dom in symbol.domain)
+            and not symbol.orphans[0].secondary_domain
+        ):
+            # MORQEX: a spatial electrode input broadcast onto the collector
+            # still varies along x. Average the original primary coordinate,
+            # then retain the collector domain (do not drop the input to scalar).
+            return pybamm.PrimaryBroadcast(
+                x_average(symbol.orphans[0]), symbol.broadcast_domain
+            )
         elif isinstance(symbol, pybamm.FullBroadcast) and all(
             dom in ["negative electrode", "separator", "positive electrode"]
             for dom in symbol.secondary_domain

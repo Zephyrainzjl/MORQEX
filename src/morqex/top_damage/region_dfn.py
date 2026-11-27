@@ -90,37 +90,68 @@ class RegionEpochDFN(EpochDFN):
     No finite elastic H is assumed; external potentials must be projected from
     the current nonlinear microstate. Input updates do not integrate fatigue.
     """
-    def __init__(self,port,*,host='NMC811',porosity,temperature_K=298.15,nx=6,transport_law=None):
+    def __init__(self,port,*,host='NMC811',porosity,temperature_K=298.15,nx=6,transport_law=None,dynamic_topology=False,stoichiometry_window=(.25,.9),local_mobility=False,solver_rtol=1e-10,solver_atol=1e-11,project_algebraic_output=False,diffusivity_interpretation='tracer_reference'):
         law=transport_law or TransportLaw();self.port=port;self.nx=nx;self.transport_law=law
+        if diffusivity_interpretation not in ('tracer_reference','chemical_diffusivity'):
+            raise ValueError('Explicit tracer_reference or chemical_diffusivity interpretation required')
+        if diffusivity_interpretation=='chemical_diffusivity' and not (dynamic_topology and local_mobility):
+            raise ValueError('Chemical diffusivity conversion requires local network mobility')
+        if type(project_algebraic_output) is not bool:raise ValueError('Boolean output projection control required')
+        self.output_projection=None
+        if project_algebraic_output:
+            from .dae_projection import AlgebraicOutputProjection
+            self.output_projection=AlgebraicOutputProjection()
+        if not np.isfinite([solver_rtol,solver_atol]).all() or not 0<min(solver_rtol,solver_atol)<=max(solver_rtol,solver_atol)<1e-3:
+            raise ValueError('Finite positive DFN time integration tolerances required')
         if type(nx) is not int or nx<3:raise ValueError('At least three DFN thickness cells required by boundary extrapolation')
         # Reuse parameter/source/inventory bookkeeping. Replace its radial model
         # before any advance; no radial state participates in this solver.
-        p,_=lithium_halfcell_parameters(host=host,active_fraction=port.active_fraction)
+        p,_=lithium_halfcell_parameters(host=host,active_fraction=port.active_fraction,stoichiometry_window=stoichiometry_window)
         cmax=float(p['Maximum concentration in positive electrode [mol.m-3]'])
         super().__init__(host=host,active_fraction=port.active_fraction,porosity=porosity,
             radius_m=3*port.active_fraction/port.area_density,temperature_K=temperature_K,nx=nx,
-            initial_stoichiometry=port.reference_concentration/cmax)
-        p0,_=lithium_halfcell_parameters(host=host,active_fraction=port.active_fraction)
+            initial_stoichiometry=port.reference_concentration/cmax,stoichiometry_window=stoichiometry_window)
+        p0,_=lithium_halfcell_parameters(host=host,active_fraction=port.active_fraction,stoichiometry_window=stoichiometry_window)
         curve=p0['Positive electrode OCP [V]']
+        if diffusivity_interpretation=='chemical_diffusivity' and curve.slope_bounds(temperature_K)[1]>=-1e-8:
+            raise ValueError('Chemical diffusivity conversion requires strictly decreasing OCP; no curvature clipping or flat-plateau division allowed')
         lo,hi=law.stoichiometry_bounds
         if lo<curve.stoichiometry[0] or hi>curve.stoichiometry[-1]:raise ValueError('Region concentration bounds exceed OCP table')
         if curve.slope_bounds(temperature_K)[1]>1e-12 and law.gradient_coefficient_J_m5_mol2<=0:
             raise ValueError('Nonconvex OCP requires declared gradient energy and spatial convergence')
         self.parameters.update({'Positive electrode OCP [V]':curve,
             'Positive electrode exchange-current density [A.m-2]':p0['Positive electrode exchange-current density [A.m-2]']})
+        geometry_class=GeometryEfficiency
+        if dynamic_topology:
+            from .network_dfn import SpatialGeometryEfficiency
+            geometry_class=SpatialGeometryEfficiency
+            self.parameters.update({'Positive electrode conductivity [S.m-1]':lambda T:
+                pb.SecondaryBroadcast(pb.InputParameter('TOP-DAMAGE electronic conductivity [S.m-1]',domain='positive electrode'),'current collector')})
         model=pb.lithium_ion.DFN({'working electrode':'positive','thermal':'isothermal'},build=False)
         model.submodels['electrolyte diffusion']=ConservativeHalfCellElectrolyte(model.param,model.options)
-        model.submodels['electrolyte transport efficiency']=GeometryEfficiency(model.param,'Electrolyte',model.options)
-        model.submodels['electrode transport efficiency']=GeometryEfficiency(model.param,'Electrode',model.options)
+        model.submodels['electrolyte transport efficiency']=geometry_class(model.param,'Electrolyte',model.options)
+        model.submodels['electrode transport efficiency']=geometry_class(model.param,'Electrode',model.options)
         model.submodels['positive primary active material']=GeometryActiveMaterial(model.param,'positive',model.options,operator=port)
-        model.submodels['positive primary particle']=RegionParticle(model.param,'positive',model.options,operator=port,transport_law=law)
+        particle_class,kinetics_class=RegionParticle,MicrostructureKinetics
+        if dynamic_topology:
+            from .network_dfn import NetworkParticle,NetworkKinetics
+            particle_class,kinetics_class=NetworkParticle,NetworkKinetics
+        particle_options={'local_mobility':local_mobility,'diffusivity_interpretation':diffusivity_interpretation} if dynamic_topology else {}
+        if local_mobility and not dynamic_topology:raise ValueError('Local mobility requires the explicit network particle')
+        model.submodels['positive primary particle']=particle_class(model.param,'positive',model.options,operator=port,transport_law=law,**particle_options)
         model.submodels['positive primary open-circuit potential']=RegionOCP(model.param,'positive','lithium-ion main',model.options,operator=port,transport_law=law)
-        model.submodels['positive primary interface']=MicrostructureKinetics(model.param,'positive','lithium-ion main',model.options,operator=port)
+        model.submodels['positive primary interface']=kinetics_class(model.param,'positive','lithium-ion main',model.options,operator=port)
         model.submodels['TOP-DAMAGE finite mechanics input']=RegionMechanics(model.param,model.options,port,nx)
         model.build_model();self.model=model
-        self.simulation=pb.Simulation(model,parameter_values=self.parameters,solver=solver(rtol=1e-8,atol=1e-9),
+        self.simulation=pb.Simulation(model,parameter_values=self.parameters,solver=solver(rtol=solver_rtol,atol=solver_atol),
             var_pts={**model.default_var_pts,'x_p':nx,'x_s':5,'r_p':2})
         self.simulation.build();self.last=None;self.last_inputs=None
+        # Evaluate the already discretized/scaled state expressions together.
+        # Hundreds of separate ProcessedVariables otherwise duplicate input
+        # arrays and CasADi output wrappers at every accepted micro time step.
+        self._region_output=pb.numpy_concatenation(*[
+            self.simulation.built_model.get_processed_variable(key('positive',k,'concentration [mol.m-3]'))
+            for k in range(port.dimension)])
 
     def advance_regions(self,dt,current_A,feedback,mechanical_potential_J_mol):
         mu=np.asarray(mechanical_potential_J_mol,float)
@@ -145,27 +176,63 @@ class RegionEpochDFN(EpochDFN):
                 raise RuntimeError('Voltage cutoff requires current reversal')
             previous=pb.Solution(np.array([float(previous.t[-1])]),np.asarray(previous.last_state.y),self.simulation.built_model,self.last_inputs,check_solution=False)
         sol=self.simulation.step(dt,starting_solution=previous,inputs=inputs,save=False,t_interp=np.linspace(0,dt,5))
-        concentrations=np.stack([sol[key('positive',k,'concentration [mol.m-3]')].entries for k in range(self.port.dimension)],axis=1)
+        projection_audit=None
+        if self.output_projection is not None:
+            sol,projection_audit=self.output_projection(sol)
+        concentrations=self.concentration_history(sol)
         lo,hi=self.transport_law.stoichiometry_bounds
         if not np.isfinite(concentrations).all() or concentrations.min()<lo*self.cmax or concentrations.max()>hi*self.cmax:raise RuntimeError('Regional concentration bounds failed')
         q=np.asarray(sol['Discharge capacity [A.h]'].entries);li=np.asarray(sol['Total lithium [mol]'].entries)
         defect=float(np.max(abs(li-self.initial_inventory-q*3600/96485.33212))/self.initial_inventory)
         if defect>1e-6:raise RuntimeError('Regional DFN lithium ledger failed')
+        # Independent integrated positive-electrode charge balance. The native
+        # FV thickness mesh is uniform; insertion has negative j and positive
+        # discharge current. No current is inferred from a fitted capacity.
+        aj=np.asarray(sol['Positive electrode volumetric interfacial current density [A.m-3]'].entries)
+        current=np.asarray(sol['Current [A]'].entries)
+        p=self.parameters
+        electrode_volume=float(p['Electrode width [m]'])*float(p['Electrode height [m]'])*float(p['Positive electrode thickness [m]'])
+        charge=float(np.max(abs(aj.mean(axis=0)*electrode_volume+current))/max(np.max(abs(current)),1e-12))
+        diff=np.asarray(sol['MORQEX positive diffusion dissipation [W.m-3]'].entries)
+        reaction=np.asarray(sol['MORQEX positive reaction dissipation [W.m-3]'].entries)
+        residual=np.asarray(sol['MORQEX positive port identity residual [W.m-3]'].entries)
+        delta=np.asarray(sol['Positive electrode surface potential difference [V]'].entries)
+        scale=max(float(np.max(abs(delta*aj))),float(np.max(abs(diff))),float(np.max(abs(reaction))),1.)
+        port_error=float(np.max(abs(residual))/scale)
+        if charge>1e-6 or port_error>1e-8 or min(diff.min(),reaction.min()) < -1e-8*scale:
+            raise RuntimeError(f'Electrode charge/local port failed: charge={charge:.6e}, port={port_error:.6e}, '
+                f'min_diff={diff.min():.6e}, min_reaction={reaction.min():.6e}, power_scale={scale:.6e}')
         jump=0.
         if previous is not None:
-            for k in range(self.port.dimension):
-                before=np.asarray(previous[key('positive',k,'concentration [mol.m-3]')].entries)[...,-1]
-                after=concentrations[:,k,0];jump=max(jump,float(np.max(abs(after-before))/self.cmax))
+            before=self.concentration_history(previous)[...,-1]
+            jump=float(np.max(abs(concentrations[...,0]-before))/self.cmax)
             before=np.asarray(previous['Electrolyte concentration [mol.m-3]'].entries)[...,-1]
             after=np.asarray(sol['Electrolyte concentration [mol.m-3]'].entries)[...,0]
             jump=max(jump,float(np.max(abs(after-before))/max(1.,np.max(abs(before)))))
             if jump>1e-9:raise RuntimeError('Mechanical input update changed regional lithium state')
         self.last=sol;self.last_inputs=inputs
-        return {'time_s':float(sol.t[-1]),'voltage_V':float(sol['Voltage [V]'].entries[-1]),'termination':sol.termination,
-                'inventory_relative_defect':defect,'relative_state_jump':jump,'net_capacity_Ah':float(q[-1])}
+        record={'time_s':float(sol.t[-1]),'voltage_V':float(sol['Voltage [V]'].entries[-1]),'termination':sol.termination,
+                'inventory_relative_defect':defect,'relative_state_jump':jump,'net_capacity_Ah':float(q[-1]),
+                'charge_relative_defect':charge,'local_port_relative_defect':port_error,
+                'minimum_diffusion_dissipation_W_m3':float(diff.min()),'minimum_reaction_dissipation_W_m3':float(reaction.min())}
+        if projection_audit is not None:
+            from dataclasses import asdict
+            record['algebraic_output_projection']=asdict(projection_audit)
+        return record
 
     def concentrations(self):
         if self.last is None:return np.full((self.nx,self.port.dimension),self.port.reference_concentration)
-        return np.column_stack([np.asarray(self.last[key('positive',k,'concentration [mol.m-3]')].entries)[...,-1] for k in range(self.port.dimension)])
+        return self.concentration_history(self.last)[...,-1]
+
+    def concentration_history(self,solution):
+        """Exact (macro cell, material region, time) physical concentrations.
+
+        Use PyBaMM's processed state expressions, including scale and offset;
+        never assume solver-vector ordering or reinterpret dimensionless y.
+        This output consists solely of constant-scaled state slices. Evaluation
+        is independent of the graph input arrays and preserves all time points.
+        """
+        values=np.asarray(self._region_output.evaluate(y=np.asarray(solution.y)))
+        return values.reshape(self.port.dimension,self.nx,-1).transpose(1,0,2)
 
     def radial_profile(self,*args,**kwargs):raise TypeError('Region DFN has no radial states; use concentrations() and port.field()')

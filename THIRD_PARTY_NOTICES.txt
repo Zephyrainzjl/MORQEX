@@ -65,3 +65,9 @@ Pinned download and source verification in top_damage/hypre_dependency.py.
 Original LICENSE-MIT and COPYRIGHT are preserved in the external source and
 installed notices; MPI/OpenMP/GPU disabled in this qualified CPU build.
 No HYPRE binary or download archive is stored inside MORQEX/src.
+
+2026-11-27 PyBaMM averages.py: electrode-direction averaging of a spatial
+InputParameter broadcast onto the current collector now preserves its physical
+primary-coordinate average. Upstream BSD-3 retained, local hashes recorded.
+The matching discretisation.py average denominator uses geometric broadcast
+unity rather than a vector sized from the symbolic shape-test placeholder.

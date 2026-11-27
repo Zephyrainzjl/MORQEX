@@ -2,6 +2,45 @@
 
 源码、配置和测试在 MORQEX；数据、环境、编译、算子、断点、结果、HTML 全部在相邻的 `morph_workspace`。新全体积接口与旧版 SVE 接口分别验证，不共享通过标签。本文末尾为从源码 AST 生成的公开定义索引；研究内部入口仍需遵守各模块 docstring。
 
+## 动态网络与逐节点三维疲劳循环（数值候选）
+
+统一入口 `network-cycle`：每个 DFN 厚度单元保留独立的三维有限变形位移、不可逆 AT2 相场、Carrara 型疲劳历史及浓度状态；微结构反应面积、扩散图、电子导率和离子输运效率作为空间端口反馈。相邻步保留原材料库存；电子失联不删除浓度状态。当前周期驱动器采用弥散损伤电子/固相导率和固定孔隙/CBD 离子几何，尚未自动生成经验证的开放裂纹、浸润、新生反应面积或宏观力平衡。**协议完成、数值检查、物理模型资格和论文验收是不同状态。**
+
+```bash
+PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
+ROOT=/home/zephyrain/lw/MORQEX
+# 先将配置复制到外部工作区并设置唯一 output；下列入口每次最多100接受步。
+$PY "$ROOT/scripts/run_local.py" --label network_cycle -- $PY -m morqex.top_damage network-cycle /home/zephyrain/lw/morph_workspace/experiments/my_network.toml --steps 100
+# 重复相同命令，自动验证源代码/配置/几何身份后从最后完整HDF5恢复。
+$PY "$ROOT/scripts/run_local.py" --label network_report -- $PY -m morqex.top_damage network-report /home/zephyrain/lw/morph_workspace/results/top_damage/network_cycles/MY_OUTPUT --output MY_OUTPUT.html --export
+# 各倍率/结构/材料、浓度空间、长循环研究使用同一求解入口：
+$PY "$ROOT/scripts/run_local.py" --label network_study -- $PY "$ROOT/benchmarks/study_fatigue_network.py" --cases full8_time24 --steps 100
+$PY "$ROOT/scripts/run_local.py" --label network_evidence -- $PY "$ROOT/benchmarks/report_network_study.py"
+```
+
+TOML 模板：`configs/top_damage_network_cycle.toml`。`[cycle]` 控制输出名称、材料 `host`、浓度区间 `stoichiometry_window`、放电/充电倍率 `C_rate/charge_C_rate`、实际完整循环数 `cycles`、厚度单元 `nodes>=3`、每半循环试步数、等温温度、弹性/韧度/正则长度、晶体化学膨胀张量对角分量、AM/CBD 导率、CBD 孔隙率/输运效率、梯度能、图更新门槛及开关。`dfn_rtol/dfn_atol` 默认 `1e-10/1e-11`，独立检查全部输出时刻的电荷平衡，不能只检查步端点。`mechanics_enabled=false` 是无力学对照；`topology_feedback=false` 冻结传输图反馈但仍保留力学化学势，并非“去掉全部力学”。
+
+`concentration_regions=0` 使用初始晶粒区域，正整数使用连通聚合，`-1` 为每个活性体素一个状态。为了保持连通性，实际区域数可稍大于请求值。`local_mobility=true` 采用对称边中点迁移率。区域状态替代原正极径向状态，没有重复锂质量。当前参数 D 显式用作正迁移率参考，不应直接宣称等同于原生 DFN 的化学扩散系数；非凸 OCP 需要正梯度能及独立分辨率验证。
+
+`[microstructure]` 可用原 `PolycrystalSpec` 生成规则三维颗粒，也可使用以下完整外部身份数据：
+
+```toml
+[microstructure]
+source_hdf5 = "data/my_polycrystal.h5" # 相对外部工作区；morqex-polycrystal-1
+sha256 = "这里填写文件的64位SHA256"
+solver_seed = 104
+```
+
+导入必须同时具备相、颗粒、连通晶粒和 SO(3) 取向，且相标签为 0=孔隙、1=活性材料、2=CBD。不能把只有 CT 分相的数据自动冒充已知晶粒和材料参数。生成器采用零原点；network-cycle 的非零原点导入已通过机械网格及 VTI/VTU 往返核查。其他后端仍按各自的坐标限制处理。
+
+`DualNetworkClosure.evaluate(electronic_S_m, ionic_efficiency, ...)` 支持独立的电子面传输、离子面传输、固相扩散面因子和原始界面有效比例。真实零导边参与连通域更新；部分区域内部割裂时报告必须富集的区域。`NetworkEpochDFN.advance_network(...)` 接收 `(nodes,regions)` 力学化学势/界面比例、`(nodes,edges)` 扩散因子和节点导率；断开区域保留原浓度和质量。新生裂纹面积不能通过把原面积比例设为大于1实现，须扩展有几何来源的表面端口。
+
+`ConductingNetwork` 的 Kron/Schur 端口消元是经典方法，支持浮动分量与恢复。`NetworkCache` 在固定正边支撑下给出相对于最后重建图的二次型相对界；边支撑、拓扑、锚点变化立即重建。该界只约束被动输运，不是电压、容量或长期疲劳的误差界。瞬态浓度状态没有被静态凝聚。
+
+每个输出目录保存 `initial.h5/mesh.h5/step_*.h5/manifest.json/electrochemical_curve.csv/validation.json`。状态包含每个厚度节点的全三维位移、相场、疲劳、浓度、应力与下一步端口；接受后原子替换写盘，失败试步不覆盖已接受状态。导出 `paraview/node_NNN.pvd` 查看体素字段，`node_NNN_mechanics.pvd` 查看精确 Tet4 节点相场和位移。各节点 SVE 分开呈现，不能拼成声称真实的整电极空间。单位加载网络电势不是充放电工作电势。
+
+HTML 保留每节点、25个实际时刻的交互三维/剖切视图，全历史保存在 HDF5。总览为外部 `reports/network_study/index.html`。CPU 单核、RSS 3 GiB，单次 CPU 上限600秒；大区域数建议一次50–100步。此前预算停止会留下完整断点，可以续算；数值门槛失败必须先查明原因，不得改标签为通过。
+
 ## 当前算例：6 节点 / 32³ CBD 正极 / 平面 Li
 
 ### TOP-DAMAGE 较密颗粒、完整电压窗口与场导出
@@ -2864,3 +2903,21 @@ Helmholtz 形式。此配置的 `dilute_diagnostic` 明确允许记录 c>cmax �
 显示方框。空间对照入口为 `benchmarks/validate_ai2022_space.py COARSE_DIR FINE_DIR --step 80`，
 同样经 `run_local.py` 启动。它在共同体积积分点比较 P1 场并报告排除体积，使用网格定位器
 避免全体积分点与全部单元两两搜索的内存爆炸；两个网格不能单独确立渐近收敛阶。
+
+## 反应端口图与输出一致性补充
+
+`ReactiveDualNetwork` / `ReactionFaces`（`top_damage.reaction_network`）在电子和离子网络上保留所有反应顶点，只对无源内部顶点做 Schur 消元。输入真实接触导率 S、界面面积 m²、OCP V、交换电流密度 A/m²、温度 K；`solve(discharge_current_A)` 联立求解两类工作电势与对称 Butler–Volmer 电流，正电流表示放电。返回电流守恒缺陷、欧姆/反应耗散及功率平衡。离子真实储库固定为0，集流体电压由求解得到；不存在的导电路径不能用任意小电导强行补上。
+
+`voxel_reaction_problem(...)` 从同一体素网格的真实相邻界面构造这些端口，并移除均匀化所用的另一端虚拟试验电极。它的离子导率输入是实际 S/m；返回工作电势而非单位加载电势。当前验证范围是给定浓度、等温、准静态欧姆输运与非线性反应，未包含浓溶液扩散电势，也未默认替换长期 DFN 耦合。电子浮动但仍有离子接触的颗粒保留：其净反应电流必须为零，局部双极反应/内部再分布可以非零。不能将这种情况等同于删除其全部浓度状态。
+
+`benchmarks/study_topology_counterexample.py --rates 0.5 8 --tag v1` 运行预设等面积干式接触失效的 DFN 两循环对照，保留失联锂库存；这里没有假称接触失效来自相场。`benchmarks/study_reactive_graph.py` 对比同一非线性问题的全图与反应端口消元解，保存实际三维工作电势。两者是不同验证层级。
+
+`project_algebraic_output=true` 可在 `network-cycle` 中启用 DAE 输出时刻代数重构。浓度/容量等微分状态、接受步端点与截止事件逐位保留，使用源码内 PyBaMM/CasADi 重求内部输出时刻的代数约束。它不消除时间积分误差，必须与严格容差完整循环比较；参考默认仍是 `dfn_rtol=1e-10/dfn_atol=1e-11`。
+
+`diffusivity_interpretation="chemical_diffusivity"` 配合 `local_mobility=true`，在核实 OCP 严格递减后，采用 `M=D_chem/(dmu_chem/dc)` 的对称边中点迁移率，包含实际 OCP 的温度和原生渐近项导数。平坦/非凸 OCP 不允许使用此换算，也不对曲率裁剪。默认 `"tracer_reference"` 保留原正迁移率候选。两种物理模型不能混作同一基线。PCHIP 在结点处仅 C1，局部二阶 Fick 极限测试不能扩展为所有结点上的二阶收敛证明。
+
+非零导入原点现已通过机械网格与 VTI/VTU 往返测试。离子几何效率的图内计算显式使用 `ionic_reference_conductivity_S_m`（默认1 S/m），有效电导再除以同一参考值得到无量纲效率，实际宏观电解液 `kappa(c_e,T)` 不重复计入。
+
+`ReactiveDualNetwork.changed_conductance_bound(state, electronic, ionic)` 在反应律、温度、电流及正导率边支持不变时，计算缓存解相对新图解的局部端电压误差上界。所有反应顶点必须保留。该方法检查全图边导率变化，求解保留空间的强单调性下界矩阵，不组装新的 Schur 补。返回 `voltage_absolute_bound_V`、边相对变化及数值残差项。边删除/创建或相对变化≥1时拒绝复用。它是解析上界的 FP64 计算，并非区间算术证明，也不是累计 DFN 容量或疲劳误差界。`solve(..., diagnostics=[])` 可记录 Newton/线搜索轨迹。
+
+核查脚本 `benchmarks/study_reactive_updates.py` 将这个上界与独立更新的全图非线性解比较。测试包含电子浮动颗粒及0.5/8C；原失败涉及高导率网络能量相减造成的线搜索停滞，现使用等价的边电势差计算功率和残差，保持原1e-10求解容限。

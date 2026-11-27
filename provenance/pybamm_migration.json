@@ -65,9 +65,9 @@
     {
       "path": "discretisations/discretisation.py",
       "upstream_sha256": "5beabb8de276a73cfccd62b4c403d6b5d4eae15b50cc568aabe5edc9cd5d70e1",
-      "bytes": 57371,
-      "local_sha256": "5beabb8de276a73cfccd62b4c403d6b5d4eae15b50cc568aabe5edc9cd5d70e1",
-      "locally_modified": false
+      "bytes": 57778,
+      "local_sha256": "e79c192c9629257a480c769e3cd496bc02a98e126f22cfc551f5b2567708e4c1",
+      "locally_modified": true
     },
     {
       "path": "dispatch/__init__.py",
@@ -142,9 +142,9 @@
     {
       "path": "expression_tree/averages.py",
       "upstream_sha256": "b03e88f5623a0c0d8d12c5a7d1cebbcb94cbbcf0d465d4f0061180063486af34",
-      "bytes": 15936,
-      "local_sha256": "b03e88f5623a0c0d8d12c5a7d1cebbcb94cbbcf0d465d4f0061180063486af34",
-      "locally_modified": false
+      "bytes": 16635,
+      "local_sha256": "f18e8dae3156753f43fe49263b241f145c6c059d81b94efd809469fadc5baf59",
+      "locally_modified": true
     },
     {
       "path": "expression_tree/binary_operators.py",

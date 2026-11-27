@@ -972,7 +972,12 @@ class Discretisation:
                 )
             else:
                 x = symbol.integration_variable
-                v = pybamm.ones_like(child)
+                # MORQEX: a domain-bearing spatial InputParameter can still
+                # carry the symbolic shape-test size before discretisation.
+                # Construct geometric unity as a broadcast, not a concrete
+                # vector with that placeholder length (e.g. 17 instead of nx).
+                v = (pybamm.FullBroadcast(1, broadcast_domains=child.domains)
+                     if child.domain else pybamm.ones_like(child))
                 average = pybamm.Integral(child, x) / pybamm.Integral(v, x)
             return self.process_symbol(average)
 

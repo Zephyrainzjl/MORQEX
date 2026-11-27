@@ -47,11 +47,12 @@ class GeometryEfficiency(BaseModel):
 
 
 class EpochDFN:
-    def __init__(self,*,host='NMC811',active_fraction,porosity,radius_m,temperature_K=298.15,nx=6,nr=20,initial_stoichiometry=.5):
+    def __init__(self,*,host='NMC811',active_fraction,porosity,radius_m,temperature_K=298.15,nx=6,nr=20,initial_stoichiometry=.5,stoichiometry_window=(.25,.9)):
         if not 0<active_fraction<1 or not 0<porosity<1 or active_fraction+porosity>=1:raise ValueError('Explicit active/CBD/pore volumes required')
         if not np.isfinite([radius_m,temperature_K]).all() or radius_m<=0 or temperature_K<=0:raise ValueError('Positive radius and temperature required')
-        if not .25<=initial_stoichiometry<.9:raise ValueError('Initial stoichiometry outside the declared half-cell window')
-        self.parameters,self.audit=lithium_halfcell_parameters(host=host,active_fraction=active_fraction)
+        lo,hi=stoichiometry_window
+        if not lo<=initial_stoichiometry<hi:raise ValueError('Initial stoichiometry outside the declared half-cell window')
+        self.parameters,self.audit=lithium_halfcell_parameters(host=host,active_fraction=active_fraction,stoichiometry_window=stoichiometry_window)
         p=self.parameters;ocp=p['Positive electrode OCP [V]'];j0=p['Positive electrode exchange-current density [A.m-2]']
         p.update({'Positive electrode porosity':porosity,'Positive particle radius [m]':radius_m,
             'Initial concentration in positive electrode [mol.m-3]':initial_stoichiometry*float(p['Maximum concentration in positive electrode [mol.m-3]']),
@@ -105,6 +106,9 @@ class EpochDFN:
     def restore_state(self,time_s,state,inputs):
         state=np.asarray(state,float)
         if state.shape!=(self.simulation.built_model.len_rhs_and_alg,) or not np.isfinite(state).all():raise ValueError('Invalid DFN state layout')
+        # JSON checkpoints encode spatial input arrays as lists. Restore their
+        # numerical shape before PyBaMM postprocessing or event evaluation.
+        inputs={k:float(np.asarray(v)) if np.asarray(v).ndim==0 else np.asarray(v,float) for k,v in inputs.items()}
         self.last=pb.Solution(np.array([time_s]),state[:,None],self.simulation.built_model,inputs,check_solution=False)
         self.last_inputs=dict(inputs)
 
