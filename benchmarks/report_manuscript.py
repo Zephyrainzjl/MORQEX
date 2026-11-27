@@ -20,7 +20,10 @@ body=markdown.markdown(text,extensions=['extra','toc'])
 out=ws.path('reports/article_draft');out.mkdir(exist_ok=True)
 figures=[('../network_study/rate_curves.svg','Actually integrated first-discharge curves, 0.1–8C; fixed-grid candidate.'),
          ('../network_study/capacity_history.svg','Actual completed cycles; capacity drift is not automatically fatigue fade.'),
-         ('../mesh_study/spatial_study.svg','Same physical geometry and loading; retained spatial-convergence failures.')]
+         ('../mesh_study/spatial_study.svg','Same physical geometry and loading; retained spatial-convergence failures.'),
+         ('../topology_study/topology.png','Prescribed equal-area contact cuts; not phase-field-generated physical cracks.'),
+         ('../topology_study/response.svg','Different contact topology produces different actual DFN discharge responses.'),
+         ('../topology_study/event_sequences.svg','Voltage and face-current errors in 324 supplied-state event queries; not 324 integrated cycles.')]
 for file,_ in figures:
     if not (out/file).resolve().is_file():raise FileNotFoundError('Generate the numerical evidence dashboards first: '+file)
 gallery=''.join('<figure><img src="'+file+'" alt="'+caption+'"><figcaption>'+caption+'</figcaption></figure>' for file,caption in figures)

@@ -88,7 +88,8 @@ def main():
             f"{e.get('max_damage',float('nan')):.4g}",scope])+'</tr>')
     refinement=[]
     for name in ['concentration_refinement','concentration256_accepted','network_time_48_96','full8_time24_48','full8_time48_96','full8_projection_accuracy','graph_port_benchmark',
-                 'static_mesh_1_2','static_mesh_3_4','static_mesh_face_contacts_v3_4_6','static_mesh_quadratic_v1_2_3','finite_storage_equivalence']:
+                 'static_mesh_1_2','static_mesh_3_4','static_mesh_face_contacts_v3_4_6','static_mesh_quadratic_v1_2_3',
+                 'static_mesh_quadratic_adaptive_budget_v1_2_3','static_mesh_quadratic_adaptive_budget_v1_3_3','finite_storage_equivalence']:
         file=ws.path('reports',name+'.json')
         if file.exists():refinement.append('<details><summary>'+name+'</summary><pre>'+html.escape(file.read_text())+'</pre></details>')
     title='MORQEX · 疲劳相场—网络—DFN 数值证据'
@@ -99,6 +100,14 @@ body{font:15px/1.65 system-ui,sans-serif;margin:0;background:#eef3f6;color:#152c
 <section class="plots"><div><img src="rate_curves.svg" alt="真实倍率放电曲线"></div><div><img src="capacity_history.svg" alt="实际循环容量"></div></section>
 <section><h2>逐工况核查</h2><p>倍率列为充电/放电；节点和区域是宏观厚度单元与微结构浓度空间。旧记录未检查的电荷门槛不会标为通过。</p><div class="scroll"><table><thead><tr>'''+''.join('<th>'+s+'</th>' for s in ['工况 / 场 HTML','材料接口','倍率 C','区域数','循环','Li 相对缺陷','电荷相对缺陷','最大节点 d','状态'])+'''</tr></thead><tbody>'''+''.join(rows)+'''</tbody></table></div></section>
 <section><h2>误差与加速证据</h2><p>257 区域的一循环对照通过既定浓度空间门槛；64/128 区域的疲劳误差失败保留。它们均不是网格收敛证明。约 201 倍为冻结被动图的双端口查询加速，不能作为整电池加速。</p>'''+''.join(refinement)+'''</section><section><h2>可复现数据</h2><p><a href="../topology_study/index.html">相同失效面积、不同拓扑的 DFN 与反应端口对照</a> · <a href="../mesh_study/index.html">三维参考解空间误差与成本</a></p><a href="evidence.json">完整配置与核查 JSON</a><p>HDF5 与逐节点 VTI/VTU/PVD 保留完整计算精度。均匀化单位载荷电势不是运行电池中的局部电势。</p></section></main>'''
+    exported=ws.path('results/top_damage/network_cycles/dual_long20_checked_v1/paraview/independent_validation.json')
+    if exported.exists():
+        audit=json.loads(exported.read_text())
+        if not audit['passed']:raise ValueError('Export validation failed')
+        base='../../results/top_damage/network_cycles/dual_long20_checked_v1/paraview/'
+        links=' · '.join('<a href="'+base+f'node_{i:03d}.pvd">节点{i+1}体素PVD</a> / <a href="'+base+f'node_{i:03d}_mechanics.pvd">有限元PVD</a>' for i in range(audit['nodes']))
+        section='<section><h2>20循环的全部三维接受态</h2><p>包含初始态共'+str(audit['states'])+'个时刻，'+str(audit['nodes'])+'个独立厚度节点，'+str(audit['verified_vtk_files'])+'个VTI/VTU文件已逐个读回，与原始HDF5状态核对。ParaView打开PVD时需保留同目录的全部关联文件。</p><p>'+links+'</p><p><a href="'+base+'independent_validation.json">独立文件一致性检查</a>。保存的是计算得到的损伤、疲劳和位移；材料标签没有被损伤阈值改成虚构孔隙。</p></section>'
+        document=document.replace('</main>',section+'</main>')
     font=ws.path('data/report_font')
     if (font/'NotoSansCJKsc-Regular.otf').exists():
         from morqex.visualization.report_font import embed_font
