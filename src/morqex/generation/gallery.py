@@ -45,4 +45,3 @@ def exact_surfaces(mesh,labels,particle,grains,cut):
 def pack(array):
     a=np.ascontiguousarray(array)
     return {'shape':a.shape,'dtype':a.dtype.str,'gzip':base64.b64encode(gzip.compress(a.tobytes(),compresslevel=6)).decode()}
-
