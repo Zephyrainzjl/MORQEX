@@ -13,6 +13,11 @@
 开度/浸润、动态离子拓扑、网格收敛和长期寿命的全部验收。
 不把早期容量变化、单位加载电势或高相场值当成已验证的疲劳失活/工作电势/开放裂缝。
 
+逐循环参考现已实际完成 20 次循环、970 个接受步；容量基本不变，不能解释为已验证的疲劳容量衰减。
+新的固定总厚度模型已完成一次对称 8C 循环，联立各微结构节点、隔膜与锂层的轴向力平衡。
+其适用范围是等截面、横向固定的弹性叠层。空间细化仍暴露未通过的门槛：源码内新增
+MFEM 保形局部加密与 P2 位移/P1 损伤参考，保持原误差阈值并逐项验证，未直接替换循环默认模型。
+
 入口及 TOML/API 见 [API.md](API.md)。证据总览输出到
 `morph_workspace/reports/network_study/index.html`，保留失败、未检查项和实际场数据。
 
@@ -117,3 +122,9 @@ NMC811/LFP 的原生三维材料扩展、物理裂纹侵液、三维力学化学
 **尚未完成整篇论文复现。** 已执行两个循环及时间/空间细化；5C 诊断中仍有
 局部浓度超过 cmax，且疲劳时间收敛未通过。诊断配置不会把这些状态标为物理合格，
 也不输出伪造的 300 循环、CT 裂纹或 DFN 寿命结论。详细运行命令及差异见 [API.md](API.md)。
+
+### 最新验证入口
+
+[循环与三维场总览](/home/zephyrain/lw/morph_workspace/reports/network_study/index.html) · [空间收敛与失败记录](/home/zephyrain/lw/morph_workspace/reports/mesh_study/index.html) · [拓扑与反应网络对照](/home/zephyrain/lw/morph_workspace/reports/topology_study/index.html) · [研究稿HTML](/home/zephyrain/lw/morph_workspace/reports/article_draft/index.html)。
+
+0.1C和8C固定厚度串联力学案例均完成完整配置循环；20周期参考已直接积分970步。容量没有出现可归因于疲劳的明显衰减，不能包装为已验证寿命预测。局部/高阶空间细化仍保留失败门槛；大参考会在主机内存余量不足时停止。24组已知反应状态变化的网络对照通过，支持复用被动分解后重新求解反应电流；这是准静态网络层的验证，不是完整长期DFN加速结论。

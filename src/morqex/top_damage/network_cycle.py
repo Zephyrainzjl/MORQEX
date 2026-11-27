@@ -33,6 +33,8 @@ class NetworkCycleConfig:
     cbd_Gc_J_m2: float = 10000.
     length_m: float = 1.5e-6
     chemical_strain_per_stoichiometry: tuple = (.012,.012,.04)
+    chemical_stretch_table: str = ''
+    chemical_stretch_sha256: str = ''
     active_conductivity_S_m: float = 10.
     cbd_conductivity_S_m: float = 100.
     cbd_microporosity: float = .47
@@ -46,6 +48,11 @@ class NetworkCycleConfig:
     project_algebraic_output: bool = False
     mechanics_enabled: bool = True
     topology_feedback: bool = True
+    mechanical_constraint: str = 'local_kubc'
+    separate_point_contacts: bool = True
+    separator_young_Pa: float = 0.5e9
+    lithium_young_Pa: float = 4.9e9
+    lithium_thickness_m: float = 20e-6
 
     def __post_init__(self):
         if not re.fullmatch('[A-Za-z0-9_-]+',self.output):raise ValueError('Safe output identifier required')
@@ -67,6 +74,19 @@ class NetworkCycleConfig:
             raise ValueError('Chemical diffusivity conversion requires local mobility')
         if not 0<self.cbd_ionic_efficiency<=self.cbd_microporosity<1:raise ValueError('Admissible porous CBD required')
         if len(self.chemical_strain_per_stoichiometry)!=3 or not np.isfinite(self.chemical_strain_per_stoichiometry).all():raise ValueError('Finite chemical stretches required')
+        if not isinstance(self.chemical_stretch_table,str) or not isinstance(self.chemical_stretch_sha256,str):
+            raise ValueError('Chemical stretch path and checksum must be strings')
+        if bool(self.chemical_stretch_table)!=bool(self.chemical_stretch_sha256):
+            raise ValueError('Chemical stretch table and checksum must be supplied together')
+        if self.chemical_stretch_sha256 and not re.fullmatch('[0-9a-f]{64}',self.chemical_stretch_sha256):
+            raise ValueError('Explicit chemical stretch SHA256 required')
+        if self.mechanical_constraint not in ('local_kubc','fixed_thickness_stack'):
+            raise ValueError('Declared local KUBC or fixed-thickness stack required')
+        if self.mechanical_constraint=='fixed_thickness_stack' and not self.mechanics_enabled:
+            raise ValueError('Stack coupling requires mechanics')
+        if type(self.separate_point_contacts) is not bool:raise ValueError('Boolean contact-mesh policy required')
+        passive=[self.separator_young_Pa,self.lithium_young_Pa,self.lithium_thickness_m]
+        if not np.isfinite(passive).all() or min(passive)<=0:raise ValueError('Positive explicit passive-layer parameters required')
 
 
 def _json(obj):
@@ -104,6 +124,8 @@ def run_network_cycle(config_path,workspace,*,steps=1):
     paths=sorted((root/'top_damage').glob('*.py'))+sorted((root/'electrochemistry').glob('*.py'))
     paths += [root/'nodewise/halfcell.py',root/'transport.py',root/'generation/particles.py']
     paths += [root.parent/'pybamm/expression_tree/averages.py',root.parent/'pybamm/solvers/solution.py',root.parent/'pybamm/discretisations/discretisation.py']
+    paths += sorted((root/'mechanics').glob('*.py'))+[root/'microstructure/mesh/voxel.py']
+    paths += sorted((root/'top_damage/native_hyperelastic').glob('*.cpp'))
     identity=hashlib.sha256(_json(raw).encode()+data.fingerprint.encode()+b''.join(p.read_bytes() for p in paths)).hexdigest()
     manifest_path=out/'manifest.json'
     if manifest_path.exists() and json.loads(manifest_path.read_text())['identity']!=identity:
@@ -127,7 +149,7 @@ def run_network_cycle(config_path,workspace,*,steps=1):
     closures=[DualNetworkClosure(fv,port,update_tolerance=cfg.graph_update_tolerance) for _ in range(cfg.nodes)]
     base_e=np.where(labels==1,cfg.active_conductivity_S_m,np.where(labels==2,cfg.cbd_conductivity_S_m,0.))
     base_i=np.where(labels==0,1.,np.where(labels==2,cfg.cbd_ionic_efficiency,0.))
-    mesh=TetMesh.from_volume(volume,solid_phases=[1,2])
+    mesh=TetMesh.from_volume(volume,solid_phases=[1,2],separate_point_contacts=cfg.separate_point_contacts)
     young=np.where(mesh.phases==1,cfg.active_young_Pa,cfg.cbd_young_Pa)
     backend=HyperelasticBackend(NativeConfig(),ws) if cfg.mechanics_enabled else None
     damage_model=mechanics=None
@@ -146,7 +168,24 @@ def run_network_cycle(config_path,workspace,*,steps=1):
     table=data.rotated_tensor_table(np.diag(cfg.chemical_strain_per_stoichiometry))
     beta[active_cells]=table[data.grain_ids.ravel()[mesh.voxel_ids[active_cells]]-1]
     eigenvalues,eigenvectors=np.linalg.eigh(beta)
+    stretch_law=None;stretch_metadata=None
+    if cfg.chemical_stretch_table:
+        from .chemical_stretch import ChemicalStretchTable
+        stretch_law=ChemicalStretchTable.load(ws,cfg.chemical_stretch_table,cfg.chemical_stretch_sha256,cfg.host)
+        if stretch_law.reference_stoichiometry!=.5:
+            raise ValueError('This driver starts stress-free at stoichiometry0.5; material reference must match')
+        active_rotations=data.grain_rotations[data.grain_ids.ravel()[mesh.voxel_ids[active_cells]]-1]
+        stretch_metadata={'path':cfg.chemical_stretch_table,'sha256':cfg.chemical_stretch_sha256,
+            'provenance':stretch_law.provenance,'reference_stoichiometry':.5,
+            'scope':'Isothermal history-independent positive lattice stretches; no implicit extrapolation'}
     damage=np.zeros((cfg.nodes,len(mesh.points)));displacement=np.zeros((cfg.nodes,3*len(mesh.points)))
+    layer_stretches=np.ones(cfg.nodes+2);passive_layers=[]
+    layer_lengths=None
+    if cfg.mechanical_constraint=='fixed_thickness_stack':
+        from .series_mechanics import HomogeneousLayer,finite_series_step
+        passive_layers=[HomogeneousLayer(backend,cfg.separator_young_Pa,cfg.poisson),HomogeneousLayer(backend,cfg.lithium_young_Pa,cfg.poisson)]
+        layer_lengths=np.r_[np.full(cfg.nodes,float(p['Positive electrode thickness [m]'])/cfg.nodes),
+                            float(p['Separator thickness [m]']),cfg.lithium_thickness_m]
     fatigue=[FatigueHistory.zero(len(mesh.cells)) for _ in range(cfg.nodes)]
     mu=np.zeros((cfg.nodes,port.dimension));area=np.ones_like(mu)
     edges=np.ones((cfg.nodes,len(runtime.edges)));sigma=np.zeros(cfg.nodes);efficiency=np.zeros(cfg.nodes)
@@ -157,6 +196,7 @@ def run_network_cycle(config_path,workspace,*,steps=1):
             if f.attrs['identity']!=identity:raise ValueError('Checkpoint identity mismatch')
             rec=json.loads(f.attrs['record']);last_step=rec['step'];phase=rec['next_phase'];cycles=rec['completed_cycles'];phase_start_q=rec['phase_start_capacity_Ah']
             damage=f['damage'][:];displacement=f['displacement_m'][:]
+            if cfg.mechanical_constraint=='fixed_thickness_stack':layer_stretches=f['macro/axial_stretches'][:]
             fatigue=[FatigueHistory(a,b) for a,b in zip(f['fatigue_J_m3'][:],f['alpha_previous_J_m3'][:])]
             mu=f['next/mu_J_mol'][:];area=f['next/reaction_fractions'][:];edges=f['next/edge_factors'][:]
             sigma=f['next/electronic_S_m'][:];efficiency=f['next/ionic_efficiency'][:]
@@ -171,12 +211,13 @@ def run_network_cycle(config_path,workspace,*,steps=1):
         with h5py.File(out/'mesh.h5','w') as f:
             for name,value in [('points_m',mesh.points),('cells',mesh.cells),('voxel_ids',mesh.voxel_ids),('partition',partition),('material_voxel_ids',fv.voxel_ids)]:f.create_dataset(name,data=value,compression='gzip')
     manifest={'identity':identity,'config':asdict(cfg),'geometry':geometry_metadata,'material_audit':audit,
-        'maximum_concentration_mol_m3':cmax,
+        'maximum_concentration_mol_m3':cmax,'chemical_stretch_table':stretch_metadata,
         'regions':port.dimension,'tetrahedra':len(mesh.cells),'nodes':cfg.nodes,'protocol_complete':cycles>=cfg.cycles,
         'physical_topology_qualified':False,'publication_qualified':False,
         'limitations':['Diffuse quadratic conductance candidate, not calibrated crack aperture/CBD contact evolution.',
         'Fixed pore and porous-CBD ionic geometry; no invented crack wetting or volume loss.',
-        'Each SVE is locally KUBC-clamped (macro F=I); not a force-equilibrated cell stack.',
+        ('Each SVE is locally KUBC-clamped (macro F=I); not a force-equilibrated cell stack.' if cfg.mechanical_constraint=='local_kubc' else
+         'Equal-area plane-strain fixed-thickness stack; elastic separator/lithium are numerical material laws, not calibrated plastic/viscoelastic models.'),
         ('Native D is an Onsager mobility reference here, not calibrated chemical diffusivity for arbitrary OCP.'
          if cfg.diffusivity_interpretation=='tracer_reference' else
          'Chemical diffusivity uses verified positive inverse chemical curvature; Fick limit and spatial convergence remain separate gates.'),
@@ -207,18 +248,42 @@ def run_network_cycle(config_path,workspace,*,steps=1):
                 elif phase=='discharge':phase='charge'
                 else:cycles+=1;phase='discharge'
         concentrations=runtime.concentrations();fields=[];diagnostics=[]
+        concentration_fields=[port.field(a,inactive=0.) for a in concentrations]
+        chemical_fields=[]
+        if cfg.mechanics_enabled and step>0:
+            for c in concentration_fields:
+                theta=(c.ravel()[mesh.voxel_ids]-port.reference_concentration)/cmax
+                if stretch_law is None:
+                    fc=np.einsum('eik,ek,ejk->eij',eigenvectors,np.exp(eigenvalues*theta[:,None]),eigenvectors);dfc=beta@fc/cmax
+                else:
+                    fc=np.broadcast_to(np.eye(3),(len(mesh.cells),3,3)).copy();dfc=np.zeros_like(fc)
+                    fc[active_cells],dfc[active_cells]=stretch_law.evaluate(theta[active_cells]+.5,active_rotations,cmax)
+                chemical_fields.append((fc,dfc))
+        stack_results=None;macro_diagnostics={}
+        if cfg.mechanical_constraint=='fixed_thickness_stack' and step>0:
+            stack_results,stack,trace=finite_series_step([mechanics]*cfg.nodes,[damage_model]*cfg.nodes,
+                damage,fatigue,[a[0] for a in chemical_fields],layer_lengths[:cfg.nodes],
+                passive_layers=passive_layers,passive_thicknesses_m=layer_lengths[cfg.nodes:],
+                initial_stretches=layer_stretches,initial_displacements=displacement,tolerance=cfg.stagger_tolerance)
+            layer_stretches=stack.stretches
+            macro_diagnostics={'nominal_stress_Pa':stack.common_nominal_stress_Pa,
+                'end_traction_x_Pa':[-stack.common_nominal_stress_Pa,stack.common_nominal_stress_Pa],
+                'normalized_force_defect':stack.normalized_force_defect,'mean_stretch_defect':stack.mean_stretch_defect,
+                'force_scale_Pa':stack.force_scale_Pa,
+                'axial_layer_stress_Pa':[r.nominal_stress_Pa for r in stack.responses],
+                'layer_thicknesses_m':layer_lengths.tolist(),'frozen_history_energy_trace_J_m3':trace.tolist(),
+                'layer_order':'positive thickness cells, separator, lithium; equal cross-section, transverse stretch fixed at one'}
         new_damage=[];new_displacement=[];new_fatigue=[];new_mu=[];new_area=[];new_edges=[];new_sigma=[];new_efficiency=[]
         for node in range(cfg.nodes):
-            c=port.field(concentrations[node],inactive=0.)
+            c=concentration_fields[node]
             if cfg.mechanics_enabled and step>0:
-                theta=(c.ravel()[mesh.voxel_ids]-port.reference_concentration)/cmax
-                fc=np.einsum('eik,ek,ejk->eij',eigenvectors,np.exp(eigenvalues*theta[:,None]),eigenvectors)
-                result=finite_staggered_step(mechanics,damage_model,damage[node],fatigue[node],fc,
+                fc,dfc=chemical_fields[node]
+                result=stack_results[node] if stack_results is not None else finite_staggered_step(mechanics,damage_model,damage[node],fatigue[node],fc,
                     initial_displacement=displacement[node],tolerance=cfg.stagger_tolerance)
                 d=result.damage;u=result.mechanics.displacement_m;history=result.fatigue;state=result.mechanics
                 if np.any(d<damage[node]-1e-12):raise ArithmeticError('Irreversibility violation')
                 dv=_voxel_average(mesh,d[mesh.cells].mean(axis=1),shape)
-                mechanical=chemical_potential(state.first_piola_Pa,state.deformation_gradient,fc,beta@fc/cmax)
+                mechanical=chemical_potential(state.first_piola_Pa,state.deformation_gradient,fc,dfc)
                 mu_voxel=_voxel_average(mesh,mechanical,shape)
                 regional_mu=port.project_mechanical_potential(mu_voxel.ravel()[fv.voxel_ids])
                 stress=_voxel_average(mesh,state.cauchy_stress_Pa.reshape(-1,9),shape)
@@ -253,7 +318,7 @@ def run_network_cycle(config_path,workspace,*,steps=1):
         mu=np.array(new_mu);area=np.array(new_area);edges=np.array(new_edges);sigma=np.array(new_sigma);efficiency=np.array(new_efficiency)
         record={**electro,'step':step,'protocol_phase':used_phase,'next_phase':phase,'completed_cycles':cycles,
             'phase_start_capacity_Ah':phase_start_q,'completed_phase_capacity_Ah':phase_capacity,
-            'node_diagnostics':diagnostics,'seconds':time.perf_counter()-tick,
+            'node_diagnostics':diagnostics,'macro_mechanics':macro_diagnostics,'seconds':time.perf_counter()-tick,
             'solid_lithium_mol_per_SVE':(concentrations@port.weights*fv.rve_volume).tolist()}
         target=out/f'step_{step:06d}.h5';pending=target.with_suffix('.pending')
         with h5py.File(pending,'w') as f:
@@ -262,6 +327,7 @@ def run_network_cycle(config_path,workspace,*,steps=1):
                 'alpha_previous_J_m3':np.array([a.previous_alpha_J_m3 for a in fatigue]),'concentration_regions_mol_m3':concentrations,
                 'next/mu_J_mol':mu,'next/reaction_fractions':area,'next/edge_factors':edges,'next/electronic_S_m':sigma,'next/ionic_efficiency':efficiency}
             for name,value in arrays.items():f.create_dataset(name,data=value,compression='gzip')
+            if cfg.mechanical_constraint=='fixed_thickness_stack':f.create_dataset('macro/axial_stretches',data=layer_stretches)
             for name in fields[0]:f.create_dataset('voxel/'+name,data=np.array([a[name] for a in fields]),compression='gzip')
             for node,closure in enumerate(closures):
                 for name,cache in [('electronic',closure.electronic_cache),('ionic',closure.ionic_cache)]:

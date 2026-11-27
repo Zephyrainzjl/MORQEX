@@ -59,11 +59,14 @@ class TetMesh:
             array.flags.writeable = False
 
     @classmethod
-    def from_volume(cls, volume, solid_phases=None):
+    def from_volume(cls, volume, solid_phases=None, *, separate_point_contacts=False):
         from morqex.microstructure.mesh.voxel import voxel_to_tetra
         mesh = voxel_to_tetra(volume, phases=solid_phases)
         box = np.array([volume.origin, np.asarray(volume.origin) + np.asarray(volume.spacing)*volume.data.shape])[:, ::-1]
         selected = np.arange(volume.data.size) if solid_phases is None else np.flatnonzero(np.isin(volume.data, solid_phases))
+        if separate_point_contacts:
+            from .voxel_junctions import separate_voxel_junctions
+            mesh.points,mesh.cells=separate_voxel_junctions(volume,mesh.points,mesh.cells,np.repeat(selected,6))
         return cls(mesh.points, mesh.cells, mesh.phases, box, np.repeat(selected, 6))
 
     @property

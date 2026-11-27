@@ -12,6 +12,7 @@ def audit_network_history(directory):
     if not paths:raise ValueError('No accepted network states')
     records=[];curves=[];previous_d=previous_f=None;identity=meta['identity'];max_mass=max_jump=max_kkt=max_equilibrium=0.
     capacities=[];last_time=-1.;max_damage=0.;min_concentration=float('inf');max_concentration=0.
+    max_stack_force=max_stack_thickness=0.;stack_mode=meta['config'].get('mechanical_constraint')=='fixed_thickness_stack'
     with h5py.File(directory/'initial.h5') as f:
         labels=f['phase_labels'][:];h=np.asarray(f.attrs['spacing_zyx_m'])
     with h5py.File(directory/'mesh.h5') as f:partition=f['partition'][:];voxel_ids=f['material_voxel_ids'][:]
@@ -33,6 +34,16 @@ def audit_network_history(directory):
             if r['time_s']<=last_time:raise ArithmeticError('Accepted times are not strictly increasing')
             last_time=r['time_s']
             if index:
+                if stack_mode:
+                    macro=r['macro_mechanics'];stretch=f['macro/axial_stretches'][:]
+                    lengths=np.asarray(macro['layer_thicknesses_m']);weights=lengths/lengths.sum()
+                    stress=np.asarray(macro['axial_layer_stress_Pa']);common=float(weights@stress)
+                    force=float(np.max(abs(stress-common))/macro['force_scale_Pa'])
+                    thickness=float(abs(weights@stretch-1))
+                    if not np.isfinite([force,thickness]).all() or force>1e-8 or thickness>1e-12:
+                        raise ArithmeticError('Independent whole-stack equilibrium/compatibility failed')
+                    np.testing.assert_allclose(macro['end_traction_x_Pa'],[-common,common],rtol=1e-12,atol=1e-6)
+                    max_stack_force=max(max_stack_force,force);max_stack_thickness=max(max_stack_thickness,thickness)
                 t=f['curve/time_s'][:];v=f['curve/voltage_V'][:];I=f['curve/current_A'][:];q=f['curve/net_capacity_Ah'][:]
                 if not all(np.isfinite(a).all() for a in (t,v,I,q)) or np.any(np.diff(t)<=0):raise ArithmeticError('Invalid electrochemical curve')
                 np.testing.assert_allclose(q[-1]-q[0],np.trapezoid(I,t)/3600,rtol=1e-7,atol=1e-13)
@@ -53,6 +64,9 @@ def audit_network_history(directory):
         'history_consistency_passed':True,'physical_topology_qualified':False,'publication_qualified':False,
         'mesh_time_convergence_qualified':False,'long_term_prediction_qualified':False,'identity':identity,
         'phase_fractions':{str(k):float(np.mean(labels==k)) for k in (0,1,2)}}
+    summary.update(stack_equilibrium_checked=stack_mode and len(paths)>1,
+        max_stack_force_defect=max_stack_force if stack_mode else None,
+        max_stack_thickness_defect=max_stack_thickness if stack_mode else None)
     charge=[r.get('charge_relative_defect') for r in records[1:]]
     port=[r.get('local_port_relative_defect') for r in records[1:]]
     summary['charge_and_local_port_history_checked']=bool(charge) and all(v is not None for v in charge+port)
@@ -78,7 +92,9 @@ def build_network_report(directory,workspace,*,output=None,max_frames=25):
             fields={k:f['voxel/'+v][:].reshape(meta['config']['nodes'],-1).tolist() for k,v in
                 [('c','concentration_mol_m3'),('d','damage'),('fatigue','fatigue_J_m3'),('electron','electronic_potential_unit_load'),('ion','ionic_potential_unit_load')]}
             fields['stress']=(np.trace(stress,axis1=-2,axis2=-1)/3e6).reshape(meta['config']['nodes'],-1).tolist()
-            frames.append({'step':int(index),'time_s':records[index]['time_s'],'cycles':records[index]['completed_cycles'],'fields':fields})
+            frames.append({'step':int(index),'time_s':records[index]['time_s'],'cycles':records[index]['completed_cycles'],'fields':fields,
+                'macro':records[index].get('macro_mechanics',{}),
+                'stretches':f['macro/axial_stretches'][:].tolist() if 'macro/axial_stretches' in f else None})
     payload={'summary':summary,'metadata':meta,'records':records,'curves':curves,'frames':frames,
         'shape':list(labels.shape),'phase':labels.ravel().tolist(),'particle':particles.ravel().tolist(),'grain':grains.ravel().tolist()}
     html=Path(__file__).with_name('network_view.html').read_text().replace('__PAYLOAD__',json.dumps(payload,separators=(',',':'),allow_nan=False).replace('<','\\u003c'))

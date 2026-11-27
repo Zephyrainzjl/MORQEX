@@ -92,6 +92,7 @@ def main():
     parser.add_argument("--dependency-install", action="store_true", help="Allow external pip installation disk space; CPU/RAM/GPU/time limits unchanged")
     parser.add_argument('--gpu',action='store_true',help='Explicit, monitored low-priority GPU profile; CPU default stays disabled')
     parser.add_argument('--render',action='store_true',help='Headless software-render qualification: allow browser virtual address reservations, keep physical RSS/CPU caps and GPU disabled')
+    parser.add_argument('--reference-memory',action='store_true',help='Explicit 6 GiB RSS / 12 GiB address-space reference mesh profile; keep one CPU and 8 GiB host reserve')
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
@@ -100,6 +101,10 @@ def main():
     if not args.label or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.label):
         parser.error("Label may contain only letters, digits, underscore and hyphen")
     settings=tomllib.loads((ROOT / 'configs/local.toml').read_text());cfg=settings['resources'];gpu=settings['gpu']
+    if args.reference_memory:
+        if args.render or args.gpu or args.dependency_install:
+            parser.error('Reference-memory profile is CPU-only and separate from other profiles')
+        cfg.update(resident_memory_mib=6144,address_space_mib=12288,file_size_mib=256)
     if args.dependency_install:
         if len(command) < 4 or command[1:4] != ["-m", "pip", "install"]:
             parser.error("Dependency disk profile is restricted to python -m pip install")

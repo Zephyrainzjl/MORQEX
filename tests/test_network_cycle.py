@@ -8,15 +8,27 @@ import pytest
 
 
 def test_controls_reject_unphysical_rates_and_boundaries():
-    for arg in ({'C_rate':0.},{'charge_C_rate':-1.},{'nodes':1},{'cycles':0},{'conductance_floor':0.},{'cbd_ionic_efficiency':.8}):
+    for arg in ({'C_rate':0.},{'charge_C_rate':-1.},{'nodes':1},{'cycles':0},{'conductance_floor':0.},{'cbd_ionic_efficiency':.8},
+                {'chemical_stretch_table':'missing.json'},{'chemical_stretch_table':None}):
         with pytest.raises(ValueError):NetworkCycleConfig(**arg)
 
 
-def test_actual_3d_fatigue_restart_preserves_cache_and_states(tmp_path):
+@pytest.mark.parametrize('tabulated,stack',[(False,False),(True,False),(False,True)])
+def test_actual_3d_fatigue_restart_preserves_cache_and_states(tmp_path,tabulated,stack):
     if not os.environ.get('MORQEX_WORKSPACE'):pytest.skip('Bounded compiled reference workspace required')
     template=(Path(__file__).parents[1]/'configs/top_damage_network_cycle.toml').read_text()
     import hashlib
     name='restart_'+hashlib.sha256(str(tmp_path).encode()).hexdigest()[:12]
+    if stack:template=template.replace('[cycle]','[cycle]\nmechanical_constraint = "fixed_thickness_stack"')
+    if tabulated:
+        import json
+        x=np.linspace(0,1,5);stretches=np.exp(x[:,None]*np.array([.012,.012,.04]))
+        relative='experiments/'+name+'_stretch.json'
+        material=Path(os.environ['MORQEX_WORKSPACE'])/relative;material.parent.mkdir(parents=True,exist_ok=True)
+        material.write_text(json.dumps(dict(schema='morqex-chemical-stretch-1',host='NMC811',stoichiometry=x.tolist(),
+            principal_stretches=stretches.tolist(),reference_stoichiometry=.5,provenance='Synthetic restart test, not measured material parameters')))
+        checksum=hashlib.sha256(material.read_bytes()).hexdigest()
+        template=template.replace('[cycle]',f'[cycle]\nchemical_stretch_table = "{relative}"\nchemical_stretch_sha256 = "{checksum}"')
     import re
     a=tmp_path/'a.toml';b=tmp_path/'b.toml'
     a.write_text(re.sub(r'output = ".*"','output = "'+name+'_whole"',template))
@@ -29,9 +41,11 @@ def test_actual_3d_fatigue_restart_preserves_cache_and_states(tmp_path):
             np.testing.assert_allclose(f[key][:],g[key][:],rtol=2e-7,atol=1e-7)
         for node in range(3):
             np.testing.assert_allclose(f[f'cache/{node}/electronic'][:],g[f'cache/{node}/electronic'][:],rtol=1e-9)
+        if stack:np.testing.assert_allclose(f['macro/axial_stretches'][:],g['macro/axial_stretches'][:],rtol=0,atol=1e-10)
     for case in (full,split):
         summary,_,_=audit_network_history(case['directory'])
         assert summary['history_consistency_passed'] and summary['max_damage']>0
+        assert summary['stack_equilibrium_checked']==stack
     from morqex.top_damage.network_export import export_network_history
     import xml.etree.ElementTree as ET
     import base64,struct

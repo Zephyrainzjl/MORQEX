@@ -36,7 +36,7 @@ def compare(coarse,fine):
     mb=json.loads((Path(fine)/'manifest.json').read_text())['config']
     numerical={'output','increments_per_half_cycle','concentration_regions','graph_update_tolerance','stagger_tolerance',
         'dfn_rtol','dfn_atol','project_algebraic_output'}
-    defaults={'diffusivity_interpretation':'tracer_reference'}
+    defaults={'diffusivity_interpretation':'tracer_reference','chemical_stretch_table':'','chemical_stretch_sha256':''}
     for key in (ma.keys()|mb.keys())-numerical:
         if ma.get(key,defaults.get(key))!=mb.get(key,defaults.get(key)):
             raise ValueError('Physical/protocol mismatch: '+key)

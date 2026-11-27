@@ -45,7 +45,9 @@ def test_budget_tracks_child_with_separate_process_group(tmp_path,monkeypatch):
     spec=importlib.util.spec_from_file_location('morqex_local_runner',ROOT/'scripts/run_local.py')
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     marker=tmp_path/'pid.txt'
-    child="import os,time; x=bytearray(12*1024*1024); open("+repr(str(marker))+",'w').write(str(os.getpid())); time.sleep(20)"
+    # Publish after close: existence of an open empty file is not readiness.
+    # The previous handshake intermittently read '' under CPU contention.
+    child="import os,time,pathlib; x=bytearray(12*1024*1024); p=pathlib.Path("+repr(str(marker))+" ); q=p.with_suffix('.tmp'); q.write_text(str(os.getpid())); q.replace(p); time.sleep(20)"
     parent="import subprocess,sys,time; subprocess.Popen([sys.executable,'-c',"+repr(child)+"],start_new_session=True); time.sleep(20)"
     proc=subprocess.Popen([sys.executable,'-c',parent],start_new_session=True)
     tracked={}

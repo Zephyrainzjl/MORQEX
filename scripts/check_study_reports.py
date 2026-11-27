@@ -15,7 +15,7 @@ class Assets(HTMLParser):
 ws=Workspace(os.environ['MORQEX_WORKSPACE'])
 browser=Path('/home/zephyrain/.cache/ms-playwright/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell')
 checks=[]
-for name in ('network_study','topology_study'):
+for name in ('network_study','topology_study','mesh_study','article_draft'):
     page=ws.path('reports',name,'index.html');parser=Assets();parser.feed(page.read_text())
     missing=[]
     for value in parser.links:

@@ -53,6 +53,7 @@ class WorkingNetworkState:
     retained_electronic_vertices: int
     retained_ionic_vertices: int
     voltage_defined: bool
+    potential_precision: str = 'float64'
 
 
 @dataclass(frozen=True)
@@ -61,8 +62,8 @@ class ReactionPortErrorBound:
     retained_energy_error_bound: float
     relative_edge_change: float
     cached_nonlinear_residual_dual_norm: float
-    scope: str = ('Strong-monotonicity voltage bound for the same reaction laws/current and '
-                  'unchanged positive edge support; evaluated in FP64, not interval-certified. '
+    scope: str = ('Strong-monotonicity voltage bound for explicitly supplied reaction states/current and '
+                  'unchanged positive edge/reaction support; floating-point evaluation, not interval-certified. '
                   'Not an accumulated DFN or fatigue error bound.')
 
 
@@ -127,6 +128,37 @@ class ReactiveDualNetwork:
             fixed.append(int(ionic_candidates[0] if len(ionic_candidates) else candidates[0]))
         self.fixed=np.asarray(fixed,int);self.free=np.setdiff1d(np.arange(ne+ni),self.fixed)
 
+    def with_reaction_state(self,faces,*,temperature_K=None):
+        """Reuse passive factorizations while solving *new* BV/charge equations.
+
+        Positive reaction support and incidence must be unchanged. This returns
+        a distinct problem; no accepted state or old kinetics are mutated.
+        It does not approximate a change in passive conductance by itself.
+        """
+        if (not isinstance(faces,ReactionFaces)
+                or not np.array_equal(faces.electronic_vertices,self.faces.electronic_vertices)
+                or not np.array_equal(faces.ionic_vertices,self.faces.ionic_vertices)):
+            raise ValueError('Changed reaction-face topology requires reconstruction')
+        amplitude=2*faces.area_m2*faces.exchange_A_m2
+        if not np.array_equal(amplitude>0,self.amplitude>0):
+            raise ValueError('Changed positive reaction support requires reconstruction')
+        temperature=self.temperature_K if temperature_K is None else float(temperature_K)
+        if not np.isfinite(temperature) or temperature<=0:raise ValueError('Positive absolute temperature required')
+        result=object.__new__(type(self));result.__dict__=self.__dict__.copy()
+        result.faces=faces;result.amplitude=amplitude;result.temperature_K=temperature
+        result.k=96485.33212/(2*8.31446261815324*temperature)
+        result.offset=float(np.average(faces.equilibrium_V,weights=amplitude)) if amplitude.sum()>0 else float(faces.equilibrium_V.mean())
+        return result
+
+    def initial_from(self,state):
+        """Retain previous physical potentials while applying this OCP shift."""
+        if (not isinstance(state,WorkingNetworkState)
+                or state.electronic_potential_V.shape!=(self.electronic.vertex_count,)
+                or state.ionic_potential_V.shape!=(self.ionic.vertex_count,)):
+            raise ValueError('Compatible previous physical graph potentials required')
+        return np.r_[state.electronic_potential_V[self.eop.terminals]-self.offset,
+                     state.ionic_potential_V[self.iop.terminals]]
+
     def _fields(self,v,current):
         eta=self.B@v+(self.offset-self.faces.equilibrium_V)
         z=self.k*eta
@@ -139,9 +171,13 @@ class ReactiveDualNetwork:
         # Retain the numerical row-sum term, rather than silently modifying S.
         dv=v[self.passive_i]-v[self.passive_j]
         current_edges=self.passive_g*dv
-        passive=(np.bincount(self.passive_i,weights=current_edges,minlength=len(v))
-                 -np.bincount(self.passive_j,weights=current_edges,minlength=len(v))
-                 +self.passive_row_sum*v)
+        if v.dtype==np.dtype(np.longdouble):
+            passive=self.passive_row_sum*v
+            np.add.at(passive,self.passive_i,current_edges);np.add.at(passive,self.passive_j,-current_edges)
+        else:
+            passive=(np.bincount(self.passive_i,weights=current_edges,minlength=len(v))
+                     -np.bincount(self.passive_j,weights=current_edges,minlength=len(v))
+                     +self.passive_row_sum*v)
         residual=passive+self.B.T@j
         residual[self.collector]+=current
         # Drop only a constant I*offset from the objective. Using shifted solid
@@ -150,12 +186,22 @@ class ReactiveDualNetwork:
         objective=.5*passive_energy+float(np.sum(self.amplitude/self.k*2*np.sinh(z/2)**2))+current*v[self.collector]
         return eta,j,dj,residual,objective
 
-    def solve(self,discharge_current_A,*,initial=None,tolerance=1e-10,max_iterations=60,diagnostics=None):
+    def solve(self,discharge_current_A,*,initial=None,tolerance=1e-10,max_iterations=60,diagnostics=None,extended_precision=False):
+        """FP64 tangents, optionally extended-precision potentials/residuals.
+
+        The optional mode addresses sub-ulp potential corrections in highly
+        conducting, weakly reacting full graphs. It does not relax charge gates.
+        Platforms without a wider longdouble type reject the requested mode.
+        """
         current=float(discharge_current_A)
         if not np.isfinite(current) or not np.isfinite(tolerance) or not 0<tolerance<1e-3 or type(max_iterations) is not int or max_iterations<1:
             raise ValueError('Finite current and explicit nonlinear solver controls required')
         if current!=0 and not self.voltage_defined:raise ValueError('No physical reaction path between reservoirs: current-controlled problem is open circuit')
-        v=np.zeros(self.S.shape[0]) if initial is None else np.array(initial,float,copy=True)
+        if type(extended_precision) is not bool:raise ValueError('Boolean precision control required')
+        if extended_precision and np.finfo(np.longdouble).eps>=np.finfo(float).eps:
+            raise ValueError('Extended potential precision unavailable on this platform')
+        dtype=np.longdouble if extended_precision else float
+        v=np.zeros(self.S.shape[0],dtype=dtype) if initial is None else np.array(initial,dtype=dtype,copy=True)
         if v.shape!=(self.S.shape[0],) or not np.isfinite(v).all():raise ValueError('Finite retained shifted potentials required')
         v[self.fixed]=0.
         for iteration in range(max_iterations+1):
@@ -167,13 +213,13 @@ class ReactiveDualNetwork:
             if diagnostics is not None:diagnostics.append({'iteration':iteration,'relative_residual':defect,'objective':float(objective)})
             if defect<=tolerance:break
             if iteration==max_iterations:raise RuntimeError(f'Reactive dual-network Newton failed charge balance: residual={defect:.6e}, tolerance={tolerance:.6e}, iterations={iteration}')
-            H=(self.S+self.B.T@sparse.diags(dj)@self.B).tocsr()[self.free][:,self.free]
+            H=(self.S+self.B.T@sparse.diags(np.asarray(dj,float))@self.B).tocsr()[self.free][:,self.free]
             diag=H.diagonal()
             if np.any(diag<=0) or not np.isfinite(diag).all():raise RuntimeError('Unresolved null mode in reactive dual network')
             scaling=1/np.sqrt(diag);D=sparse.diags(scaling)
             with warnings.catch_warnings():
                 warnings.simplefilter('error',MatrixRankWarning)
-                direction=scaling*spsolve((D@H@D).tocsc(),-scaling*residual[self.free])
+                direction=scaling*spsolve((D@H@D).tocsc(),np.asarray(-scaling*residual[self.free],float))
             if not np.isfinite(direction).all():raise RuntimeError('Reactive graph tangent solve failed')
             slope=float(residual[self.free]@direction)
             accepted=False;step=1.
@@ -183,7 +229,7 @@ class ReactiveDualNetwork:
                 evaluated=self._fields(trial,current)
                 if evaluated is not None:
                     new_residual=evaluated[3];new_objective=evaluated[4]
-                    descent=new_objective<=objective+1e-4*step*slope
+                    descent=abs(step*slope)>roundoff and new_objective<=objective+1e-4*step*slope
                     rounding=(abs(step*slope)<=roundoff and new_objective<=objective+roundoff
                         and np.linalg.norm(new_residual[self.free])<(1-1e-4*step)*np.linalg.norm(residual[self.free]))
                     if descent or rounding:v=trial;accepted=True;break
@@ -195,24 +241,31 @@ class ReactiveDualNetwork:
         reaction=float(j@eta)
         power=e.dissipation_W+i.dissipation_W+reaction+current*voltage+float(j@self.faces.equilibrium_V)
         power_scale=max(e.dissipation_W+i.dissipation_W+abs(reaction),abs(current*voltage),float(np.sum(abs(j*self.faces.equilibrium_V))),1e-30)
-        charge=max(defect,abs(j.sum()+current)/max(abs(current),float(np.sum(abs(j))),1e-30))
+        charge=float(max(defect,abs(j.sum()+current)/max(abs(current),float(np.sum(abs(j))),1e-30)))
         if charge>10*tolerance or reaction < -1e-12*power_scale or abs(power)>max(10*tolerance,1e-11)*power_scale:
             raise RuntimeError('Reactive graph charge/power identity failed')
         return WorkingNetworkState(_owned(e.potential_V+self.offset),i.potential_V,_owned(j),_owned(eta),voltage,current,
             e.dissipation_W,i.dissipation_W,reaction,charge,float(power),iteration,
-            len(self.eop.terminals),len(self.iop.terminals),self.voltage_defined)
+            len(self.eop.terminals),len(self.iop.terminals),self.voltage_defined,str(v.dtype))
 
     def changed_conductance_bound(self,state,electronic,ionic):
+        """Backward-compatible fixed-kinetics/current conductance-only bound."""
+        return self.changed_problem_bound(state,electronic,ionic)
+
+    def changed_problem_bound(self,state,electronic,ionic,*,faces=None,temperature_K=None,discharge_current_A=None):
         """Bound a cached nonlinear solution under passive conductance changes.
 
         No updated graph factorization or Schur matrix is constructed. With
         |g_new/g_old-1|<=eps<1 and identical support, (1-eps)S<=S_new<=
         (1+eps)S. Symmetric BV has derivative >=2*A*j0*k. On the same gauge
         space, H=(1-eps)S+B.T diag(2*A*j0*k)B is a monotonicity lower bound.
-        Consequently ||v-v_new||_H <= ||F_old(v)||_{H^-1} +
-        eps/sqrt(1-eps)*sqrt(v.T*S*v). A collector dual solve gives its voltage
-        bound. All reaction vertices remain retained; U, j0, T and I must be
-        identical between the cached and target problems.
+        Target OCP, area, exchange current, temperature and current may change
+        when explicitly supplied. Let r*=F_old(v)+B.T*(j_new(v)-j_old(v))
+        +(I_new-I_old)*e_collector, and use a_new*k_new in H. Then
+        ||v-v_new||_H <= ||r*||_{H^-1}+eps/sqrt(1-eps)*sqrt(v.T*S*v).
+        A collector dual solve gives its voltage bound. The target reaction
+        law must keep the same face incidence and positive reaction support.
+        There is no estimate of uncertainty in the supplied chemical state.
 
         This is a sufficient, potentially conservative local bound. It does
         not certify electrolyte/solid state errors or repeated-cycle drift.
@@ -221,6 +274,19 @@ class ReactiveDualNetwork:
         from scipy.linalg import cho_factor,cho_solve
         if not isinstance(state,WorkingNetworkState) or not state.voltage_defined:
             raise ValueError('A solved, physically defined working voltage required')
+        target_faces=self.faces if faces is None else faces
+        if (not isinstance(target_faces,ReactionFaces)
+                or not np.array_equal(target_faces.electronic_vertices,self.faces.electronic_vertices)
+                or not np.array_equal(target_faces.ionic_vertices,self.faces.ionic_vertices)):
+            raise ValueError('Changed reaction-face topology requires reconstruction')
+        amplitude=2*target_faces.area_m2*target_faces.exchange_A_m2
+        if not np.array_equal(amplitude>0,self.amplitude>0):
+            raise ValueError('Changed positive reaction support requires reconstruction')
+        temperature=self.temperature_K if temperature_K is None else float(temperature_K)
+        current=state.discharge_current_A if discharge_current_A is None else float(discharge_current_A)
+        if not np.isfinite([temperature,current]).all() or temperature<=0:
+            raise ValueError('Finite target current and positive absolute temperature required')
+        k=96485.33212/(2*8.31446261815324*temperature)
         eps=0.
         for old,new in [(self.electronic,electronic),(self.ionic,ionic)]:
             if (not isinstance(new,ConductingNetwork) or new.channel!=old.channel
@@ -248,7 +314,14 @@ class ReactiveDualNetwork:
         if (np.max(abs(j-state.reaction_current_A),initial=0)>1e-8*jscale+roundoff
                 or not np.allclose(eta,state.overpotential_V,rtol=1e-8,atol=1e-12)):
             raise ValueError('State does not solve the declared reaction laws')
-        H=((1-eps)*self.S+self.B.T@sparse.diags(self.amplitude*self.k)@self.B).tocsr()[self.free][:,self.free]
+        z=k*(eta+self.faces.equilibrium_V-target_faces.equilibrium_V)
+        if not np.isfinite(z).all() or np.max(abs(z),initial=0)>600:
+            raise ValueError('Target reaction state exceeds finite BV evaluation range')
+        target_j=amplitude*np.sinh(z)
+        if not np.isfinite(target_j).all():raise ValueError('Nonfinite target reaction currents')
+        residual=residual+self.B.T@(target_j-j)
+        residual[self.collector]+=current-state.discharge_current_A
+        H=((1-eps)*self.S+self.B.T@sparse.diags(amplitude*k)@self.B).tocsr()[self.free][:,self.free]
         diagonal=H.diagonal()
         if np.any(diagonal<=0):raise ValueError('Unresolved null space in voltage bound')
         scale=1/np.sqrt(diagonal)

@@ -19,7 +19,7 @@ dfn = ["pybammsolvers==0.6.0", "casadi==3.7.2", "anytree>=2.8", "black", "pandas
 transport = ["taufactor"]
 gpu = ["cupy-cuda12x>=14.0", "pyamg>=5.3"]
 view = ["pyvista", "plotly"]
-report = ["fonttools>=4.50"]
+report = ["fonttools>=4.50", "markdown>=3.7"]
 top-damage = ["h5py==3.15.1", "ninja==1.13.0", "pyamg==5.3.0"]
 paper-particle = ["scikit-fem==11.0.0", "gmsh==4.15.2", "h5py==3.15.1", "pypdf==6.4.0", "fonttools>=4.50"]
 statistics = ["aabbtree>=2.5", "pyquaternion>=0.9.5", "lsq-ellipse>=2.0", "xmltodict>=0.12"]

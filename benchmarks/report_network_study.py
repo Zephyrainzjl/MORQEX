@@ -32,7 +32,8 @@ def main():
         'dual_full8_time24_v1','dual_full8_time48_v1','dual_full8_time96_v1',
         'dual_full8_projected_v1','dual_full8_projected48_v1','dual_full8_projected96_v1',
         'dual_long20_256_v1','dual_charge_gate_probe_v1','dual_long20_checked_v1',
-        'dual_no_feedback_v1','dual_exact_graph_v1']
+        'dual_no_feedback_v1','dual_exact_graph_v1','dual_chemical_rate01_v1','dual_chemical_rate8_v1',
+        'dual_stack_chemical8_v1','dual_stack_chemical01_v1']
     output=ws.path('reports/network_study');output.mkdir(exist_ok=True)
     summaries=[];curves={};long=[]
     for name in names:
@@ -86,17 +87,18 @@ def main():
             f"{e.get('completed_cycles',0)}/{e.get('requested_cycles','?')}",f"{e.get('max_inventory_relative_defect',float('nan')):.2e}",charge,
             f"{e.get('max_damage',float('nan')):.4g}",scope])+'</tr>')
     refinement=[]
-    for name in ['concentration_refinement','concentration256_accepted','network_time_48_96','full8_time24_48','full8_time48_96','full8_projection_accuracy','graph_port_benchmark']:
+    for name in ['concentration_refinement','concentration256_accepted','network_time_48_96','full8_time24_48','full8_time48_96','full8_projection_accuracy','graph_port_benchmark',
+                 'static_mesh_1_2','static_mesh_3_4','static_mesh_face_contacts_v3_4_6','static_mesh_quadratic_v1_2_3','finite_storage_equivalence']:
         file=ws.path('reports',name+'.json')
         if file.exists():refinement.append('<details><summary>'+name+'</summary><pre>'+html.escape(file.read_text())+'</pre></details>')
     title='MORQEX · 疲劳相场—网络—DFN 数值证据'
     document='''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'''+title+'''</title><style>
 body{font:15px/1.65 system-ui,sans-serif;margin:0;background:#eef3f6;color:#152c3c}main{max-width:1250px;margin:auto;padding:32px}h1{font-size:28px}section{background:white;border-radius:12px;padding:24px;margin:20px 0;box-shadow:0 3px 14px #132c3c09}.notice{border-left:5px solid #b97419}table{width:100%;border-collapse:collapse;font-size:12px}td,th{text-align:left;border-bottom:1px solid #dde5eb;padding:9px}a{color:#146e89}img{max-width:100%;display:block}pre{overflow:auto;font-size:12px}.scroll{overflow:auto}.plots{display:grid;grid-template-columns:1fr 1fr;gap:15px}@media(max-width:800px){.plots{display:block}main{padding:10px}}
 </style><main><h1>'''+title+'''</h1><p>仅使用实际接受的充放电步与三维状态。源码内编译 MFEM、源码内 PyBaMM；计算、断点和图表位于外部工作区。</p>
-<section class="notice"><b>数值候选，尚未达到论文全部验收</b><p>当前疲劳使用 Carrara 型正变差历史和不可逆 AT2，电子/固相传输使用声明的弥散损伤导率。孔隙/CBD 离子几何固定；尚没有经验证的裂纹开度—侵液—新生反应面闭环。每个 SVE 独立固定外边界，未替代整电芯力平衡。迁移率参数、材料疲劳与网格仍需独立验证。</p><p>容量由实际电流积分取得。单纯早期容量变化不能归因于疲劳，损伤相场也不能直接等同开放裂缝。未积分的循环不绘制曲线。</p></section>
+<section class="notice"><b>数值候选，尚未达到论文全部验收</b><p>当前疲劳使用 Carrara 型正变差历史和不可逆 AT2，电子/固相传输使用声明的弥散损伤导率。孔隙/CBD 离子几何固定；尚没有经验证的裂纹开度—侵液—新生反应面闭环。旧工况各 SVE 独立固定外边界；新 stack 工况计算共同截面力与总体固定厚度，包含弹性隔膜和锂层，仅适用于等截面平面应变假设。材料疲劳与网格仍需独立验证。</p><p>空间收敛门槛尚未通过：48³→72³ 的共同体素平均应力相差约 8.07%，能量约 4.76%。加密研究保留失败，不将粗网格循环场称为收敛参考解。容量由实际电流积分取得；早期容量变化不能直接归因于疲劳，损伤相场不能直接等同开放裂缝。</p></section>
 <section class="plots"><div><img src="rate_curves.svg" alt="真实倍率放电曲线"></div><div><img src="capacity_history.svg" alt="实际循环容量"></div></section>
 <section><h2>逐工况核查</h2><p>倍率列为充电/放电；节点和区域是宏观厚度单元与微结构浓度空间。旧记录未检查的电荷门槛不会标为通过。</p><div class="scroll"><table><thead><tr>'''+''.join('<th>'+s+'</th>' for s in ['工况 / 场 HTML','材料接口','倍率 C','区域数','循环','Li 相对缺陷','电荷相对缺陷','最大节点 d','状态'])+'''</tr></thead><tbody>'''+''.join(rows)+'''</tbody></table></div></section>
-<section><h2>误差与加速证据</h2><p>257 区域的一循环对照通过既定浓度空间门槛；64/128 区域的疲劳误差失败保留。它们均不是网格收敛证明。约 201 倍为冻结被动图的双端口查询加速，不能作为整电池加速。</p>'''+''.join(refinement)+'''</section><section><h2>可复现数据</h2><p><a href="../topology_study/index.html">相同失效面积、不同拓扑的 DFN 与反应端口对照</a></p><a href="evidence.json">完整配置与核查 JSON</a><p>HDF5 与逐节点 VTI/VTU/PVD 保留完整计算精度。均匀化单位载荷电势不是运行电池中的局部电势。</p></section></main>'''
+<section><h2>误差与加速证据</h2><p>257 区域的一循环对照通过既定浓度空间门槛；64/128 区域的疲劳误差失败保留。它们均不是网格收敛证明。约 201 倍为冻结被动图的双端口查询加速，不能作为整电池加速。</p>'''+''.join(refinement)+'''</section><section><h2>可复现数据</h2><p><a href="../topology_study/index.html">相同失效面积、不同拓扑的 DFN 与反应端口对照</a> · <a href="../mesh_study/index.html">三维参考解空间误差与成本</a></p><a href="evidence.json">完整配置与核查 JSON</a><p>HDF5 与逐节点 VTI/VTU/PVD 保留完整计算精度。均匀化单位载荷电势不是运行电池中的局部电势。</p></section></main>'''
     font=ws.path('data/report_font')
     if (font/'NotoSansCJKsc-Regular.otf').exists():
         from morqex.visualization.report_font import embed_font

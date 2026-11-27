@@ -39,6 +39,9 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog='morqex top-damage')
     sub = p.add_subparsers(dest='action', required=True)
     sub.add_parser('status')
+    refine=sub.add_parser('build-refinement',help='Compile source-integrated MFEM conforming refinement adapter')
+    refine.add_argument('config')
+    refine.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
     network_cycle=sub.add_parser('network-cycle',help='Conservative regional DFN / 3D finite fatigue / dual graph candidate')
     network_cycle.add_argument('config')
     network_cycle.add_argument('--workspace',default=os.environ.get('MORQEX_WORKSPACE'))
@@ -158,6 +161,11 @@ def main(argv=None):
         if not args.workspace:p.error('An external workspace is required')
         from .region_probe import run_probe
         print(json.dumps(run_probe(args.config,Workspace(args.workspace),stage=args.stage,node=args.node),indent=2))
+    elif args.action == 'build-refinement':
+        if not args.workspace:p.error('An external workspace is required')
+        from .backend import NativeConfig
+        from .refinement import build_refinement
+        print(json.dumps(build_refinement(NativeConfig.from_toml(args.config),Workspace(args.workspace)),indent=2))
     elif args.action == 'build-hyperelastic':
         if not args.workspace:p.error('An external workspace is required')
         from .backend import NativeConfig

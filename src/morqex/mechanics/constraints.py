@@ -32,6 +32,8 @@ def constraints(mesh, boundary):
     if boundary == "periodic":
         scaled = (mesh.points-mesh.box[0])/(mesh.box[1]-mesh.box[0])
         integer_keys = np.round(scaled*1e10).astype(np.int64)
+        if len(np.unique(integer_keys,axis=0))!=n:
+            raise ValueError('Separated junctions require explicit periodic sheet mapping; coordinate identification would weld them')
         lookup = {tuple(row): i for i, row in enumerate(integer_keys)}
         for axis in range(3):
             for i in np.flatnonzero((integer_keys[:, axis] == 0) | (integer_keys[:, axis] == 10**10)):

@@ -49,6 +49,8 @@ CASES={
     'full8_projected96':{'cycles':1,'C_rate':8.,'charge_C_rate':8.,'concentration_regions':-1,'local_mobility':True,'project_algebraic_output':True,'dfn_rtol':1e-8,'dfn_atol':1e-9,'increments_per_half_cycle':96},
     'chemical_rate01':{'cycles':1,'C_rate':.1,'charge_C_rate':.1,'concentration_regions':-1,'local_mobility':True,'diffusivity_interpretation':'chemical_diffusivity','gradient_coefficient_J_m5_mol2':0.},
     'chemical_rate8':{'cycles':1,'C_rate':8.,'charge_C_rate':8.,'concentration_regions':-1,'local_mobility':True,'diffusivity_interpretation':'chemical_diffusivity','gradient_coefficient_J_m5_mol2':0.},
+    'stack_chemical8':{'cycles':1,'C_rate':8.,'charge_C_rate':8.,'concentration_regions':-1,'local_mobility':True,'diffusivity_interpretation':'chemical_diffusivity','gradient_coefficient_J_m5_mol2':0.,'mechanical_constraint':'fixed_thickness_stack','separate_point_contacts':True},
+    'stack_chemical01':{'cycles':1,'C_rate':.1,'charge_C_rate':.1,'concentration_regions':-1,'local_mobility':True,'diffusivity_interpretation':'chemical_diffusivity','gradient_coefficient_J_m5_mol2':0.,'mechanical_constraint':'fixed_thickness_stack','separate_point_contacts':True},
 }
 
 

@@ -15,12 +15,13 @@ import shutil
 import sys
 import time
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.linalg import spsolve, minres, LinearOperator
 from .backend import NativeConfig, MFEMScalarBackend, require_local_budget, _sha, _LOCK
 from .phase_field import _field
 from morqex.workspace import Workspace
-from morqex.mechanics.reference import ElasticitySolver, MechanicalSolveError
+from morqex.mechanics.reference import MechanicalSolveError
+from morqex.mechanics.constraints import constraints
 
 _NATIVE = Path(__file__).with_name('native_hyperelastic')
 
@@ -99,7 +100,7 @@ class HyperelasticBackend:
         f=np.ascontiguousarray(F,dtype=float)
         if f.ndim!=3 or f.shape[1:]!=(3,3) or len(f)==0 or not np.isfinite(f).all():
             raise ValueError('Finite nonempty (cells,3,3) deformation required')
-        n=len(f);fc=np.array(np.broadcast_to(chemical_F,f.shape),float,copy=True)
+        n=len(f);fc=np.asarray(np.broadcast_to(chemical_F,f.shape),dtype=float)
         if not np.isfinite(fc).all() or np.any(np.linalg.det(fc)<=1e-12):
             raise ValueError('Chemical deformation must preserve orientation')
         a=np.ascontiguousarray(np.linalg.inv(fc))
@@ -149,6 +150,35 @@ class HyperelasticState:
     equilibrium_force_scale_N: float
 
 
+def _intact_stiffness(mesh, shear, bulk, chunk=2048):
+    """Exact isotropic Tet4 preconditioner, bounded element temporaries.
+
+    Binary sparse merges avoid repeatedly adding every chunk to a growing
+    global matrix. No linear strain matrix, per-cell 6x6 stiffness or duplicate
+    linear solver survives setup. This changes storage, not the bilinear form.
+    """
+    shape=(3*len(mesh.points),)*2; levels=[]
+    for begin in range(0,len(mesh.cells),chunk):
+        end=min(begin+chunk,len(mesh.cells));g=mesh.gradients[begin:end]
+        mu=shear[begin:end];lam=bulk[begin:end]-2*mu/3
+        local=(np.einsum('e,ik,eab->eaibk',mu,np.eye(3),np.einsum('eaj,ebj->eab',g,g))
+               +np.einsum('e,eak,ebi->eaibk',mu,g,g)
+               +np.einsum('e,eai,ebk->eaibk',lam,g,g))
+        local=(local*mesh.volumes[begin:end,None,None,None,None]).reshape(-1,12,12)
+        row=np.broadcast_to(mesh.dofs[begin:end,:,None],local.shape)
+        col=np.broadcast_to(mesh.dofs[begin:end,None,:],local.shape)
+        part=coo_matrix((local.ravel(),(row.ravel(),col.ravel())),shape=shape).tocsr()
+        level=0
+        while level<len(levels) and levels[level] is not None:
+            part=levels[level]+part;levels[level]=None;level+=1
+        if level==len(levels):levels.append(part)
+        else:levels[level]=part
+    result=csr_matrix(shape)
+    for part in levels:
+        if part is not None:result=result+part
+    return result
+
+
 class Hyperelasticity:
     """Total-Lagrangian Tet4 reference; full 3x3 prescribed macro F.
 
@@ -164,15 +194,13 @@ class Hyperelasticity:
         nu=np.array(np.broadcast_to(poisson,(n,)),float,copy=True)
         if not np.isfinite(nu).all() or np.any((nu<=-1)|(nu>=.5)):raise ValueError('Poisson ratio must be in (-1,.5)')
         self.shear=self.young/(2*(1+nu));self.bulk=self.young/(3*(1-2*nu))
-        identity=np.array([1.,1.,1.,0.,0.,0.])
-        C=2*self.shear[:,None,None]*np.eye(6)+(self.bulk-2*self.shear/3)[:,None,None]*np.outer(identity,identity)
-        self.base=ElasticitySolver(mesh,C,boundary=boundary,factorize=False)
-        self.P=self.base.P
-        # B[e,iJ,ak]=delta_ik N_a,J; total F=I+B u.
-        self.B=np.einsum('ik,eaJ->eiJak',np.eye(3),mesh.gradients).reshape(n,9,12)
+        self.constraint=constraints(mesh,boundary)
+        self.P=self.constraint.projection
         self.matrix_free='matrix-free' in linear_solver
         self.compiled_action=self.matrix_free and not linear_solver.startswith('numpy-')
         if not self.matrix_free:
+            # Only assembled tangents need this expanded element matrix.
+            self.B=np.einsum('ik,eaJ->eiJak',np.eye(3),mesh.gradients).reshape(n,9,12)
             self.rows=np.broadcast_to(mesh.dofs[:,:,None],(n,12,12)).ravel()
             self.cols=np.broadcast_to(mesh.dofs[:,None,:],(n,12,12)).ravel()
         self.preconditioner=None;self.linear_iterations=[];self.solve_diagnostics=[]
@@ -180,14 +208,17 @@ class Hyperelasticity:
             import pyamg
             from morqex.mechanics.constraints import _rigid
             rigid=_rigid(mesh.points,float(np.max(np.ptp(mesh.points,axis=0)))).reshape(-1,6)
-            ml=pyamg.smoothed_aggregation_solver((self.base.Kr/self.base.scale).tocsr(),
+            intact=_intact_stiffness(mesh,self.shear,self.bulk)
+            scale=float(np.max(intact.diagonal()))
+            reduced=(self.P.T@intact@self.P).tocsr();del intact
+            ml=pyamg.smoothed_aggregation_solver(reduced/scale,
                 B=np.asarray(self.P.T@rigid),symmetry='symmetric',max_coarse=48,
                 presmoother=('gauss_seidel',{'sweep':'symmetric'}),
                 postsmoother=('gauss_seidel',{'sweep':'symmetric'}))
             # Capture immutable scale, not self: self -> preconditioner -> self
             # otherwise retains the full mesh/tangent workspace until cyclic GC.
             # NumPy's large allocations do not reliably trigger that collector.
-            amg=ml.aspreconditioner();scale=self.base.scale
+            amg=ml.aspreconditioner()
             self.preconditioner=LinearOperator(amg.shape,matvec=lambda x:amg@x/scale)
 
     def assemble(self,u,chemical_F,degradation=1.,*,tangent=True):
@@ -195,17 +226,17 @@ class Hyperelasticity:
             raise ValueError('Geometry changed: rebuild constraints, gradients and preconditioner')
         u=np.asarray(u,float).reshape(-1)
         if u.shape!=(3*len(self.mesh.points),) or not np.isfinite(u).all():raise ValueError('Invalid displacement')
-        F=np.eye(3)+np.einsum('eij,ej->ei',self.B,u[self.mesh.dofs]).reshape(-1,3,3)
+        F=np.eye(3)+np.einsum('eai,eaj->eij',u[self.mesh.dofs].reshape(-1,4,3),self.mesh.gradients)
         w,plus,p,c=self.backend.evaluate(F,chemical_F,self.shear,self.bulk,degradation,tangent=tangent)
-        force=np.zeros(len(u));local=np.einsum('eij,ei,e->ej',self.B,p.reshape(-1,9),self.mesh.volumes)
+        force=np.zeros(len(u));local=np.einsum('eij,eaj,e->eai',p,self.mesh.gradients,self.mesh.volumes)
         np.add.at(force,self.mesh.dofs.ravel(),local.ravel())
         A=None
         if tangent:
             if self.matrix_free:
                 def action(v):
-                    dv=np.einsum('eij,ej->ei',self.B,v[self.mesh.dofs],optimize=True)
+                    dv=np.einsum('eai,eaj->eij',v[self.mesh.dofs].reshape(-1,4,3),self.mesh.gradients).reshape(-1,9)
                     dp=np.einsum('eij,ej->ei',c,dv,optimize=True)
-                    nodal=np.einsum('eij,ei,e->ej',self.B,dp,self.mesh.volumes,optimize=True)
+                    nodal=np.einsum('eij,eaj,e->eai',dp.reshape(-1,3,3),self.mesh.gradients,self.mesh.volumes)
                     out=np.zeros(len(u));np.add.at(out,self.mesh.dofs.ravel(),nodal.ravel());return out
                 if self.compiled_action:action=self.backend.tangent_action(self.mesh,c)
                 A=LinearOperator((len(u),len(u)),matvec=action,rmatvec=action,dtype=float)
@@ -217,7 +248,7 @@ class Hyperelasticity:
     def solve(self, chemical_F=np.eye(3), degradation=1., *, macro_F=None, force=None,
               initial_displacement=None,tolerance=1e-9,max_iterations=50):
         n=len(self.mesh.points);nd=3*n
-        if macro_F is not None and self.base.constraint.boundary=='neumann':
+        if macro_F is not None and self.constraint.boundary=='neumann':
             raise ValueError('Neumann problem uses nominal forces, not macro F')
         fm=np.eye(3) if macro_F is None else np.asarray(macro_F,float)
         if fm.shape!=(3,3) or not np.isfinite(fm).all() or np.linalg.det(fm)<=1e-12:raise ValueError('Invalid macro F')
@@ -235,7 +266,8 @@ class Hyperelasticity:
         # by that shrinking vector falsely demands near-zero/near-zero accuracy.
         # Freeze the norm using the chemical/macro lift and actual applied load;
         # include the first trial force when unloading from a warm start.
-        _,lift_force,*_=self.assemble(lift,chemical_F,degradation,tangent=False)
+        response=self.assemble(lift,chemical_F,degradation,tangent=False)
+        lift_force=response[1];del response
         load_scale=max(np.linalg.norm(lift_force),np.linalg.norm(external),force_scale*1e-9)
         # EvalW subtracts O(modulus) invariants to obtain the much smaller
         # strain energy. Near equilibrium, Armijo alone can reject a Newton
@@ -251,7 +283,7 @@ class Hyperelasticity:
             if iteration==0:load_scale=max(load_scale,np.linalg.norm(internal))
             scale=load_scale
             residual=float(np.linalg.norm(rr)/scale)
-            physical=float(np.linalg.norm(self.base.constraint.equilibrium_projection.T@r)/scale)
+            physical=float(np.linalg.norm(self.constraint.equilibrium_projection.T@r)/scale)
             potential=energy-float(external@u)
             trace.append({'iteration':iteration,'residual':residual,'potential_J':potential,
                           'residual_N':float(np.linalg.norm(rr)),'force_scale_N':float(scale)})
@@ -262,7 +294,7 @@ class Hyperelasticity:
                     'roundoff_energy_scale_J':roundoff_energy,'trace':trace})
                 J=np.linalg.det(F);sigma=(p@np.swapaxes(F,1,2))/J[:,None,None]
                 return HyperelasticState(u.reshape(-1,3),F,p,sigma,plus,energy,potential,r.reshape(-1,3),physical,iteration,float(J.min()),
-                    float(np.linalg.norm(self.base.constraint.equilibrium_projection.T@r)),float(scale))
+                    float(np.linalg.norm(self.constraint.equilibrium_projection.T@r)),float(scale))
             if iteration==max_iterations:break
             if self.matrix_free:
                 reduced=LinearOperator((self.P.shape[1],)*2,matvec=lambda x:np.asarray(self.P.T@(A@(self.P@x))),dtype=float)
@@ -287,7 +319,8 @@ class Hyperelasticity:
             for _ in range(35):
                 trial=u+step*direction
                 try:
-                    new_energy,new_force,*_=self.assemble(trial,chemical_F,degradation,tangent=False)
+                    response=self.assemble(trial,chemical_F,degradation,tangent=False)
+                    new_energy,new_force=response[:2];del response
                 except ValueError:
                     step*=.5;continue
                 new_potential=new_energy-float(external@trial)
@@ -300,6 +333,10 @@ class Hyperelasticity:
                 backtracks+=1
                 step*=.5
             else:raise MechanicalSolveError('Finite-strain positive-J line search failed')
+            # Do not keep the preceding full cell tangent alive while allocating
+            # the next Newton tangent. A and reduced are no longer used after
+            # the accepted line-search step; the constitutive equation is unchanged.
+            del A,reduced,F,p,plus,internal
         raise MechanicalSolveError('Finite-strain Newton did not converge; accepted state unchanged')
 
 

@@ -46,4 +46,7 @@ def test_cycle_export_preserves_imported_reference_origin(tmp_path):
     vti=ET.parse(Path(exported['directory'])/'node_000_step_000000.vti')
     np.testing.assert_array_equal(np.fromstring(vti.find('ImageData').attrib['Origin'],sep=' '),offset[::-1])
     expected=TetMesh.from_volume(Volume(data.structure.labels,spacing=data.structure.spacing_zyx_m,origin=offset),solid_phases=[1,2])
-    with h5py.File(Path(result['directory'])/'mesh.h5') as f:np.testing.assert_array_equal(f['points_m'][:],expected.points)
+    with h5py.File(Path(result['directory'])/'mesh.h5') as f:
+        # The face-contact policy may duplicate coincident vertex sheets. The
+        # physical coordinates of EVERY element must still preserve the origin.
+        np.testing.assert_array_equal(f['points_m'][:][f['cells'][:]],expected.points[expected.cells])

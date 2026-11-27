@@ -26,6 +26,20 @@ def cube(n=2):
     return TetMesh.from_volume(Volume(np.ones((n,n,n),np.uint8),spacing=(1/n,)*3))
 
 
+def test_bounded_preconditioner_matches_independent_mandel_assembly():
+    from morqex.top_damage.hyperelastic import _intact_stiffness
+    from morqex.mechanics.reference import ElasticitySolver
+    from morqex.mechanics.tensors import isotropic_stiffness
+    mesh=cube(3);E=np.where(mesh.centers[:,0]<.5,100.,17.)
+    nu=.29;mu=E/(2*(1+nu));K=E/(3*(1-2*nu))
+    exact=ElasticitySolver(mesh,E[:,None,None]*isotropic_stiffness(1.,nu),factorize=False).K
+    for chunk in (7,2048):
+        actual=_intact_stiffness(mesh,mu,K,chunk)
+        assert np.max(abs((actual-exact).data),initial=0)<1e-12*np.max(abs(exact.data))
+    rng=np.random.default_rng(31);u=rng.normal(size=exact.shape[0])
+    np.testing.assert_allclose(actual@u,exact@u,rtol=1e-12,atol=1e-12)
+
+
 def test_amg_preconditioner_does_not_retain_owning_mechanics(backend):
     import weakref
     model=Hyperelasticity(cube(2),backend,100.,.3,linear_solver='matrix-free-amg-minres')

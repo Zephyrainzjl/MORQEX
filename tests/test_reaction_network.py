@@ -75,6 +75,71 @@ def test_voltage_bound_rejects_support_changes_and_undefined_voltage():
         series(exchange=0).changed_conductance_bound(series(exchange=0).solve(0),old.electronic,old.ionic)
 
 
+@pytest.mark.parametrize('current',[-.2,.02])
+@pytest.mark.parametrize('epsilon',[0.,.1,.6])
+def test_changed_reaction_state_bound_contains_analytic_and_full_solution(current,epsilon):
+    from dataclasses import replace
+    old=series();state=old.solve(current)
+    e=changed(old.electronic,[1-epsilon,1+epsilon/2])
+    i=changed(old.ionic,[1+epsilon,1-epsilon/2])
+    faces=replace(old.faces,area_m2=old.faces.area_m2*.8,
+        exchange_A_m2=old.faces.exchange_A_m2*1.3,equilibrium_V=old.faces.equilibrium_V+.015)
+    temperature=315.;target_current=-.9*current
+    bound=old.changed_problem_bound(state,e,i,faces=faces,temperature_K=temperature,discharge_current_A=target_current)
+    fresh=ReactiveDualNetwork(e,i,faces,electronic_collector=0,ionic_reservoir=2,
+        temperature_K=temperature,reduce=False).solve(target_current)
+    R=np.sum(1/e.conductance_S)+np.sum(1/i.conductance_S)
+    exact=faces.equilibrium_V[0]-target_current*R-np.arcsinh(target_current/(2*faces.area_m2[0]*faces.exchange_A_m2[0]))/(96485.33212/(2*8.31446261815324*temperature))
+    assert fresh.voltage_V==pytest.approx(exact,abs=1e-11)
+    assert abs(exact-state.voltage_V)<=bound.voltage_absolute_bound_V+1e-12
+    assert bound.cached_nonlinear_residual_dual_norm>0
+
+
+def test_changed_reaction_state_rejects_support_incidence_and_temperature():
+    from dataclasses import replace
+    old=series();state=old.solve(.02)
+    with pytest.raises(ValueError,match='reaction support'):
+        old.changed_problem_bound(state,old.electronic,old.ionic,faces=replace(old.faces,exchange_A_m2=np.zeros(1)))
+    with pytest.raises(ValueError,match='reaction-face topology'):
+        old.changed_problem_bound(state,old.electronic,old.ionic,faces=replace(old.faces,electronic_vertices=np.array([1])))
+    with pytest.raises(ValueError,match='temperature'):
+        old.changed_problem_bound(state,old.electronic,old.ionic,temperature_K=0.)
+
+
+def test_extended_residual_keeps_returned_potential_precision_and_physical_currents():
+    from dataclasses import replace
+    old=series(False,exchange=1e-8)
+    if np.finfo(np.longdouble).eps>=np.finfo(float).eps:
+        with pytest.raises(ValueError,match='unavailable'):old.solve(1e-10,extended_precision=True)
+        return
+    result=old.solve(1e-10,extended_precision=True)
+    assert result.electronic_potential_V.dtype==np.dtype(np.longdouble)
+    assert result.ionic_potential_V.dtype==np.dtype(np.longdouble)
+    # Retain precision when returning full potentials, not just the residual label.
+    e=old.electronic;v=result.electronic_potential_V
+    currents=e.conductance_S*(v[e.edges[:,0]]-v[e.edges[:,1]])
+    np.testing.assert_allclose(currents,-1e-10,rtol=3e-8,atol=1e-20)
+    assert result.relative_charge_residual<1e-10
+
+
+def test_rebinding_reuses_passive_operators_but_resolves_new_reaction_currents():
+    from dataclasses import replace
+    old=series();accepted=old.solve(.02)
+    faces=replace(old.faces,equilibrium_V=np.array([3.9]),exchange_A_m2=np.array([.1]))
+    rebound=old.with_reaction_state(faces,temperature_K=310.)
+    assert rebound.eop is old.eop and rebound.iop is old.iop and rebound.S is old.S
+    assert old.faces.equilibrium_V[0]==4. and old.temperature_K==298.15
+    state=rebound.solve(-.03,initial=rebound.initial_from(accepted))
+    full=ReactiveDualNetwork(old.electronic,old.ionic,faces,electronic_collector=0,ionic_reservoir=2,
+        temperature_K=310.,reduce=False).solve(-.03)
+    np.testing.assert_allclose(state.reaction_current_A,[.03],rtol=1e-10)
+    assert state.voltage_V==pytest.approx(full.voltage_V,abs=1e-11)
+    expected=3.9+.03*(1/2+1/4+1/3+1/5)+np.arcsinh(.03/.04)/rebound.k
+    assert state.voltage_V==pytest.approx(expected,abs=1e-11)
+    with pytest.raises(ValueError,match='reaction support'):
+        old.with_reaction_state(replace(faces,exchange_A_m2=np.zeros(1)))
+
+
 def test_high_conductance_floating_voxel_graph_has_no_line_search_stagnation():
     from morqex.microstructure import Volume
     from morqex.transport import VoxelDiffusion

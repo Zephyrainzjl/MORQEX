@@ -88,18 +88,25 @@ class KronOperator:
         return result
 
     def currents(self, terminal_potential_V, source_A=None):
-        v = np.asarray(terminal_potential_V, float)
+        dtype=np.longdouble if np.asarray(terminal_potential_V).dtype==np.dtype(np.longdouble) else float
+        v = np.asarray(terminal_potential_V, dtype=dtype)
         if v.shape != (len(self.terminals),) or not np.isfinite(v).all():
             raise ValueError('Finite terminal potentials required')
         return self.matrix_S @ v - self.condensed_source(source_A)
 
     def recover(self, terminal_potential_V, source_A=None):
-        v = np.asarray(terminal_potential_V, float)
+        dtype=np.longdouble if np.asarray(terminal_potential_V).dtype==np.dtype(np.longdouble) else float
+        v = np.asarray(terminal_potential_V, dtype=dtype)
         currents = self.currents(v, source_A)
         f = np.zeros(self.network.vertex_count) if source_A is None else np.asarray(source_A, float)
-        u = np.zeros(self.network.vertex_count); u[self.terminals] = v
+        u = np.zeros(self.network.vertex_count,dtype=dtype); u[self.terminals] = v
         if self.factor is not None:
-            u[self.interior] = self.factor.solve((f[self.interior] - self.Lib @ v) / self.scale)
+            u[self.interior] = self.factor.solve(np.asarray((f[self.interior] - self.Lib @ v) / self.scale,float))
+            if dtype==np.longdouble:
+                # Mixed-precision iterative refinement; factorization remains FP64.
+                for _ in range(3):
+                    residual=(self.L@u-f)[self.interior]
+                    u[self.interior]-=self.factor.solve(np.asarray(residual/self.scale,float))
         residual = self.L @ u - f
         scale = max(np.linalg.norm(f), np.linalg.norm(self.Lib @ v), np.linalg.norm(self.L @ u), np.finfo(float).tiny)
         relative = float(np.linalg.norm(residual[self.interior]) / scale)
