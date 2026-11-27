@@ -15,7 +15,7 @@ if workspace == root or root in workspace.parents:
 # build/lib can silently reuse old files, so isolate by actual package content.
 signature=hashlib.sha256()
 signature.update(repr((sysconfig.get_platform(), sysconfig.get_config_var('SOABI'),
-    os.environ.get('MORQEX_BUILD_GEOMETRY'), os.environ.get('MORQEX_BUILD_TETGEN'),os.environ.get('MORQEX_BUILD_ACVD'))).encode())
+    os.environ.get('MORQEX_BUILD_GEOMETRY'), os.environ.get('MORQEX_BUILD_TETGEN'),os.environ.get('MORQEX_BUILD_ACVD'),os.environ.get('MORQEX_BUILD_MMG'))).encode())
 if any(os.environ.get(k)=='1' for k in ('MORQEX_BUILD_ACVD','MORQEX_BUILD_GEOMETRY')):
     for name in ('numpy','Cython'):
         signature.update((name+':'+importlib.metadata.version(name)).encode())
@@ -26,6 +26,8 @@ build = workspace / "build/packages" / signature.hexdigest()[:24]
 metadata = build / "metadata"
 metadata.mkdir(parents=True, exist_ok=True)
 extensions = []
+if os.environ.get('MORQEX_BUILD_MMG')=='1':
+    extensions.append(Extension('morqex._mmg_native',['src/morqex/modeling/native_mmg/bridge.cpp'],language='c++'))
 if os.environ.get('MORQEX_BUILD_ACVD')=='1':
     import numpy as np
     from Cython.Build import cythonize
@@ -62,6 +64,21 @@ if os.environ.get("MORQEX_BUILD_GEOMETRY") == "1":
     extensions = cythonize(extensions, compiler_directives={"language_level": 3}, build_dir=str(build / "cython"))
 
 class ExternalBuildExt(build_ext):
+    def build_extension(self,extension):
+        if extension.name=='morqex._mmg_native':
+            import importlib.util,shutil
+            spec=importlib.util.spec_from_file_location('morqex_mmg_build',root/'src/morqex/modeling/mmg_backend.py')
+            backend=importlib.util.module_from_spec(spec);spec.loader.exec_module(backend)
+            library=backend.build_mmg(workspace,python_extension=True)
+            destination=Path(self.get_ext_fullpath(extension.name));destination.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(library,destination)
+            # LGPL component remains a separate, replaceable shared library.
+            dependencies=list(library.parent.glob('libmmg3d.so.5'))+list(library.parent.glob('libmmg3d.5.dylib'))+list(library.parent.glob('mmg3d.dll'))
+            if not dependencies:raise RuntimeError('MMG shared runtime dependency missing')
+            for dependency in dependencies:shutil.copy2(dependency,destination.parent/dependency.name)
+            return
+        super().build_extension(extension)
+
     def run(self):
         if self.inplace and self.extensions:
             raise RuntimeError('Native editable builds would put binaries in src. Use a non-editable pip install with MORQEX_WORKSPACE outside source, or build_tetgen(workspace).')

@@ -73,6 +73,11 @@ def test_real_tet_sections_and_adaptive_viewer(native):
         p=np.array(p);area+=abs(np.sum(p[:,0]*np.roll(p[:,1],-1)-p[:,1]*np.roll(p[:,0],-1)))/2
     assert 0.5*np.pi*10e-6*12e-6<area<1.5*np.pi*10e-6*12e-6
     view=result.adaptive_viewer();assert 'Tet4' in view.document and 'DecompressionStream' in view.document
+    import re,json,base64,gzip
+    data=json.loads(re.search(r'const D=(.*?),\$=',view.document).group(1))
+    sections=json.loads(gzip.decompress(base64.b64decode(data['sections_gzip'])))
+    np.testing.assert_array_equal(sections[0]['phase'],cut['phase'])
+    assert sections[0]['polygons']==cut['polygons']
     assert result.report['geometry']['interface_pairs']=={'1':[-1,3]}
 
 

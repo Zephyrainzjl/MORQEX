@@ -1,0 +1,34 @@
+[geometry]
+method = "coated_electrode"
+morphology = "rods"
+size = 256
+spacing = 5e-7
+seed = 20261127
+active_fraction = 0.5
+cbd_thickness_voxels = 3
+pore_buffer_voxels = 7
+particle_scale_voxels = 17.0
+
+# Full-domain shared-interface route. Old GEMsim/ACVD remains a separate API.
+# Run in the external workspace with the reference-memory resource profile.
+[meshing]
+method = "partitioned_tetgen"
+directory = "/home/zephyrain/lw/morph_workspace/microelectrode_gallery/dense_toml_parts"
+content_addressed = true
+surface_method = "surface_nets"
+slab_depth = 32
+axis = 0
+[meshing.tetgen_options]
+preserve_surface = true
+merge_coplanar = false
+region_labelling = "interfaces"
+coplanarity_tolerance = 1e-15
+maximum_cells = 8000000
+maximum_steiner = 800000
+isolated = true
+require_quality = false
+native_timeout_seconds = 240
+
+[exports]
+length_unit = "um"
+formats = ["comsol", "vtu", "gmsh", "medit", "abaqus"]

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(morqex_tetgen LANGUAGES CXX)
-get_filename_component(MORQEX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
-set(TETGEN_SOURCE "${MORQEX_SOURCE}/src/morqex/microstructure/mesh/tetgen/cython/tetgen")
+get_filename_component(TETGEN_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../../microstructure/mesh/tetgen/cython/tetgen" ABSOLUTE)
 add_library(morqex_tetgen SHARED bridge.cpp "${TETGEN_SOURCE}/tetgen.cxx" "${TETGEN_SOURCE}/predicates.cxx")
 target_include_directories(morqex_tetgen PRIVATE "${TETGEN_SOURCE}")
 target_compile_definitions(morqex_tetgen PRIVATE TETLIBRARY)

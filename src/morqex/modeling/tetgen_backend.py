@@ -1,6 +1,6 @@
 """Source-built TetGen ABI; no Cython or PyVista requirement for this adapter."""
 import ctypes as ct
-import hashlib,importlib.util,importlib.metadata,json,os,platform,subprocess,sys,threading
+import hashlib,importlib.util,importlib.metadata,json,os,platform,subprocess,sys,threading,shutil
 from pathlib import Path
 import numpy as np
 
@@ -11,6 +11,7 @@ _LOCK=threading.RLock()
 
 def identity():
     h=hashlib.sha256(platform.platform().encode())
+    h.update(Path(__file__).read_bytes())
     for p in [NATIVE/'bridge.cpp',NATIVE/'CMakeLists.txt',*[CORE/n for n in ('tetgen.cxx','tetgen.h','predicates.cxx')]]:
         h.update(p.name.encode()+p.read_bytes())
     return h.hexdigest()
@@ -20,7 +21,12 @@ def build_tetgen(workspace):
     from .voxel import external_path
     workspace=external_path(workspace);folder=workspace/'build/tetgen'/identity()[:20]
     folder.mkdir(parents=True,exist_ok=True)
-    subprocess.run(['cmake','-S',str(NATIVE),'-B',str(folder),'-DCMAKE_BUILD_TYPE=Release'],check=True)
+    # A content-identical checkout/wheel can move. Keep CMake's source path
+    # stable rather than reconfiguring a cache against another installation.
+    adapter=folder/'source/modeling/native_tetgen';core=folder/'source/microstructure/mesh/tetgen/cython/tetgen'
+    if not adapter.exists():shutil.copytree(NATIVE,adapter)
+    if not core.exists():shutil.copytree(CORE,core)
+    subprocess.run(['cmake','-S',str(adapter),'-B',str(folder),'-DCMAKE_BUILD_TYPE=Release'],check=True)
     subprocess.run(['cmake','--build',str(folder),'--parallel','1'],check=True)
     candidates=list(folder.glob('*morqex_tetgen*'))
     libs=[p for p in candidates if p.suffix in ('.so','.dylib','.dll')]

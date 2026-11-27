@@ -1,2 +1,9 @@
 include build_backend.py
 include THIRD_PARTY_NOTICES.txt
+recursive-include configs *.toml
+recursive-include scripts *.py
+recursive-include tutorials *.md *.ipynb
+recursive-include tests *.py
+recursive-include provenance *
+recursive-include literature *
+recursive-include docs *.md *.json *.toml

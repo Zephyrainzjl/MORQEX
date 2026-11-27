@@ -29,9 +29,17 @@ Use the bounded local runner for numerical work:
 cd /home/zephyrain/lw/MORQEX
 WORK=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
 PY=$WORK/runtime/bin/python
-python scripts/run_local.py --workspace "$WORK" --label my_geometry -- "$PY" my_recipe.py
+python scripts/run_local.py --workspace "$WORK" --label my_geometry -- "$PY" /external/my_recipe.py
 ```
 
 The installed runtime can inherit the workstation's NumPy/SciPy installation.
 Optional geometry packages are declared in `pyproject.toml`; actual availability
 is reported by `morqex.modeling.capabilities()`. No neural model is required.
+
+## Complex CT and software exchange / 复杂CT与软件交换
+
+[07 — Complex CT, dense electrodes, layers and configurable export units /
+复杂CT、致密电极、分层与导出单位](07_complex_ct_layers_and_exchange.md) covers original
+TIFF labels, five256³ morphology families, separate electrode/electrolyte/CBD
+regions, shared-interface partitions, COMSOL Selection0 objects, VTU/Gmsh/Medit/
+Abaqus exchange and physical-unit checks. 中英文在同一文件内；含完整代码与验证范围。

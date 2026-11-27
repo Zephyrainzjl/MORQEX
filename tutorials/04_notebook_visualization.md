@@ -205,3 +205,15 @@ made from voxel splitting or a replacement finite-element mesh.
 该查看器保存完整计算边界及真实体单元切面，支持材料选择、旋转、线框及内部疏密查看；
 不会把体素图或其他网格冒充计算结果。详细API见
 [完整教程](06_gemsim_adaptive_meshing.md)。
+## Isolate material regions / 单独查看材料域
+
+```python
+# 3D isolates one label; the2D view retains the complete original slice.
+# 三维单独显示一个分区；二维保留原始完整分区切片。
+model.viewer(maximum_3d_size=64, show_region=1).display()
+```
+
+The Show dropdown switches between individual materials and all regions.
+Hide and clipping remain available. Explicit labels must exist in the model;
+the view never changes geometry or physical phase assignments. 三维可选择活性材料、
+CBD、电解液及各电池层，不改变模型；显式标签不存在时接口会报错。

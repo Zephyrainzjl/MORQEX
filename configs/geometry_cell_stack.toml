@@ -1,0 +1,40 @@
+[geometry]
+method = "stack_layers"
+axis = 2
+
+[[layers]]
+name = "anode"
+[layers.geometry]
+method = "uniform_layer"
+shape = [256, 256, 48]
+spacing = [5e-7, 5e-7, 5e-7]
+name = "lithium_metal"
+
+[[layers]]
+name = "negative_electrolyte"
+[layers.geometry]
+method = "uniform_layer"
+shape = [256, 256, 4]
+spacing = [5e-7, 5e-7, 5e-7]
+name = "electrolyte"
+
+[[layers]]
+name = "separator"
+[layers.geometry]
+method = "uniform_layer"
+shape = [256, 256, 24]
+spacing = [5e-7, 5e-7, 5e-7]
+name = "effective_porous_separator"
+
+[[layers]]
+name = "cathode"
+[layers.geometry]
+method = "coated_electrode"
+morphology = "granular"
+size = 256
+spacing = 5e-7
+seed = 20261127
+
+[exports]
+length_unit = "um"
+formats = ["comsol", "vtu", "gmsh", "medit", "abaqus"]

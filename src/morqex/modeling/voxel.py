@@ -7,7 +7,12 @@ from morqex.microstructure import Volume
 
 def external_path(path):
     target=Path(path).expanduser().resolve()
-    source=Path(__file__).resolve().parents[3]
+    container=Path(__file__).resolve().parents[2]
+    # A checkout is ROOT/src/morqex; a wheel lives directly in site-packages
+    # or a pip --target directory. Do not mistake the installation's parent
+    # for a repository and reject legitimate sibling output directories.
+    source=(container.parent if container.name=='src' and
+            (container.parent/'pyproject.toml').is_file() else container)
     if target.is_relative_to(source):raise ValueError('Generated files must remain outside MORQEX source')
     return target
 
@@ -24,6 +29,8 @@ class VoxelModel:
         a=np.asarray(self.regions)
         if a.ndim!=3 or not a.size or a.dtype.kind not in 'iu' or np.any(a<0):
             raise ValueError('Nonnegative integer region labels in a nonempty ZYX array required')
+        if int(a.max())>np.iinfo(np.int32).max:
+            raise ValueError('Region IDs must fit nonnegative signed32-bit mesh labels; remap larger IDs explicitly')
         Volume(a,self.spacing,self.origin)
         names={int(k):str(v) for k,v in (self.region_names or {int(i):f'region_{i}' for i in np.unique(a)}).items()}
         if set(np.unique(a))!=set(names):raise ValueError('Name every present region exactly once')
@@ -181,7 +188,10 @@ def capabilities():
     from .acvd_backend import load_acvd
     try:acvd={'compiled':True,'library':str(load_acvd().__file__)}
     except RuntimeError:acvd={'compiled':False,'enable':'MORQEX_BUILD_ACVD=1 pip install . or build_acvd(workspace)'}
-    return {'frameworks':BACKENDS,'tetgen':tetgen,'weighted_acvd':acvd,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
+    from .mmg_backend import library_path as mmg_library
+    try:mmg={'compiled':True,'library':str(mmg_library())}
+    except RuntimeError:mmg={'compiled':False,'enable':'MORQEX_BUILD_MMG=1 pip install . or build_mmg(workspace)'}
+    return {'frameworks':BACKENDS,'tetgen':tetgen,'weighted_acvd':acvd,'mmg':mmg,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
         'native_reconstruction':{'matlab':shutil.which('matlab'),'Rscript':shutil.which('Rscript'),
             'status':'Integrated MATLAB/R source; native execution requires original licensed runtimes and packages'},
-        'optional':{name:importlib.util.find_spec(name) is not None for name in ['pyvoro','meshpy','gmsh','meshio','h5py']}}
+        'optional':{name:importlib.util.find_spec(name) is not None for name in ['pyvoro','meshpy','gmsh','meshio','h5py','vtkmodules','triangle','tifffile']}}

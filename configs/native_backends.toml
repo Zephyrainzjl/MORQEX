@@ -1,0 +1,4 @@
+[native_build]
+# Explicit opt-in; each backend retains its own third-party license.
+workspace = "/home/zephyrain/lw/morph_workspace/microelectrode_gallery"
+backends = ["tetgen", "acvd", "mmg"]

@@ -1,5 +1,42 @@
 # MORQEX API reference
 
+## Complex geometry and units / 复杂几何与单位
+
+See [the complete bilingual workflow](07_complex_ct_layers_and_exchange.md).
+
+| API / 接口 | Contract / 契约 |
+|---|---|
+| `tiff_voxels(path, spacing=..., axes_to_zyx=None, region_names=None)` | Full original labels + SHA256, explicit ZYX spacing in m / 保留全量灰度与来源 |
+| `import_comsol(path,length_unit=None,region_names=None)` | Read Mesh4 + Selection0; use a declared file unit or require the caller's explicit unit; reject conflicts / 读文件单位或显式指定，拒绝单位冲突 |
+| `dense_electrode(morphology,size=256,spacing=5e-7,seed=...,active_fraction=.55,cbd_fraction=.11,...)` | Exact phase counts, correlated patchy CBD / 原生分相体素 |
+| `coated_electrode(morphology,size=256,spacing=5e-7,seed=...,active_fraction=.5,cbd_thickness_voxels=3,pore_buffer_voxels=7,...)` | Resolved CBD coating; measured CBD fraction / 可解析涂层路线 |
+| `uniform_layer(shape,spacing,name,region=1)` | Named effective layer / 命名均匀层 |
+| `porous_layer(shape,spacing,porosity=.45,correlation_voxels=3,seed=0,name=...)` | Correlated resolved pores and solid / 显式孔隙层 |
+| `stack_layers(layers,axis=0,origin=...)` | Distinct layer×phase IDs and selections; matching transverse grid / 复合分层 |
+| `surface_nets_plc(model,iterations=8,constraint=.2,conserve_volumes=False,...)` | Optional VTK shared front end; smoothing geometry assumptions explicit / 共享界面 |
+| `cut_cap(points,faces,markers,pairs,plane,axis=2,...)` | One Triangle PSLG cap, labels from oriented physical interfaces / 统一切面 |
+| `slab_plc(source,low,high,lower_cap,upper_cap,axis=2,length_scale=...,origin=...)` | Clip original triangles + shared end caps; no geometry coarsening / 分块PLC |
+| `assemble_slabs(paths,path,length_scale=...)` | Stream one full mesh; assert common nodes and material faces / 严格拼接 |
+| `export_comsol(...,length_unit='m',selections=None,include_region_selections=True,preserve_domain_ids=False)` | Actual Mesh4 + Selection0; SI-to-export coordinate conversion / 真实命名选择与单位换算 |
+| `export_bundle(mesh,directory,region_names,selections,length_unit='m',formats=...)` | COMSOL/VTU/Gmsh/Medit/Abaqus, region and unit manifest + readback / 多软件交换 |
+| `export_from_toml(mesh,model,path,directory=None)` | Apply explicit `[exports]`; output remains outside source / TOML导出 |
+| `AdaptiveMeshView(...,maximum_embedded_faces=None,node_cache_bytes=...)` | Optional actual-face display sample, full HDF5 untouched / 显示抽样不改网格 |
+| `MeshResolution(precision='balanced',target_cells=None,maximum_volume_m3=None,nominal_edge_m=None,vertex_fraction=None,maximum_phase_volume_error=None)` | Independent surface/volume fidelity, SI sizing; coarse/balanced/fine/very_fine / 独立曲面与内部尺寸 |
+| `controlled_tetgen(model,resolution,regions,surface_method,adaptive_options,tetgen_options,...)` | Same voxel source SHA, actual mesh counts and measured checks recorded / 同一体素多精度网格 |
+| `partitioned_tetgen(model,directory,surface_method='surface_nets',slab_depth=32,axis=0,...)` | Generic resumable whole-domain pipeline, common actual caps, explicit budgets / 通用全域分块、断点恢复和严格共形 |
+| `RemeshOptions(...)`, `remesh(existing_mesh,options,workspace)` | Source-integrated MMG5.8.0; measured size/geometry/topology gates / 已有网格疏密优化 |
+| `remesh_artifact(artifact,output,options,workspace)` | Large HDF5 input loaded only inside an isolated worker; separate input/output cell budgets / 大网格文件隔离重网格，避免父子进程重复载入 |
+| `build_mmg(workspace)` | Explicit one-job external CMake build; optional pip flag `MORQEX_BUILD_MMG=1` / 外部显式编译 |
+| `build_native_from_toml(path,workspace=None)` | Explicit `[native_build]` list of TetGen/ACVD/MMG; serial external builds / TOML统一编译 |
+| `remesh_from_toml(mesh,path,workspace=None)` | Apply explicit `[remeshing]` to existing Tet4 / TOML体网格重构 |
+
+`from_toml` accepts `[geometry]`, optional `[[layers]]`, `[meshing]` and
+`[exports]`. It generates geometry only; call `mesh_from_toml` and
+`export_from_toml` explicitly for the subsequent stages. 数组为ZYX，网格为XYZ米。
+COMSOL导入单位必须与导出一致；有效参数和物理模型不是网格导出的一部分。
+VTU uses bounded appended-raw binary IO; Medit/Abaqus use bounded ASCII IO.
+VTU采用分块二进制，Medit与Abaqus采用分块文本核对；完整数据不受HTML抽样影响。
+
 The unified geometry API is `morqex.modeling`. Begin with:
 
 - [Geometry and voxel modelling](01_geometry_and_voxels.md)

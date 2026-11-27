@@ -99,3 +99,40 @@ local topological retention, shared-junction/nested-interface checks, and
 explicit geometric validation. It does not use legacy skipped-face or
 low-quality-volume-element deletion. These are adaptations of existing methods,
 not a claim that ACVD, TetGen or residual-weighted remeshing is a new invention.
+
+VTK / Surface Nets optional compiled dependency (2026-11-27)
+https://vtk.org/doc/nightly/html/classvtkSurfaceNets3D.html
+VTK is BSD-3-Clause; no VTK binaries are committed to this repository.
+modeling/surface_nets.py is a MORQEX adapter, not a new Surface Nets algorithm.
+Local qualification used VTK9.6.2. It can split nonmanifold contacts; topology
+equivalence and arbitrary material-contact fidelity are not guaranteed.
+
+Triangle optional partition-cap dependency (2026-11-27)
+Python wrapper: https://github.com/drufat/triangle (LGPL-3.0).
+Core: Jonathan Richard Shewchuk, https://www.cs.cmu.edu/~quake/triangle.html .
+The core is not covered solely by the wrapper's LGPL: it may not be sold or
+included in commercial products without a separate license. Review the core
+terms before redistribution/commercial use. No Triangle source or binary was
+copied into MORQEX; partitioned-meshing opts into this external dependency.
+Local qualification used wrapper20250106 for shared constrained2D cut caps.
+
+MMG5.8.0 optional source-integrated remesher (2026-11-27)
+Upstream: https://github.com/MmgTools/mmg , commit
+4d8232c8aebfed877935d75d4d4a67e850962422. LGPL-3.0-or-later.
+src/morqex/vendor/mmg contains the unmodified scientific source and build
+helpers. COPYING, COPYING.LESSER, LICENSE, AUTHORS and per-file SHA256 provenance
+are retained (the actual GPL text file is named COPYING). Data/test meshes and
+documentation assets are excluded. MORQEX's separate C++ ABI bridge and Python
+adapter are under modeling/native_mmg and modeling/remeshing.py. Optional pip
+compilation uses MORQEX_BUILD_MMG=1 and dynamic linking to a replaceable shared
+MMG library; all binaries/build files stay in the external workspace. No claim
+is made that size adaptation itself is original, GPU-parallel or a certified
+finite-element error estimator. Preserve LGPL replacement/relinking rights
+and upstream notices when distributing a compiled package.
+
+2026-11-28 provenance reconciliation: integration_state.json now records the
+pre-existing d40f233 change to FEMesh.save_comsol (legacy writer replaced by
+the unified exporter). Its previous hash was verified against dd72515 and the
+current hash against the unchanged baseline source. Voxelization algorithms
+were not changed. The integrity check also recognizes all seven previously
+recorded PyBaMM adaptations; their per-file hashes remain independently checked.

@@ -26,7 +26,9 @@ def main():
     destination = ROOT / "provenance/integration_state.json"
     state = {"upstream_commit": migration["commit"], "files": rows,
              "additional_changes": {"src/morqex/microstructure/simulate/native/pyproject.toml":
-                                    "Removed in-source scikit-build build-dir; launcher TMPDIR is external"}}
+                                    "Removed in-source scikit-build build-dir; launcher TMPDIR is external",
+                                    "src/morqex/microstructure/mesh/voxel.py":
+                                    "Baseline d40f233 replaced legacy COMSOL forwarding with unified exporter; voxelization unchanged"}}
     if args.record:
         destination.write_text(json.dumps(state, indent=2))
     else:
@@ -38,7 +40,13 @@ def main():
         path = ROOT / 'src/pybamm' / row['path']
         assert hashlib.sha256(path.read_bytes()).hexdigest() == row['local_sha256'], path
         if row['locally_modified']:modified.append(row['path'])
-    assert set(modified) == {'__init__.py','expression_tree/operations/convert_to_casadi.py'}
+    # These baseline adaptations are documented in THIRD_PARTY_NOTICES.txt
+    # and pinned individually in pybamm_migration.json. Do not replace this
+    # check with --record when unrelated source hashes differ.
+    assert set(modified) == {'__init__.py','expression_tree/operations/convert_to_casadi.py',
+        'discretisations/discretisation.py','expression_tree/averages.py',
+        'models/submodels/electrolyte_diffusion/base_electrolyte_diffusion.py',
+        'solvers/base_solver.py','solvers/solution.py'}
     assert (ROOT/'src/pybamm/LICENSE.txt').is_file()
     expected = {r['path'] for r in pybamm['files']} | {'LICENSE.txt'}
     assert {str(p.relative_to(ROOT/'src/pybamm')) for p in (ROOT/'src/pybamm').rglob('*') if p.is_file()} == expected

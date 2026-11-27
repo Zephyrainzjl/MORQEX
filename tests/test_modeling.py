@@ -96,3 +96,28 @@ def test_progress_is_actual_partial_geometry_and_view_updates_same_model(tmp_pat
     assert '<iframe' in view._repr_html_()
     saved=view.save_html(tmp_path/'view.html')
     assert 'DecompressionStream' in saved.read_text() and 'previewShape' in saved.read_text()
+
+
+def test_array_geometry_remains_usable_without_optional_hdf5():
+    import subprocess,sys
+    code='''import builtins
+real=builtins.__import__
+def isolated_import(name,*args,**kwargs):
+    if name.split('.')[0]=='h5py':raise ImportError('HDF5 deliberately unavailable')
+    return real(name,*args,**kwargs)
+builtins.__import__=isolated_import
+import numpy as np
+from morqex.modeling import from_regions
+model=from_regions(np.ones((2,3,4),np.uint8))
+mesh=model.tetrahedralize()
+assert len(mesh.cells)==144 and mesh.signed_volumes().min()>0
+'''
+    subprocess.run([sys.executable,'-c',code],check=True)
+
+
+def test_wide_region_labels_cannot_silently_wrap_in_mesh_outputs():
+    for value in (2**31,2**64-1):
+        with pytest.raises(ValueError,match='signed32-bit'):
+            from_regions(np.full((2,2,2),value,np.uint64))
+    a=np.zeros((2,2,2),np.uint64);a[0]=2**31-1
+    np.testing.assert_array_equal(from_regions(a).regions,a)

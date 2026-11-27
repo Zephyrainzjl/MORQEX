@@ -104,7 +104,9 @@ def voxel_plc(model,*,regions=None,maximum_facets=500000):
         indices=np.argwhere(mask);count+=len(indices)
         if count>maximum_facets:raise ValueError(f'PLC needs more than {maximum_facets} facets; choose an explicit geometry/budget')
         corners=indices[:,None,:]+offsets[axis][None,:,:]
-        quads.append(np.ravel_multi_index(corners.reshape(-1,3).T,tuple(grid)).reshape(-1,4))
+        face_ids=np.ravel_multi_index(corners.reshape(-1,3).T,tuple(grid)).reshape(-1,4)
+        reverse=left[mask]>right[mask];face_ids[reverse]=face_ids[reverse][:,::-1]
+        quads.append(face_ids)
         pairs.append(np.sort(np.column_stack((left[mask],right[mask])),axis=1))
     ids,inverse=np.unique(np.concatenate(quads),return_inverse=True)
     points=(np.column_stack(np.unravel_index(ids,tuple(grid)))*model.spacing+model.origin)[:,::-1]
@@ -116,7 +118,8 @@ def voxel_plc(model,*,regions=None,maximum_facets=500000):
     return SurfacePLC(points,inverse.reshape(-1,4),seeds,markers+1,holes,volumes,
         {'surface_method':'voxel_plc','region_names':model.region_names,
          'interface_pairs':{str(i+1):list(map(int,p)) for i,p in enumerate(pair_values)},
-         'geometry':'exact voxel boundaries; -1 denotes exterior; ZYX arrays / XYZ coordinates'})
+         'geometry':'exact voxel boundaries; -1 denotes exterior; ZYX arrays / XYZ coordinates',
+         'oriented_material_pairs':True,'box_planes_preserved':set(chosen)==set(map(int,np.unique(a)))})
 
 
 def marching_cubes_plc(model,*,region,step_size=1,maximum_facets=500000):
@@ -163,6 +166,7 @@ class TetGenOptions:
     facet_separation_angle: float = 179.9
     isolated: bool = False
     native_timeout_seconds: float = 180.
+    region_labelling: str = 'seeds'
 
     @classmethod
     def for_adaptive(cls,**overrides):
@@ -181,6 +185,7 @@ class TetGenOptions:
         if not np.isfinite(self.coplanarity_tolerance) or not 0<self.coplanarity_tolerance<=1e-6:raise ValueError('coplanarity_tolerance must be positive and<=1e-6')
         if not np.isfinite(self.facet_separation_angle) or not 0<self.facet_separation_angle<=180:raise ValueError('facet_separation_angle must be in(0,180] degrees')
         if not np.isfinite(self.native_timeout_seconds) or self.native_timeout_seconds<=0:raise ValueError('Positive finite native time budget required')
+        if self.region_labelling not in ('seeds','interfaces'):raise ValueError('region_labelling must be seeds or interfaces')
 
 
 @dataclass
@@ -207,26 +212,29 @@ class TetGenMesh(FEMesh):
             for name,value in [('points_m',self.points),('tetrahedra',self.cells),('phase',self.phases),
                                ('facets',self.facets),('facet_markers',self.facet_markers)]:
                 f.create_dataset('mesh/'+name,data=value,compression='gzip',compression_opts=1,shuffle=True)
-            f.attrs.update(complete=True,mesher='TetGen1.6.0',report=json.dumps(self.report),
+            f.attrs.update(complete=True,mesher=self.report.get('mesher','TetGen1.6.0'),report=json.dumps(self.report),
                 node_count=len(self.points),tetrahedra=len(self.cells),selected_regions=np.unique(self.phases),
                 coordinate_units='m',coordinate_order='XYZ')
         from .meshing import MeshArtifact
         from xml.sax.saxutils import escape
         xdmf=path.with_suffix('.xdmf');fn=escape(path.name)
+        cell_number='UInt' if self.cells.dtype.kind=='u' else 'Int'
+        phase_number='UInt' if self.phases.dtype.kind=='u' else 'Int'
         xdmf.write_text(f'''<Xdmf Version="3.0"><Domain><Grid Name="TetGen">
-<Topology TopologyType="Tetrahedron" NumberOfElements="{len(self.cells)}"><DataItem Dimensions="{len(self.cells)} 4" NumberType="Int" Precision="4" Format="HDF">{fn}:/mesh/tetrahedra</DataItem></Topology>
-<Geometry GeometryType="XYZ"><DataItem Dimensions="{len(self.points)} 3" Format="HDF" NumberType="Float" Precision="8">{fn}:/mesh/points_m</DataItem></Geometry>
-<Attribute Name="region" Center="Cell"><DataItem Dimensions="{len(self.cells)}" NumberType="Int" Precision="8" Format="HDF">{fn}:/mesh/phase</DataItem></Attribute></Grid></Domain></Xdmf>''')
+<Topology TopologyType="Tetrahedron" NumberOfElements="{len(self.cells)}"><DataItem Dimensions="{len(self.cells)} 4" NumberType="{cell_number}" Precision="{self.cells.dtype.itemsize}" Format="HDF">{fn}:/mesh/tetrahedra</DataItem></Topology>
+<Geometry GeometryType="XYZ"><DataItem Dimensions="{len(self.points)} 3" Format="HDF" NumberType="Float" Precision="{self.points.dtype.itemsize}">{fn}:/mesh/points_m</DataItem></Geometry>
+<Attribute Name="region" Center="Cell"><DataItem Dimensions="{len(self.cells)}" NumberType="{phase_number}" Precision="{self.phases.dtype.itemsize}" Format="HDF">{fn}:/mesh/phase</DataItem></Attribute></Grid></Domain></Xdmf>''')
         return MeshArtifact(path,xdmf,len(self.points),len(self.cells),tuple(map(int,np.unique(self.phases))))
 
 
 def tetra_quality(points,cells):
     """Measured metrics, including sliver-sensitive minimum dihedral, in bounded chunks."""
+    if not np.all(np.isfinite(points)):raise ArithmeticError('Nonfinite Tet4 coordinates')
     values=[];ratios=[];angles=[]
     for start in range(0,len(cells),50000):
         p=points[cells[start:start+50000]];edge=p[:,1:]-p[:,:1]
         volume=np.linalg.det(edge)/6
-        if np.any(volume<=0):raise ArithmeticError('Nonpositive Tet4 volume')
+        if np.any(~np.isfinite(volume)) or np.any(volume<=0):raise ArithmeticError('Nonpositive or nonfinite Tet4 volume')
         lengths=np.linalg.norm(p[:,:,None]-p[:,None,:],axis=3)
         shortest=lengths[:,np.triu_indices(4,1)[0],np.triu_indices(4,1)[1]].min(axis=1)
         centre=np.linalg.solve(2*edge,np.sum(edge**2,axis=2)[...,None])[...,0]
@@ -236,6 +244,7 @@ def tetra_quality(points,cells):
             n=np.cross(p[:,b]-p[:,a],p[:,c]-p[:,a]);normals.append(n/np.linalg.norm(n,axis=1)[:,None])
         n=np.stack(normals,axis=1);i,j=np.triu_indices(4,1)
         angle=np.degrees(np.arccos(np.clip(-np.einsum('nki,nki->nk',n[:,i],n[:,j]),-1,1))).min(axis=1)
+        if not np.all(np.isfinite(ratio)) or not np.all(np.isfinite(angle)):raise ArithmeticError('Nonfinite Tet4 shape metrics')
         values.append(volume);ratios.append(ratio);angles.append(angle)
     v=np.concatenate(values);r=np.concatenate(ratios);d=np.concatenate(angles)
     return {'minimum_volume_m3':float(v.min()),'total_volume_m3':float(v.sum()),
@@ -290,6 +299,9 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
     if options.isolated:
         from .tetgen_worker import isolated_mesh
         return isolated_mesh(plc,options,workspace,maximum_facets)
+    if options.region_labelling=='interfaces':
+        from .interface_labelling import interface_tetgen
+        return interface_tetgen(plc,options,workspace)
     centre=plc.points.min(axis=0);scale=float(np.ptp(plc.points,axis=0).max())
     if scale<=0:raise ValueError('Degenerate geometry')
     labels=sorted(plc.seeds);decode=np.array(labels,dtype=np.int64)
@@ -345,6 +357,7 @@ def tetgen_mesh(geometry,*,regions=None,surface_method='voxel_plc',step_size=1,
     report={'mesher':'source-integrated TetGen1.6.0','source_identity':identity(),'switches':switches,
         'input_points':len(plc.points),'input_facets':len(plc.facets),'nodes':len(p),'tetrahedra':len(t),
         'region_volume_relative_errors':errors,'quality':quality,'geometry':plc.metadata,
+        'region_volumes_m3':{str(int(k)):float(volumes[phases==k].sum()) for k in np.unique(phases)},
         'elapsed_seconds':time.perf_counter()-start,
         'refinement_attempts':refinement_attempts+1,
         'quality_limits_satisfied':bool(quality['radius_edge_max']<=options.radius_edge_ratio*(1+1e-6) and

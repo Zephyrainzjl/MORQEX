@@ -94,6 +94,7 @@ def main():
     parser.add_argument('--render',action='store_true',help='Headless software-render qualification: allow browser virtual address reservations, keep physical RSS/CPU caps and GPU disabled')
     parser.add_argument('--reference-memory',action='store_true',help='Explicit 6 GiB RSS / 12 GiB address-space reference mesh profile; keep one CPU and 8 GiB host reserve')
     parser.add_argument('--mesh-output',action='store_true',help='Permit an external full-volume mesh file up to1GiB; keep default CPU/RSS/host reserve')
+    parser.add_argument('--large-mesh-output',action='store_true',help='Permit a single external whole-CT mesh file up to4GiB; RAM, CPU and host reserve remain unchanged')
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
@@ -111,9 +112,9 @@ def main():
             parser.error("Dependency disk profile is restricted to python -m pip install")
         cfg.update(file_size_mib=256, run_disk_mib=1024)
     if cfg['gpu_enabled']:raise SystemExit('GPU must be selected explicitly by --gpu')
-    if args.mesh_output:
+    if args.mesh_output or args.large_mesh_output:
         if args.render or args.gpu or args.dependency_install:parser.error('Mesh-output profile is CPU-only')
-        cfg.update(file_size_mib=1024)
+        cfg.update(file_size_mib=4096 if args.large_mesh_output else 1024)
     before_gpu=None
     if args.render:
         if args.gpu or args.dependency_install:parser.error('Render, GPU and installation profiles are separate')

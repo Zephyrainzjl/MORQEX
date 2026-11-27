@@ -9,7 +9,9 @@ class Workspace:
 
     def __post_init__(self):
         root = Path(self.root).expanduser().resolve()
-        source = Path(__file__).resolve().parents[2]
+        container = Path(__file__).resolve().parents[1]
+        source = (container.parent if container.name == 'src' and
+                  (container.parent / 'pyproject.toml').is_file() else container)
         if root == source or source in root.parents:
             raise ValueError("Workspace must be outside MORQEX source")
         object.__setattr__(self, "root", root)

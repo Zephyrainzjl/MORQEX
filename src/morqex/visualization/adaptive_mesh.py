@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-def section_polygons(mesh,axis=0,fraction=.5):
+def section_polygons(mesh,axis=0,fraction=.5,*,node_cache_bytes=48*2**20):
     """Cut real Tet4 cells by one physical plane. No voxel/surrogate mesh."""
     from morqex.modeling.comsol import _arrays
     if axis not in (0,1,2) or not 0<fraction<1:raise ValueError('XYZ axis0..2 and fraction in(0,1)')
@@ -14,7 +14,7 @@ def section_polygons(mesh,axis=0,fraction=.5):
         # h5py fancy indexing tens of thousands of irregular node IDs can
         # dominate a section. Cache at most48MB of nodes, or gather through
         # bounded contiguous blocks. Cell connectivity stays streamed.
-        node_cache=points if isinstance(points,np.ndarray) else (points[:] if len(points)<=2000000 else None)
+        node_cache=points if isinstance(points,np.ndarray) else (points[:] if len(points)*24<=node_cache_bytes else None)
         low=np.full(3,np.inf);high=np.full(3,-np.inf)
         for i in range(0,len(points),50000):
             block=np.asarray(points[i:i+50000]);low=np.minimum(low,block.min(axis=0));high=np.maximum(high,block.max(axis=0))
@@ -50,10 +50,12 @@ def section_polygons(mesh,axis=0,fraction=.5):
 
 
 class AdaptiveMeshView:
-    def __init__(self,mesh,*,sections=True,height=820,title='GEMsim adaptive mesh / 自适应贴体网格'):
+    def __init__(self,mesh,*,sections=True,height=820,title='MORQEX finite-element mesh / 三维有限元网格',
+                 maximum_embedded_faces=None,node_cache_bytes=48*2**20):
         from morqex.modeling.tetgen import SurfacePLC
         from morqex.modeling.meshing import MeshArtifact
         self.height=height;self.title=title;self.handle=None
+        if maximum_embedded_faces is not None and (type(maximum_embedded_faces) is not int or maximum_embedded_faces<1):raise ValueError('Positive display face budget required')
         if isinstance(mesh,SurfacePLC):
             points=mesh.points;markers=mesh.markers;report=mesh.metadata;faces=[]
             diagnostics={'geometry':report,'scope':'surface only; no volume mesh'}
@@ -67,17 +69,26 @@ class AdaptiveMeshView:
             with h5py.File(mesh.hdf5) as f:
                 points=f['mesh/points_m'][:];faces=f['mesh/facets'][:];markers=f['mesh/facet_markers'][:]
                 diagnostics=json.loads(f.attrs['report']);report=diagnostics['geometry']
-            cuts=[section_polygons(mesh,axis) for axis in range(3)] if sections else []
+            cuts=[section_polygons(mesh,axis,node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
         else:
             points=mesh.points;faces=mesh.facets;markers=mesh.facet_markers;diagnostics=mesh.report;report=diagnostics['geometry']
-            cuts=[section_polygons(mesh,axis) for axis in range(3)] if sections else []
+            cuts=[section_polygons(mesh,axis,node_cache_bytes=node_cache_bytes) for axis in range(3)] if sections else []
+        complete_faces=len(faces);source_face_ids=None
+        if maximum_embedded_faces is not None and len(faces)>maximum_embedded_faces:
+            source_face_ids=np.linspace(0,len(faces)-1,maximum_embedded_faces,dtype=np.int64)
+            faces=faces[source_face_ids];markers=markers[source_face_ids]
         used,inverse=np.unique(faces,return_inverse=True);points=points[used];faces=inverse.reshape(-1,3)
         def pack(a,dtype):return base64.b64encode(gzip.compress(np.asarray(a,dtype=dtype).tobytes(),compresslevel=1)).decode()
         render_origin=points.min(axis=0)
         payload={'points':pack(points-render_origin,'<f4'),'origin_m':render_origin.tolist(),
             'faces':pack(faces,'<u4'),'markers':pack(markers,'<u4'),
             'pairs':report.get('interface_pairs',{}),'names':report.get('region_names',{}),
-            'sections':cuts,'title':title,'report':diagnostics,'point_count':len(points),'face_count':len(faces)}
+            'sections':[],
+            'sections_gzip':base64.b64encode(gzip.compress(json.dumps(cuts,separators=(',',':')).encode(),compresslevel=1)).decode(),
+            'title':title,'report':diagnostics,'point_count':len(points),'face_count':len(faces),
+            'complete_surface_face_count':complete_faces,
+            'display_scope':'all actual faces' if source_face_ids is None else 'display-only actual-face sample; complete source volume and interfaces remain in HDF5',
+            'source_face_ids':None if source_face_ids is None else pack(source_face_ids,'<u4')}
         template=Path(__file__).with_name('adaptive_mesh.html').read_text()
         self.document=template.replace('__DATA__',json.dumps(payload,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c'))
         workspace=os.environ.get('MORQEX_WORKSPACE')

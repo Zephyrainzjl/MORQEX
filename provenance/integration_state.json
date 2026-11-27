@@ -363,8 +363,8 @@
     },
     {
       "path": "src/morqex/microstructure/mesh/voxel.py",
-      "sha256": "75038871a3a22b6ca309dffe87ec3eecadaff76ce5c864bfaad0932f7945aee8",
-      "additional_local_adaptation": false
+      "sha256": "87b3b074645efec57aea593863b1155c00f4dfb7e5d4301af32f71837f5dcc96",
+      "additional_local_adaptation": true
     },
     {
       "path": "src/morqex/microstructure/pipeline.py",
@@ -1373,6 +1373,7 @@
     }
   ],
   "additional_changes": {
-    "src/morqex/microstructure/simulate/native/pyproject.toml": "Removed in-source scikit-build build-dir; launcher TMPDIR is external"
+    "src/morqex/microstructure/simulate/native/pyproject.toml": "Removed in-source scikit-build build-dir; launcher TMPDIR is external",
+    "src/morqex/microstructure/mesh/voxel.py": "Baseline d40f233 replaced legacy COMSOL forwarding with unified exporter; voxelization unchanged"
   }
 }

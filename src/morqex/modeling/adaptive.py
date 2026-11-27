@@ -29,6 +29,8 @@ class AdaptiveMeshOptions:
     surface_method: str = 'auto'
     project_surface: bool = False
     retry_without_facet_merging: bool = True
+    conserve_phase_volumes: bool = False
+    surface_partition_voxels: int = 0
     phase_order: tuple = ()
     # Optional user multiplier sampled on source surface vertices.
     # It changes target density, not physical material parameters.
@@ -44,8 +46,10 @@ class AdaptiveMeshOptions:
         if type(self.maximum_facets) is not int or self.maximum_facets<4:raise ValueError('maximum_facets must be an integer>=4')
         if type(self.project_surface) is not bool:raise ValueError('project_surface must be boolean')
         if type(self.retry_without_facet_merging) is not bool:raise ValueError('retry_without_facet_merging must be boolean')
+        if type(self.conserve_phase_volumes) is not bool:raise ValueError('conserve_phase_volumes must be boolean')
+        if type(self.surface_partition_voxels) is not int or self.surface_partition_voxels<0:raise ValueError('Nonnegative surface partition width required')
         if not 0<self.maximum_phase_volume_error<1:raise ValueError('Positive relative phase-volume tolerance required')
-        if self.surface_method not in ('auto','marching_cubes','shared_interfaces','nested_contours'):raise ValueError('Unknown adaptive surface route')
+        if self.surface_method not in ('auto','marching_cubes','shared_interfaces','nested_contours','surface_nets'):raise ValueError('Unknown adaptive surface route')
         if type(self.iterations) is not int or self.iterations<1 or type(self.topology_retries) is not int or self.topology_retries<0:raise ValueError('Integer iteration budgets required')
         if self.density is not None and not callable(self.density):raise ValueError('density must be a callback(points_xyz_m)')
 
@@ -53,8 +57,9 @@ class AdaptiveMeshOptions:
     def precision(cls,name,**overrides):
         choices={'coarse':dict(vertex_fraction=.06,maximum_phase_volume_error=.06),
                  'balanced':dict(vertex_fraction=.12,maximum_phase_volume_error=.03),
-                 'fine':dict(vertex_fraction=.25,maximum_phase_volume_error=.015)}
-        if name not in choices:raise ValueError('Precision is coarse, balanced or fine')
+                 'fine':dict(vertex_fraction=.25,maximum_phase_volume_error=.015),
+                 'very_fine':dict(vertex_fraction=.5,maximum_phase_volume_error=.0075)}
+        if name not in choices:raise ValueError('Precision is coarse, balanced, fine or very_fine')
         return cls(**(choices[name]|overrides))
 
 
@@ -289,10 +294,15 @@ def _cluster_patch(points,faces,weights,pinned,fraction,iterations,workspace,pro
         _,first,counts=np.unique(keys,return_index=True,return_counts=True)
         unique_faces=candidate[first]
         result=_topology(np.empty((base,3)),unique_faces)
-        if _same_topology(signature,result):break
+        present=np.unique(unique_faces)
+        missing_pins=ids[pins][~np.isin(ids[pins],present)]
+        if _same_topology(signature,result) and not len(missing_pins):break
         edge=np.sort(unique_faces[:,[[0,1],[1,2],[2,0]]].reshape(-1,2),axis=1)
         k,n=np.unique(edge[:,0].astype(np.int64)*base+edge[:,1],return_counts=True)
         bad=k[n!=2];bad=np.unique(np.concatenate((bad//base,bad%base)))
+        if len(missing_pins):
+            touched=np.any(np.isin(ids[faces],missing_pins),axis=1)
+            bad=np.union1d(bad,np.unique(ids[faces[touched]]))
         sizes=np.bincount(ids,minlength=base)
         bad=bad[sizes[bad]>1]
         if not len(bad):bad=np.unique(candidate[first[counts>1]])
@@ -345,14 +355,17 @@ def _orient_quads(model,plc):
 
 
 def _region_volumes(points,faces,markers,pairs,regions):
-    reference=points.mean(axis=0);p=points[faces]-reference
-    volume=np.einsum('ij,ij->i',p[:,0],np.cross(p[:,1],p[:,2]))/6
+    reference=points.mean(axis=0);sums=np.zeros(max(int(np.max(markers)),max(map(int,pairs)))+1,float)
+    for start in range(0,len(faces),50000):
+        p=points[faces[start:start+50000]]-reference
+        volume=np.einsum('ij,ij->i',p[:,0],np.cross(p[:,1],p[:,2]))/6
+        sums+=np.bincount(markers[start:start+50000],weights=volume,minlength=len(sums))
     totals={}
     for k in regions:
         total=0.
         for marker,pair in pairs.items():
-            if k==pair[0]:total+=float(volume[markers==int(marker)].sum())
-            elif k==pair[1]:total-=float(volume[markers==int(marker)].sum())
+            if k==pair[0]:total+=float(sums[int(marker)])
+            elif k==pair[1]:total-=float(sums[int(marker)])
         if total<=0:raise ArithmeticError(f'Nonpositive enclosed surface volume for region{k}')
         totals[k]=total
     return totals
@@ -360,7 +373,12 @@ def _region_volumes(points,faces,markers,pairs,regions):
 
 def _multiphase_surface(model,regions,options,workspace):
     raw=voxel_plc(model,regions=regions,maximum_facets=options.maximum_facets)
-    faces,markers=_orient_quads(model,raw);points=raw.points
+    return _remesh_interfaces(model,regions,options,workspace,raw)
+
+
+def _remesh_interfaces(model,regions,options,workspace,raw):
+    faces,markers=(_orient_quads(model,raw) if np.asarray(raw.facets).shape[1]==4 else (np.asarray(raw.facets),raw.markers))
+    points=raw.points
     weights=multiresolution_weights(model,points,options)
     # Separate outer box planes, so flat walls cannot be rounded across edges.
     pairs=raw.metadata['interface_pairs'];patch=markers.astype(np.int64)*7
@@ -369,6 +387,16 @@ def _multiphase_surface(model,regions,options,workspace):
         for side,value in enumerate((lo[axis],hi[axis])):
             mask=np.all(np.isclose(points[faces,axis],value,atol=min(model.spacing)*1e-5,rtol=0),axis=1)
             patch[mask]+=axis*2+side+1
+    partitions=1
+    if options.surface_partition_voxels:
+        width=options.surface_partition_voxels
+        grid=np.maximum(1,np.ceil(np.asarray(model.regions.shape)[::-1]/width).astype(int));partitions=int(np.prod(grid))
+        patch*=partitions
+        for start in range(0,len(faces),50000):
+            xyz=points[faces[start:start+50000]].mean(axis=1)
+            index=np.floor((xyz-lo)/(np.asarray(model.spacing)[::-1]*width)).astype(int)
+            index=np.clip(index,0,grid-1)
+            patch[start:start+50000]+=np.ravel_multi_index(index.T,tuple(grid))
     minmark=np.full(len(points),np.iinfo(np.int64).max);maxmark=np.zeros(len(points),np.int64)
     np.minimum.at(minmark,faces.ravel(),np.repeat(patch,3));np.maximum.at(maxmark,faces.ravel(),np.repeat(patch,3))
     pinned=minmark!=maxmark
@@ -385,14 +413,15 @@ def _multiphase_surface(model,regions,options,workspace):
         before=_topology(points[ids],local);success=False
         fractions=sorted(set([min(1.,options.vertex_fraction*2**a) for a in range(options.topology_retries+1)]+[1.]))
         for fraction in fractions:
-            p,f,pin_map,cleanup=_cluster_patch((points[ids]-lo)/length,local,weights[ids],pinned[ids],fraction,options.iterations,workspace,options.project_surface,options.minimum_component_vertices)
+            try:p,f,pin_map,cleanup=_cluster_patch((points[ids]-lo)/length,local,weights[ids],pinned[ids],fraction,options.iterations,workspace,options.project_surface,options.minimum_component_vertices)
+            except ArithmeticError:continue
             after=_topology(p,f)
             if not _same_topology(before,after):continue
             p=p*length+lo
             newmap=np.full(len(p),-1,np.int64)
             lp=np.flatnonzero(pinned[ids]);newmap[pin_map[lp]]=pin_ids[ids[lp]]
             free=np.flatnonzero(newmap<0);newmap[free]=cursor+np.arange(len(free));cursor+=len(free)
-            output.append(p[free]);outfaces.append(newmap[f]);outmarkers.append(np.full(len(f),marker//7,np.int32))
+            output.append(p[free]);outfaces.append(newmap[f]);outmarkers.append(np.full(len(f),(marker//partitions)//7,np.int32))
             logs.append({'patch':int(marker),'fraction':fraction,'before':before,'after':after,'pinned':len(lp),'flat_stars_replaced':cleanup});success=True;break
         if not success:raise ArithmeticError(f'ACVD patch{marker} did not preserve topology; increase vertex_fraction')
     p=np.concatenate(output);f=np.concatenate(outfaces);m=np.concatenate(outmarkers)
@@ -503,7 +532,17 @@ def adaptive_surface(model,*,regions=None,options=None,workspace=None):
         logs=[{'fraction':fraction,'before':before,'after':after,'pinned':0,'flat_stars_replaced':cleanup,'cavity_orientation_components_flipped':flips}]
     else:
         nested=options.surface_method=='nested_contours' or (options.surface_method=='auto' and (options.phase_order or model.metadata.get('phase_order')))
-        raw,p,f,m,volumes,logs,weights=(_nested_surface if nested else _multiphase_surface)(model,chosen,options,workspace)
+        if options.surface_method=='surface_nets':
+            from .surface_nets import surface_nets_plc
+            source=surface_nets_plc(model,regions=chosen,maximum_facets=options.maximum_facets,conserve_volumes=options.conserve_phase_volumes)
+            raw,p,f,m,volumes,logs,weights=_remesh_interfaces(model,chosen,options,workspace,source)
+        else:raw,p,f,m,volumes,logs,weights=(_nested_surface if nested else _multiphase_surface)(model,chosen,options,workspace)
+    projection={}
+    if options.conserve_phase_volumes:
+        from .volume_projection import conserve_phase_volumes
+        corrected=SurfacePLC(p,f,raw.seeds,m,raw.holes,metadata={'interface_pairs':raw.metadata['interface_pairs']})
+        conserve_phase_volumes(corrected,model);p=corrected.points;projection=corrected.metadata['volume_projection']
+        volumes=_region_volumes(p,f,m,raw.metadata['interface_pairs'],chosen)
     voxel={k:float(np.count_nonzero(model.regions==k)*np.prod(model.spacing)) for k in chosen}
     errors={str(k):abs(volumes[k]/voxel[k]-1) for k in chosen}
     if max(errors.values())>options.maximum_phase_volume_error:
@@ -511,6 +550,7 @@ def adaptive_surface(model,*,regions=None,options=None,workspace=None):
     metadata={'surface_method':'gemsim_adaptive','source_shape_zyx':model.regions.shape,
         'source_voxels':int(model.regions.size),'full_resolution':True,
         'minimum_component_vertices':options.minimum_component_vertices,
+        'surface_partition_voxels':options.surface_partition_voxels,
         'selected_regions':list(chosen),
         'algorithm':'full-resolution interfaces → GEMsim multiresolution median residual weights → original weighted ACVD → topology/phase-volume checks → TetGen',
         'input_surface_vertices':len(raw.points),'input_surface_facets':len(raw.facets),
@@ -518,6 +558,9 @@ def adaptive_surface(model,*,regions=None,options=None,workspace=None):
         'source_voxel_volume_m3':voxel,'phase_voxel_volume_relative_errors':errors,
         'patches':logs,'weight_range':[float(weights.min()),float(weights.max())],
         'region_names':model.region_names,'interface_pairs':raw.metadata.get('interface_pairs',{}),
+        'surface_frontend':raw.metadata,
+        'remeshed_volume_projection':projection,
+        'selection_groups':model.metadata.get('selection_groups',{}),
         'phase_order':list(options.phase_order or model.metadata.get('phase_order',())),
         'elapsed_seconds':time.perf_counter()-start,
         'adaptivity':'geometric residual-weighted surface density; not a certified PDE error estimator',

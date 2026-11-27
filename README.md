@@ -16,6 +16,9 @@ requirements.
 [TetGen + COMSOL / 原生编译与导出](tutorials/05_tetgen_and_comsol.md) ·
 [GEMsim adaptive / 自适应重网格](tutorials/06_gemsim_adaptive_meshing.md)
 
+[Complex CT, dense256³ electrodes, cell layers and exchange units /
+复杂CT、256³电极、分层与单位](tutorials/07_complex_ct_layers_and_exchange.md)
+
 中文教程：[几何与体素](tutorials/01_geometry_and_voxels.md#zh) ·
 [有限元网格](tutorials/02_finite_element_meshes.md#zh) ·
 [集成框架与扩展](tutorials/03_integrated_geometry_backends.md#zh)。
@@ -24,6 +27,29 @@ requirements.
 [Executable notebook / 可执行示例](tutorials/notebooks/geometry_workflow.ipynb)。
 
 ## Adaptive geometry workflow / 自适应几何流程
+
+`morqex.modeling` imports original TIFF segmentation, generates irregular
+granular/rod/platelet/agglomerate/bicontinuous electrodes, and stacks independent
+electrode/electrolyte/separator/collector regions. COMSOL export accepts
+`length_unit='m'|'cm'|'mm'|'um'|'nm'` and writes actual named domain selection
+objects. Internal geometry and HDF5 always use SI metres; software imports must
+use the selected export unit. VTK shared-interface extraction and conforming
+slab assembly are optional alternatives for large multi-label structures.
+The two supplied TIFF and COMSOL reference files are independent geometries.
+See the linked bilingual tutorial for contracts, licenses and validation limits.
+
+For the **same unchanged voxel model**, `MeshResolution` and
+`controlled_tetgen` independently control surface approximation and maximum
+Tet4 volume. Choose coarse/balanced/fine/very_fine or explicit SI size limits.
+The actual element count and source checksum are recorded; a requested density
+is not an exact count or a certified PDE-error bound.
+
+An existing conforming Tet4 mesh can also be adapted through the optional,
+source-integrated **MMG5.8.0** backend (`remesh`, `RemeshOptions`). SI size and
+Hausdorff requests are independent of display resolution. Material references,
+boundary tags, phase volumes and surface topology invariants are checked;
+these checks do not certify arbitrary topology equivalence or PDE accuracy.
+See the [same bilingual tutorial](tutorials/07_complex_ct_layers_and_exchange.md).
 
 ```text
 Shapes / statistical recipes / user region arrays
@@ -65,6 +91,11 @@ Omit both flags for a Python-only installation. Cython/NumPy build headers are
 requested only for the opt-in ACVD/legacy geometry builds. No PyVista/VTK is
 required. Native editable installs are rejected to keep binaries out of `src`.
 不设置开关则不编译；构建依赖按需安装，二进制、构建目录及大型输出均留在源码外。
+
+For optional MMG compilation add `MORQEX_BUILD_MMG=1` (CMake and C/C++ compiler
+required), or run `python -m morqex.modeling build-mmg --workspace /external`.
+MMG is LGPL3+ and remains a separate shared library. VTK is needed only for
+the optional Surface Nets route, not for the original TetGen/ACVD workflow.
 
 ## Quick start / 快速开始
 
@@ -125,7 +156,7 @@ Numerical commands should run through the local resource launcher:
 WORK=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
 PY=$WORK/runtime/bin/python
 python scripts/run_local.py --workspace "$WORK" --label geometry_run -- \
-  "$PY" my_geometry_recipe.py
+  "$PY" /absolute/path/my_geometry_recipe.py
 ```
 
 Default limits are one CPU thread, low process priority,3GiB process-tree RSS
@@ -171,9 +202,11 @@ convergence or long-term battery-life validation.
 The workspace was cleared on request before creating the new geometry atlas.
 Earlier run outputs and numerical environments are not included in the source
 repository and must be regenerated when needed. Current geometry outputs live
-under `../morph_workspace/microelectrode_gallery/adaptive_gallery256_gemsim/`.
-The earlier voxel-reference atlas remains in `atlas256/`; it is a different
-mesh method, not the adaptive gallery.
+under `../morph_workspace/microelectrode_gallery/nmc_complex_gallery/`;
+open its `index.html` for the independent reference, full NMC TIFF, five dense
+256³ native structures, layered cell, exact mesh sections and software exports.
+The earlier ten-family galleries remain in `atlas256/` and
+`adaptive_gallery256_gemsim/`; they exercise different mesh workflows.
 
 Third-party source provenance, copyright and licenses are retained in
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) and the corresponding source

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from pathlib import Path
 import json
 import numpy as np
-import h5py
 from morqex.microstructure import Volume
 from morqex.microstructure.mesh.voxel import voxel_to_tetra
 
@@ -19,6 +18,7 @@ class MeshArtifact:
     @classmethod
     def load(cls,path):
         """Open a complete voxel or TetGen HDF5 artifact without loading cells."""
+        import h5py
         path=Path(path).expanduser().resolve()
         with h5py.File(path,'r') as f:
             if not f.attrs.get('complete',False):raise ValueError('Incomplete mesh artifact')
@@ -38,6 +38,11 @@ class MeshArtifact:
 
     def show(self,**kwargs):return self.viewer(**kwargs).display()
 
+    def adaptive_viewer(self,**kwargs):
+        """Actual interfaces and full-cell sections of an irregular artifact."""
+        from morqex.visualization.adaptive_mesh import AdaptiveMeshView
+        return AdaptiveMeshView(self,**kwargs)
+
     def export_comsol(self,path,**kwargs):
         from .comsol import export_comsol
         return export_comsol(self,path,**kwargs)
@@ -51,11 +56,12 @@ def tetrahedralize(model,*,regions=None,maximum_voxels=262144):
 def stream_tetrahedralize(model,path,*,regions=None,slab_depth=2,compression=1):
     """Global compact shared nodes, exact parent labels, bounded cell slabs.
 
-    Only mesh_to stores the complete mesh at256^3. No full global element or
+    This route streams all selected cells at256^3. No full global element or
     gradient matrix is allocated. Nodes touching only along an edge/corner are
     shared, following voxel_to_tetra's bonded shared-grid convention.
     """
     from xml.sax.saxutils import escape
+    import h5py
     from .voxel import external_path
     path=external_path(path)
     a=model.regions;shape=np.array(a.shape);spacing=np.asarray(model.spacing);origin=np.asarray(model.origin)
