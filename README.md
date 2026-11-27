@@ -1,136 +1,159 @@
 # MORQEX
 
-## 三维疲劳—网络—DFN 循环研究
+**Microstructure modelling, finite-element meshing and multiscale battery research.**
 
-新增统一 `network-cycle / network-report` 接口：各 DFN 厚度节点拥有独立三维
-有限变形/AT2/疲劳状态，浓度区域或完整活性体素替代径向粒子状态，网络端口反馈
-并逐步核查锂质量、电荷、局部功率恒等式和不可逆性。MFEM 与 PyBaMM 源码在 `src`。
-默认单核、RSS 3 GiB，完整断点和 HTML 在外部工作区。
+MORQEX brings voxel geometry, region-labelled finite-element meshes and battery
+research solvers into one Python source tree. Its geometry API accepts both
+parameterized shapes and user-supplied three-dimensional region arrays. The
+source-integrated GEM and MicroStructPy modules provide reusable geometry and
+mesh capabilities; optional backends retain their original licenses and runtime
+requirements.
 
-0.1–8C 放电、8C/8C 循环、不同随机结构、NMC811/NMC532/LFP 参数接口已产生
-实际短循环数据；完整体素与聚合浓度、时间步和图查询已有独立对照。
-这些是数值候选：当前离子几何固定、电子导率损伤律未标定，尚未完成真实裂纹
-开度/浸润、动态离子拓扑、网格收敛和长期寿命的全部验收。
-不把早期容量变化、单位加载电势或高相场值当成已验证的疲劳失活/工作电势/开放裂缝。
+[Tutorials](tutorials/README.md) · [API reference](tutorials/API.md) ·
+[Voxel modelling](tutorials/01_geometry_and_voxels.md) ·
+[Finite-element meshing](tutorials/02_finite_element_meshes.md) ·
+[Integrated backends](tutorials/03_integrated_geometry_backends.md)
 
-逐循环参考现已实际完成 20 次循环、970 个接受步；容量基本不变，不能解释为已验证的疲劳容量衰减。
-新的固定总厚度模型已分别完成 0.1C 与 8C 配置循环，联立各微结构节点、隔膜与锂层的轴向力平衡。
-其适用范围是等截面、横向固定的弹性叠层。空间细化仍暴露未通过的门槛：源码内新增
-MFEM 保形局部加密与 P2 位移/P1 损伤参考，保持原误差阈值并逐项验证，未直接替换循环默认模型。
+中文教程：[几何与体素](tutorials/01_geometry_and_voxels.md#zh) ·
+[有限元网格](tutorials/02_finite_element_meshes.md#zh) ·
+[集成框架与扩展](tutorials/03_integrated_geometry_backends.md#zh)。
 
-反应网络事件控制现已同时约束端电压和各反应面电流误差；接触/反应连接关系改变时
-重建，其他状态尝试复用被动分解并重新求解 BV。三种合成结构、NMC811/NMC532/LFP、
-0.1C/2C/8C 的 324 次给定状态查询通过独立完整图比较。含初次建图与重建的本序列
-总成本为 1.703 s，对照为 5.037 s；这不是完整 DFN 循环或寿命加速。428 项软件
-回归通过，科学验收缺口仍单独保留。
+[Notebook实时二维/三维可视化](tutorials/04_notebook_visualization.md) ·
+[Executable notebook / 可执行示例](tutorials/notebooks/geometry_workflow.ipynb)。
 
-入口及 TOML/API 见 [API.md](API.md)。证据总览输出到
-`morph_workspace/reports/network_study/index.html`，保留失败、未检查项和实际场数据。
-
-## TOP-DAMAGE 2S 有限变形参考
-
-新增 MFEM 4.10 超弹性编译接口，支持乘法各向异性化学变形、解析应力/切线、
-力学化学势、不可逆 AT2 接受步和矩阵自由 AMG-MINRES。独立制造解细化及
-独立回归测试已通过；这不是材料标定、真实裂缝拓扑或长期寿命的全部验收。
-`configs/top_damage_finite_cycle.toml` 选择该路线，原小变形默认值保留。
-详细 API 与运行入口见 [API.md](API.md)。所有构建/结果仍在外部工作区。
-
-有限变形路线现已完成三个环境各一轮实际截止电压 CC 放电—充电，
-报告为 `reports/MORQEX_TOP_DAMAGE_2S_finite_cycles.html`。
-另有 `configs/top_damage_region_probe.toml` 驱动的六节点 32³ 全体素测试：
-66 个连通区域浓度状态（请求 64，拆分不连通区域）、六次独立三维有限变形/AT2
-求解、六组功共轭化学势反馈及同起点无反馈对照。报告为
-`reports/region_finite_32_toml.html`。这是 60 秒分段耦合验证，
-尚不是完整三维电解液/电势参考，也不是长期物理拓扑退化验收。
-
-本地运行限制：单核、nice 15、进程树 RSS 3 GiB；启动保留至少 8 GiB 可用内存；
-GPU 默认关闭。运行必须经 `scripts/run_local.py`。
-
-面向复杂电极微结构与 DFN 的电化学、力学、热及退化跨尺度研究框架。独立于 ZynJoule；GEMsim 全部 274 个源码文件与 PyBaMM 26.3.1 的 355 个源码文件已集成到 `src`，不依赖外部 GEMsim checkout。迁移记录和许可证保留。
-
-当前分支 `research/top-damage` 在既有节点级 CBD、多模式绑定及平面锂金属半电池基础上增加退化参考；原 `research/nodewise-cbd16` 分支保留。开发中的接口、数值通过、材料标定和论文验收分别记录，不宣称已达到顶刊验收或支持任意物理组合。
-
-TOP-DAMAGE 新增较密大颗粒候选计算：32³、8 颗粒、32 晶粒、孔隙率 34.96%，整个固体网格含 127872 个 Tet4。0.5C 约束、2C 约束、0.5C 自由边界均已实际完成预充及一轮截止电压 CC 放电—充电；DFN 浓度驱动三维疲劳/相场，更新后的有效电子电导与平均机械化学势进入下一步 DFN。50 个加载步及 3 个初始态完整保存于外部工作区。报告：`reports/MORQEX_TOP_DAMAGE_voltage_cycles.html`；可查看逐步三维浓度、应力、应变、损伤和疲劳历史，另有 VTI/PVD、HDF5/XDMF 时间序列。
-
-这不是合格的寿命预测：力学/疲劳参数是数值敏感性组合，采用等温和一个正极节点的等粒径球形浓度映射。局部二次损伤电导律未标定为真实裂缝接触；没有物理孔隙重建和颗粒失联。后处理发现 CBD 最大总应变约 3.85%–12.15%，未通过本研究 2% 保守小应变筛查，须验证有限变形 CBD 与裂尖网格收敛，不能靠收紧残差消除模型误差。完整三维结果保留为数值候选并明确标记，所有论文/物理拓扑资格仍为 false。
-
-既有节点级算例为 **6 个正极厚度节点，每节点真实 32³ 体素、56 个近球形颗粒，负极采用平面锂金属且没有负极颗粒**。共享模板模式复用不可变算子，节点状态独立。120 秒电化学—力学—均温双向反馈已完成，守恒与能量测试已通过；报告为外部 `reports/MORQEX_sphere32_Li_short.html`。本轮完整界面参考未启用退化；32³ 两轮完整循环尚未通过 CPU 预算，不将部分放电冒充循环结果。64 状态浓度闭合尚需模式/网格收敛，守恒残差不代表工程预测误差。
-
-## 使用
-
-TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`research/top-damage`）。当前数值闭环、独立对照和缺口见本文顶部；早期审计报告 `reports/MORQEX_TOP_DAMAGE_phase_A.html` 作为历史记录保留，不代表最新进展。`python -m morqex.top_damage status` 返回资格范围；`morqex top-damage` 使用同一入口。持续研究记录位于外部 `morph_workspace/research_archive/top_damage`。该子框架不使用神经网络，旧求解器保持不变。
-
-新增 MFEM 4.10 可编译库源码（`src/morqex/vendor/mfem`，BSD-3），以 TOML 驱动 CMake/Ninja 编译，通过 MORQEX 的 C++17/ctypes API 调用。`top-damage build` 支持单核限时断点编译；`top-damage reference` 运行三维力学—不可逆 AT2—疲劳历史参考，逐接受步生成 HDF5、ParaView VTU 与可切换步/切片的 HTML。具体命令见 [API](API.md)。这条新增路线目前是机械试件资格验证，尚不等于多晶正极—拓扑演化—动态 DFN 的长期闭环；不输出假定的容量衰减曲线。
-
-完整接口、单位、操作步骤与适用范围见 [API.md](API.md)。源码仅保留 README 和 API 两份 Markdown；历史理论、计划、日志和旧接口说明完整归档到源码外 `morph_workspace/research_archive`。文献表保留在 [literature](literature)，第三方说明见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
-
-少量大颗粒检查入口为 `top-damage geometry configs/top_damage_few_particles.toml`（仍经资源运行器执行）。默认 32³、4 个近球形颗粒、每颗粒 8 个晶粒及 CBD；参数均可配置。完整 HDF5/VTI、取向表、晶界面、三维旋转与剖切 HTML 写入外部 `results/top_damage/microstructures/`。该稀疏几何用于检查编号和后续损伤映射，不能当作真实电极 RVE 或已经完成的疲劳循环。
+## Geometry workflow
 
 ```text
-/home/zephyrain/lw/MORQEX                 # 轻量源码、配置、测试、复现脚本
-/home/zephyrain/lw/morph_workspace        # 数据、环境、编译、算子、结果、HTML
+Physical shapes / statistical recipes / segmented region arrays
+                              │
+                       VoxelModel (ZYX)
+                              │
+           explicit material regions + SI spacing/origin
+                              │
+             GEM voxel-to-Tet4 / streamed global meshing
+                              │
+              HDF5 + XDMF + parent-voxel association
+                              │
+          interactive geometry inspection / research solvers
 ```
 
-数值步骤均经运行器执行。默认单逻辑 CPU、单线程、nice +15、RSS 3 GiB、单任务墙钟 660 秒、禁用 GPU。显式 `--gpu` 才允许 GPU：进程显存预算 8 GiB，保留空闲显存 4 GiB，协作占空比 20%，资源超限中止。若其他作业占用导致预算与余量无法同时满足，则不启动 GPU。占空比是主动节流策略，不是硬件配额；不修改全局 GPU 设置或其他作业。
+- **One modelling API:** `morqex.modeling` for arrays, shapes, presets, TOML,
+  generator extensions and mesh generation.
+- **Custom regions:** nonnegative integer IDs with explicit names; active
+  material, CBD, pores and additional phases can be represented separately.
+- **Irregular presets:** granular, elongated rods, platelets, dendritic
+  scaffolds, hollow shells, agglomerates, fibres, bicontinuous networks,
+  gradient lamellae and curved channels.
+- **Large voxel grids:** directly evaluated256×256×256 geometry; complete
+  conforming Tet4 meshes are streamed to disk with compact global shared nodes.
+- **Traceable geometry:** physical units, region labels, source metadata and
+  element-to-original-voxel mapping remain available in the exported files.
+- **Interactive inspection:** offline HTML with whole-domain display LOD,
+  original-resolution slices and exact local tetrahedral mesh views.
+
+## Quick start
+
+Python3.11 or newer is required. A minimal scientific environment needs NumPy,
+SciPy, h5py, Matplotlib, Pillow, pyquaternion and lsq-ellipse. The optional
+geometry, statistics and report dependencies are declared in `pyproject.toml`.
+Keep the environment and generated files outside this source directory.
 
 ```bash
 cd /home/zephyrain/lw/MORQEX
-PY=/home/zephyrain/lw/morph_workspace/venvs/morqex/bin/python
-$PY scripts/run_local.py --label tests -- $PY -m pytest /home/zephyrain/lw/MORQEX/tests -q --junitxml=test_results.xml
-$PY scripts/run_local.py --label gpu_compile --gpu -- $PY /home/zephyrain/lw/MORQEX/benchmarks/probe_voxel_backend.py
-$PY scripts/run_local.py --label ct_fetch -- $PY /home/zephyrain/lw/MORQEX/scripts/fetch_full_electrodes.py
-$PY scripts/prepare_full_suite.py
-$PY scripts/run_full_transport_suite.py
+python -m venv --system-site-packages ../morph_workspace/microelectrode_gallery/runtime
+../morph_workspace/microelectrode_gallery/runtime/bin/python -m pip install -e '.[modeling,notebook,report]'
 ```
 
-## 新接口与验收范围
+Create an irregular electrode and generate its full mesh:
 
-- 五个公开 NMC532 CT 使用完整提供体积，含原作者重构 CBD。它们不是五种化学材料，也不是整个制造电极片。
-- 编译 C++/CUDA 兼容差分力学和 CUDA 体素输运采用矩阵自由计算；数据、库和缓存全部外置。新力学离散与原 Tet4 FEM 分开验证。
-- 正浓度基按连通活性区域保留独立锂库存。固定八个状态不能普遍解析任意拓扑、反应热点和相界面。
-- NMC532、NMC811、LFP、LCO 有独立参数入口；支持自定义字典、原始非单调 OCP、线性温度熵、梯度能和正迁移率。缺项补充与模型变更显式审计。
-- 分相材料、掺杂、cohesive 界面损伤、SEI、析锂/剥离/死锂和自定义子模型保留。新 POU 与旧非均匀掺杂迁移率组合有独立门禁，不静默忽略不支持的物理。
-- 小尺度路线的同能量反馈、统计、局部场恢复已有验证。完整 CT 多模式双向力学的误差及性能需要单独通过，不能由全体积输运通过自动推出。
+```python
+from morqex.modeling import electrode
+
+model, source_regions = electrode(
+    'rods', size=256, spacing=0.5e-6, seed=20261127,
+    cbd_fraction=0.12,
+)
+mesh = model.mesh_to(
+    '/home/zephyrain/lw/morph_workspace/microelectrode_gallery/rods.h5',
+    regions=[1, 2], slab_depth=2,
+)
+print(mesh.xdmf, mesh.nodes, mesh.tetrahedra)
+```
+
+Or supply your own region array:
+
+```python
+from morqex.modeling import from_regions
+
+model = from_regions(
+    my_labels_zyx, spacing=(0.5e-6,)*3,
+    region_names={0:'pore', 1:'active material', 2:'CBD'},
+)
+mesh = model.mesh_to('/external/workspace/custom.h5', regions=[1,2])
+```
+
+Open the generated `.xdmf` in ParaView while keeping its `.h5` sibling beside
+it. Full256³ meshes can contain tens of millions of elements; use HDF5 slices
+or a local mesh view for inspection. Geometry generation and a feasible
+full-field mechanical solve are separate resource requirements.
+
+## Resource-controlled execution
+
+Numerical commands should run through the local resource launcher:
 
 ```bash
-# 完整 CT 力学；未收敛则保存断点并明确标注，不能作为合格参考解
-$PY scripts/run_local.py --label full_mechanics --gpu -- $PY /home/zephyrain/lw/MORQEX/benchmarks/study_full_voxel_response.py --dataset nmc1cal --iterations 1500 --preconditioner coarse
+WORK=/home/zephyrain/lw/morph_workspace/microelectrode_gallery
+PY=$WORK/runtime/bin/python
+python scripts/run_local.py --workspace "$WORK" --label geometry_run -- \
+  "$PY" my_geometry_recipe.py
 ```
 
-报告在外部 `morph_workspace/reports`。0.0.9 稳定报告为 `MORQEX_crossscale_cathodes_report.html`；新结果依据自己的来源、配置、残差与误差验收，不借用旧 SVE 的通过状态。
+Default limits are one CPU thread, low process priority,3GiB process-tree RSS
+and an8GiB host memory reserve. The explicit CPU reference profile permits
+6GiB RSS while retaining the host reserve. GPU use is opt-in; the geometry
+gallery does not require a GPU. All builds, data, meshes and run logs remain
+outside MORQEX.
 
-开发版本 `0.1.0.dev0` 的新报告：`morph_workspace/reports/MORQEX_full_volume_report.html`。五个完整 CT 共 80,308,348 体素；10 项完整体积输运已通过 1e-7 相对残差，43 个原生 DFN 放电/循环基线已通过协议检查。NMC1CAL 的 DFN (20,40) 对 (40,80) 网格电压 RMSE 为 0.1C 0.00531 mV、3C 0.13285 mV、5C 0.24834 mV；它们是同物理原生 DFN 离散对照，不是微结构跨尺度误差。完整 CT 多模态双向力学及退化尚需独立验收。
+## Source organization
 
-### 已解析三维电化学与疲劳场（2026-11-26）
+```text
+src/morqex/
+  modeling/          unified geometry and finite-element API
+  generation/        statistical media, particles and geometry adapters
+  microstructure/    integrated GEM geometry, voxelization and mesh modules
+  mechanics/         reference elasticity and matrix-free solvers
+  electrochemistry/  DFN and microstructure coupling research modules
+  top_damage/        fatigue, topology and degradation research modules
+  visualization/     geometry and computed-field HTML exporters
+  vendor/            pinned third-party source with notices and licenses
+src/pybamm/          source-integrated electrochemical solver
+tutorials/           English module tutorials and API reference
+configs/             TOML examples and resource settings
+scripts/             generation, checking and reproducibility entry points
+tests/               targeted mathematical and software checks
+```
 
-`morqex.top_damage.resolved_echem` 统一调用源码集成的 echemAMR/AMReX，
-可选 HYPRE 由 TOML 下载校验和单核编译，源与二进制都在外部工作区。
-`resolved_phase_field` 将完整体素浓度保守传给有限变形/AT2，并显式传递疲劳历史。
-[实际三维场 HTML](/home/zephyrain/lw/morph_workspace/reports/MORQEX_resolved_3D_phase_field.html)
-包括全 32³ 正极、8 颗粒/32 晶粒、CBD、逐时刻浓度/电势/应力/损伤；显示增量可区分预置缺陷。
+The complete public geometry namespaces of the integrated backends are
+accessible through `morqex.modeling.framework(name)`. See the
+[backend tutorial](tutorials/03_integrated_geometry_backends.md) for available
+portals and native prerequisites. Micro_Reconstruction's MATLAB/R source is
+included; executing it requires its original runtimes. Python statistical
+generation is explicitly identified as a different method.
 
-本次原生三维基准包含 **2 秒细时间步验证和 40 秒/41 帧延长验证，不是完整循环或寿命预测**。
-40 秒案例全部体素状态已逐帧传入有限变形疲劳相场。时间步 2→1 秒的电压最大差
-0.112 mV、固相浓度演化量 L2 差 0.424%；这是时间离散间差异，不是实验精度。
-原生材料卡为
-NMC532；惰性 CBD、不变材料拓扑、等温、单级网格边界配置已核对。
-NMC811/LFP 的原生三维材料扩展、物理裂纹侵液、三维力学化学势反向反馈和长期
-循环误差尚未验收。已有 DFN 完整充放电及六节点双向探针是独立验收案例。
-构建、复现与三维相场 TOML 入口见 [API.md](API.md)。
+## Research modules and validation
 
-### Ai–Wu–Martínez-Pañeda 2022 独立复现（进行中）
+MORQEX also contains electrochemical, mechanical, thermal and degradation
+research interfaces. The [API reference](tutorials/API.md) records those
+interfaces and their model assumptions. Source availability and successful
+geometry checks do not establish calibrated material predictions, spatial
+convergence or long-term battery-life validation.
 
-不依赖 COMSOL 的 `paper-particle` 接口实现球形轴对称/圆柱平面应变的
-扩散—力学—疲劳相场单体求解，提供原文散度形式和公开模型 Helmholtz 形式两种明确配置。
-`paper-reference` 从校验过的出版 PDF 提取 Figure 5 曲线；`paper-report`
-生成实际相场、浓度、应力和疲劳历史的离线 HTML。TOML、源码身份、HDF5 断点和失败记录均保留。
+The workspace was cleared on request before creating the new geometry atlas.
+Earlier run outputs and numerical environments are not included in the source
+repository and must be regenerated when needed. Current geometry outputs live
+under `../morph_workspace/microelectrode_gallery/atlas256/`.
 
-**尚未完成整篇论文复现。** 已执行两个循环及时间/空间细化；5C 诊断中仍有
-局部浓度超过 cmax，且疲劳时间收敛未通过。诊断配置不会把这些状态标为物理合格，
-也不输出伪造的 300 循环、CT 裂纹或 DFN 寿命结论。详细运行命令及差异见 [API.md](API.md)。
-
-### 最新验证入口
-
-[循环与三维场总览](/home/zephyrain/lw/morph_workspace/reports/network_study/index.html) · [空间收敛与失败记录](/home/zephyrain/lw/morph_workspace/reports/mesh_study/index.html) · [拓扑与反应网络对照](/home/zephyrain/lw/morph_workspace/reports/topology_study/index.html) · [研究稿HTML](/home/zephyrain/lw/morph_workspace/reports/article_draft/index.html)。
-
-0.1C和8C固定厚度串联力学案例均完成完整配置循环；20周期参考已直接积分970步。容量没有出现可归因于疲劳的明显衰减，不能包装为已验证寿命预测。局部/高阶空间细化仍保留失败门槛；大参考会在主机内存余量不足时停止。24组已知反应状态变化的网络对照通过，支持复用被动分解后重新求解反应电流；这是准静态网络层的验证，不是完整长期DFN加速结论。
+Third-party source provenance, copyright and licenses are retained in
+[THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) and the corresponding source
+directories. MORQEX does not rename established scientific methods as new
+methods or remove upstream attribution.

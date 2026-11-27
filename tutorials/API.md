@@ -1,3 +1,61 @@
+# MORQEX API reference
+
+The unified geometry API is `morqex.modeling`. Begin with:
+
+- [Geometry and voxel modelling](01_geometry_and_voxels.md)
+- [Finite-element meshes](02_finite_element_meshes.md)
+- [Integrated geometry frameworks](03_integrated_geometry_backends.md)
+
+中文：[几何与体素](01_geometry_and_voxels.md#zh) ·
+[有限元网格](02_finite_element_meshes.md#zh) ·
+[集成框架与扩展](03_integrated_geometry_backends.md#zh)。
+
+```python
+from morqex.modeling import (
+    VoxelModel, Shape, from_regions, from_shapes, electrode,
+    tetrahedralize, stream_tetrahedralize, framework, capabilities,
+    register_generator, generate, from_toml, register_mesher, mesh,
+)
+```
+
+Public geometry fields use ZYX arrays and SI spacing/origin. FEM vertices use
+XYZ in SI metres. `VoxelModel.mesh_to` supports full256³ region arrays through
+bounded slab processing. See the tutorials for the input/output contracts,
+explicit region selection, topology policy and optional backend requirements.
+
+|Public entry / 公开入口|Purpose / 用途|
+|---|---|
+|`VoxelModel(regions,spacing,origin,region_names,metadata)`|Integer-region geometry contract / 整数分区几何|
+|`from_regions(...)`|User-provided ZYX region arrays / 用户数组|
+|`Shape(kind,region,centre,axes,rotation,irregularity)`|SI primitive definition / 物理尺寸原语|
+|`from_shapes(shapes,shape,spacing,origin,background,region_names)`|Direct voxel-centre rasterization / 直接体素化|
+|`electrode(preset,size,spacing,seed,cbd_fraction)`|Ten irregular morphology families; returns model and source IDs / 十种预设|
+|`PRESETS`|Preset identifiers and names / 预设列表|
+|`VoxelModel.save`, `VoxelModel.load`|HDF5 geometry I/O / 几何存储|
+|`VoxelModel.volume()`|Existing GEM Volume adapter / GEM数据适配|
+|`tetrahedralize`, `VoxelModel.tetrahedralize`|Small in-memory Tet4 / 小规模内存网格|
+|`stream_tetrahedralize`, `VoxelModel.mesh_to`|Full shared-node HDF5/XDMF mesh / 大规模共享节点网格|
+|`MeshArtifact`|HDF5/XDMF paths, node/element counts and selected regions / 文件与数量契约|
+|`framework(name)`|Complete integrated public module namespace / 集成模块公开API入口|
+|`capabilities()`|Portal names and optional native prerequisites / 能力与依赖状态|
+|`register_generator`, `generate`|Custom VoxelModel callbacks / 自定义几何回调|
+|`register_mesher`, `mesh`|Custom FEMesh/MeshArtifact callbacks / 自定义网格回调|
+|`from_toml(path)`|Presets, shape lists or relative `.npy` region files / 配置入口|
+|`VoxelModel.show`, `VoxelModel.viewer`|Live notebook2D/3D display handle / 实时预览|
+|`VoxelView.update`, `VoxelView.save_html`|Update the same output or save standalone HTML / 同位置刷新和导出|
+|`MeshArtifact.show`, `MeshArtifact.viewer`, `MeshView`|Exact bounded subset of stored or in-memory Tet4 / 真实四面体子集显示|
+
+`from_shapes(...,progress=view.update,progress_every=5)` shows actual partial
+geometry during construction. See the bilingual
+[notebook visualization tutorial](04_notebook_visualization.md) and
+[executable notebook](notebooks/geometry_workflow.ipynb).
+
+The remaining sections document existing MORQEX research modules. Paths to
+previous run outputs are historical examples; the workspace has been cleared
+at the user's request and those files must be regenerated before use.
+
+---
+
 # MORQEX API 与操作说明
 
 源码、配置和测试在 MORQEX；数据、环境、编译、算子、断点、结果、HTML 全部在相邻的 `morph_workspace`。新全体积接口与旧版 SVE 接口分别验证，不共享通过标签。本文末尾为从源码 AST 生成的公开定义索引；研究内部入口仍需遵守各模块 docstring。

@@ -11,6 +11,8 @@ dependencies = ["numpy>=2.1", "scipy>=1.14"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+modeling = ["h5py>=3.11", "matplotlib>=3.8", "pillow>=10", "pyquaternion>=0.9.5", "lsq-ellipse>=2.0"]
+notebook = ["ipython>=8", "nbformat>=5", "nbclient>=0.10", "ipykernel>=6"]
 geometry = ["scikit-image>=0.24", "tifffile", "meshio", "matplotlib", "PyYAML", "edt"]
 ct = ["tifffile>=2024.1", "imagecodecs>=2024.1"]
 ai = ["torch>=2.7", "diffusers>=0.35", "pillow", "opencv-python", "scikit-learn"]

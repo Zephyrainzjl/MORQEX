@@ -1,0 +1,7 @@
+[geometry]
+method = 'electrode'
+preset = 'rods'
+size = 256
+spacing = 5e-7
+seed = 20261128
+cbd_fraction = 0.12
