@@ -69,6 +69,24 @@ def main():
         accepted=sum(r['rebound_below_1mV_event_tolerance'] for r in records)
         text='<section><h2>反应状态变化与守恒复用</h2><p>24组NMC811/NMC532/LFP对照覆盖完整/失联结构、0.5C/8C、小变化与电流反转。OCP、交换电流、界面覆盖和温度显式更新；全部与新鲜完整图比较。复用被动分解后仍重新求解BV电流，保持总电流约束；'+str(accepted)+'/24组复用后的电压界低于1mV。</p><p>这是已知化学状态下的准静态欧姆/BV问题，尚未作为长期DFN浓溶液求解器的替代。LFP舍入停滞通过64位有效尾数的扩展精度电位/残差与FP64切线修正，未放宽Newton容差；不是IEEE binary128，也不是GPU加速。</p><img src="changed_state_bounds.svg" alt="状态变化和重新求解反应后的误差与上界"><a href="../reactive_state_voltage_bounds_v2.json">全部状态、误差、守恒和计时</a></section>'
         document=document.replace('</main>',text+'</main>')
+    events=ws.path('reports/reactive_event_sequences_v1.json')
+    if events.exists():
+        result=json.loads(events.read_text());records=result['records']
+        fig,axes=plt.subplots(1,2,figsize=(10,4),layout='constrained')
+        for host,colour in [('NMC811','#1e5e82'),('NMC532','#398475'),('LFP','#b55752')]:
+            chosen=[r for r in records if r['host']==host]
+            x=np.arange(len(chosen))
+            axes[0].semilogy(x,[max(r['voltage_error_V'],1e-15) for r in chosen],'.',color=colour,label=host)
+            axes[1].semilogy(x,[max(r['relative_face_error_L1'],1e-15) for r in chosen],'.',color=colour,label=host)
+        axes[0].axhline(.001,color='#a96528',ls='--');axes[1].axhline(.01,color='#a96528',ls='--')
+        axes[0].set(xlabel='Supplied-state query index per material',ylabel='Voltage error [V]')
+        axes[1].set(xlabel='Supplied-state query index per material',ylabel='Relative face-current L1 error')
+        for ax in axes:ax.legend();ax.grid(alpha=.15)
+        fig.savefig(output/'event_sequences.svg');plt.close(fig)
+        rebuilds=sum(r['rebuilt'] for r in records)
+        elapsed=sum(r['cache_update_seconds'] for r in records);reference=sum(r['fresh_full_seconds'] for r in records)
+        text='<section><h2>自动事件更新：电压与局部锂通量同时约束</h2><p>'+str(len(records))+'次状态查询全部通过独立完整图比较：三种合成结构、NMC811/NMC532/LFP、0.1C/2C/8C，包含电流反转、导率改变、接触断开/恢复和反应支持集变化。'+str(rebuilds)+'次重建、'+str(len(records)-rebuilds)+'次复用；每次均重新求解反应电流。重建失败不会提交新状态。</p><p>该查询序列总成本 '+f'{elapsed:.3f}'+' s，对照 '+f'{reference:.3f}'+' s（包含本序列初次建图与全部重建，约 '+f'{reference/elapsed:.2f}'+' 倍）。这不是连续充放电或长期寿命加速；给定浓度、温度和几何变化没有由相场自动生成。浮点数评估的解析界不等于区间算术认证。</p><img src="event_sequences.svg" alt="所有查询的电压和反应面电流误差"><a href="../reactive_event_sequences_v1.json">逐查询事件、误差上界、守恒与计时</a></section>'
+        document=document.replace('</main>',text+'</main>')
     font=ws.path('data/report_font')
     if (font/'NotoSansCJKsc-Regular.otf').exists():
         from morqex.visualization.report_font import embed_font

@@ -12,7 +12,7 @@ for name,query,field,node in [('damage','','d',0),('initial','#frame=0&field=c&n
     png=ws.path('reports',page.stem+'_browser_'+name+'.png')
     result=subprocess.run([str(browser),'--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
         '--disable-background-networking','--virtual-time-budget=1600','--user-data-dir='+str(Path.cwd()/name),
-        '--window-size=1440,1100','--screenshot='+str(png),'--dump-dom',page.as_uri()+query],
+        '--window-size=1440,1800','--screenshot='+str(png),'--dump-dom',page.as_uri()+query],
         text=True,capture_output=True,timeout=40)
     ok=result.returncode==0 and 'data-rendered="true"' in result.stdout
     ok &= f'data-field="{field}"' in result.stdout and f'data-node="{node}"' in result.stdout

@@ -2952,3 +2952,31 @@ CPU reference-mesh studies may explicitly use `scripts/run_local.py --reference-
 `prolong_quadratic_field(source,target,parent_cells,field)` transfers nested P2 displacement guesses through exact mother-cell shape evaluation. `quadratic_indicator` adds within-cell response variation to a heuristic marking score; this is not a certified error estimator. The adaptive benchmark versions every branch and exposes its Dörfler fraction. Reducing a marking batch to respect memory does not qualify global convergence.
 
 HTML generation: run `report_network_study.py`, `report_topology_counterexample.py`, `report_mesh_study.py`, then `report_manuscript.py` from benchmarks through the resource runner. Manuscript source stays at external `manuscript/top_damage_2s/MANUSCRIPT.md`; the export preserves its explicit unqualified-draft status. `scripts/check_study_reports.py` checks all four pages offline; `check_network_html.py REPORT.html` retains separate screenshots per report.
+
+### Conservative event-triggered reaction graphs
+
+`from morqex.top_damage import ReactionNetworkCache` provides a transactional
+quasi-static update API. Construct with `voltage_tolerance_V`,
+`relative_current_tolerance`, `solver_tolerance`, `extended_precision` and
+`max_ports`; call `evaluate(electronic, ionic, faces, temperature_K=T,
+discharge_current_A=I)`. Every query re-solves the BV currents. The returned
+`ReactionUpdate` includes the accepted state, voltage and per-face current
+bounds, event reason and rebuild/reuse counters. A failed target solve leaves
+the previous accepted operator/state/counters unchanged.
+
+Conductance changes are compared with the last factorization, not merely the
+preceding query. Edge/reaction support changes force reconstruction. Reuse needs
+both the voltage bound and the sum of absolute face-current bounds divided by
+`max(abs(I),sum(abs(j)))` to meet their tolerances. Individual near-zero fluxes
+are not used as relative-error denominators. `changed_problem_bound(...,
+include_reaction_bounds=True)` exposes these local source bounds separately.
+The source inventory integrator is still responsible for accumulating fluxes,
+closed-system conservation and time errors: this API is not a cycle-jump or
+transient DFN replacement.
+
+The passive constant-potential null mode is enforced after checking the Schur
+row-sum defect is below `1e-10` relative to the matrix scale. Residuals use the
+physical incidence form so roundoff cannot create a ground leakage current.
+Newton convergence checks both local KCL and global reaction-current balance.
+`benchmarks/study_reaction_events.py` verifies 324 prescribed state queries
+against fresh full graphs, including reaction/current and topology changes.

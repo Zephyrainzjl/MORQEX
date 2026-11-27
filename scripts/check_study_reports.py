@@ -27,7 +27,8 @@ for name in ('network_study','topology_study','mesh_study','article_draft'):
         '--disable-background-networking','--virtual-time-budget=1800','--user-data-dir='+str(Path.cwd()/name),
         '--window-size=1440,1400','--screenshot='+str(png),'--dump-dom',page.as_uri()],
         capture_output=True,text=True,timeout=45)
-    passed=result.returncode==0 and '<h1>' in result.stdout and png.exists() and png.stat().st_size>20000
+    # Markdown's TOC extension adds an id attribute to headings.
+    passed=result.returncode==0 and '<h1' in result.stdout and png.exists() and png.stat().st_size>20000
     checks.append({'page':str(page),'passed':passed,'asset_count':len(parser.links),'screenshot':str(png)})
     if not passed:raise RuntimeError('Offline browser rendering failed: '+name)
 ws.path('reports/study_browser_checks.json').write_text(json.dumps(checks,indent=2));print(json.dumps(checks,indent=2))

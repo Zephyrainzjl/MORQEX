@@ -7,7 +7,11 @@ def embed_font(html,path,license_text):
     from fontTools import subset
     from fontTools.ttLib import TTFont
     font=TTFont(path);options=subset.Options();options.name_IDs=['*'];options.name_languages=['*'];options.name_legacy=True
-    selected=subset.Subsetter(options=options);selected.populate(text=''.join(sorted(set(html))));selected.subset(font)
+    selected=subset.Subsetter(options=options)
+    # The attribution is appended after subsetting; its CJK glyphs must also
+    # be present when the reader has no locally installed Chinese font.
+    selected.populate(text=''.join(sorted(set(html+'字体来源与 OFL 许可证'+license_text))))
+    selected.subset(font)
     for record in font['name'].names:
         if record.nameID in {1,4,6,16}:record.string='MORQEXReportCJK'.encode(record.getEncoding())
     if 'CFF ' in font:

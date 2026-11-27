@@ -19,8 +19,10 @@ let [c,w,h]=ctx('solid'),scale=1.1*Math.min(w,h)/Math.hypot(nx,ny,nz);let list=f
 [c,w,h]=ctx('slice');let s=.85*Math.min(w/nx,h/ny),ox=(w-nx*s)/2,oy=(h-ny*s)/2,z=+$('cut').value-1;window.bounds={s,ox,oy,z};for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){let i=idx(x,y,z);c.fillStyle=D.phase[i]===0?'#263d56':color(i);c.fillRect(ox+x*s,oy+(ny-1-y)*s,s+.1,s+.1)}document.body.dataset.rendered='true';document.body.dataset.frame=f.step;document.body.dataset.node=node;document.body.dataset.field=key;}
 
 function drawMacro(f,node){
- const [c,w,h]=ctx('stack'),m=f.macro||{},n=D.metadata.config.nodes;
+ const m=f.macro||{},n=D.metadata.config.nodes;
+ $('stack').hidden=!f.stretches||!m.layer_thicknesses_m;
  if(!f.stretches||!m.layer_thicknesses_m){$('macrostate').textContent=D.metadata.config.mechanical_constraint==='fixed_thickness_stack'?'初始无载参考状态；各层伸长比为 1。':'当前算例为每个微结构独立 KUBC 固定边界；未计算共同轴向力。';return;}
+ const [c,w,h]=ctx('stack');
  const order=[n+1,n,...Array.from({length:n},(_,i)=>i)],lengths=m.layer_thicknesses_m,total=lengths.reduce((a,b)=>a+b,0);
  $('macrostate').textContent=`固定总厚度 ${(total*1e6).toFixed(2)} μm · 共同轴向名义应力 ${(m.nominal_stress_Pa/1e6).toFixed(4)} MPa（负值为压缩）· 两端牵引分量 ${(m.end_traction_x_Pa[0]/1e6).toFixed(4)} / ${(m.end_traction_x_Pa[1]/1e6).toFixed(4)} MPa。横向宏观伸长比固定为 1。`;
  let x=24;const scale=(w-48)/total;c.font='12px MORQEXReportCJK,system-ui';

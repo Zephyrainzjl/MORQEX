@@ -65,6 +65,8 @@ class ReactionPortErrorBound:
     scope: str = ('Strong-monotonicity voltage bound for explicitly supplied reaction states/current and '
                   'unchanged positive edge/reaction support; floating-point evaluation, not interval-certified. '
                   'Not an accumulated DFN or fatigue error bound.')
+    reaction_current_absolute_bounds_A: np.ndarray | None = None
+    overpotential_absolute_bounds_V: np.ndarray | None = None
 
 
 class ReactiveDualNetwork:
@@ -105,7 +107,17 @@ class ReactiveDualNetwork:
         upper=sparse.triu(self.S,k=1).tocoo()
         self.passive_i,self.passive_j=upper.row,upper.col
         self.passive_g=-upper.data
-        self.passive_row_sum=np.asarray(self.S.sum(axis=1)).ravel()
+        # A physical passive network has an exact constant-potential null mode.
+        # Diagonal summation / Schur cancellation may leave a tiny FP64 row
+        # sum; multiplying it by a common potential invents reservoir leakage
+        # that dominates low-rate weak BV currents. Check the correction, then
+        # evaluate the physical incidence form rather than this roundoff leak.
+        row_sum=np.asarray(self.S.sum(axis=1)).ravel()
+        self.passive_nullspace_correction_relative=float(np.max(abs(row_sum),initial=0))/max(float(np.max(abs(self.S.data),initial=0)),1e-300)
+        if self.passive_nullspace_correction_relative>1e-10:
+            raise ArithmeticError('Passive Schur null-space defect exceeds roundoff gate')
+        self.S=self.S-sparse.diags(row_sum)
+        self.passive_row_sum=np.zeros(self.S.shape[0])
         self.amplitude=2*faces.area_m2*faces.exchange_A_m2
         self.offset=float(np.average(faces.equilibrium_V,weights=self.amplitude)) if self.amplitude.sum()>0 else float(faces.equilibrium_V.mean())
         # Gauges follow the union of *physical* passive edges and active BV
@@ -168,7 +180,8 @@ class ReactiveDualNetwork:
         # Evaluate the identical quadratic form through potential differences.
         # Direct v.T*S*v subtracts large near-equal common-mode terms when
         # ionic/electronic conductance greatly exceeds reaction conductance.
-        # Retain the numerical row-sum term, rather than silently modifying S.
+        # The checked constant-mode correction in construction prevents a
+        # roundoff diagonal defect from acting as fictitious ground leakage.
         dv=v[self.passive_i]-v[self.passive_j]
         current_edges=self.passive_g*dv
         if v.dtype==np.dtype(np.longdouble):
@@ -210,8 +223,12 @@ class ReactiveDualNetwork:
             eta,j,dj,residual,objective=state
             scale=max(abs(current),float(np.sum(abs(j))),1e-30)
             defect=float(np.max(abs(residual[self.free]),initial=0))/scale
-            if diagnostics is not None:diagnostics.append({'iteration':iteration,'relative_residual':defect,'objective':float(objective)})
-            if defect<=tolerance:break
+            # A small residual at each of many vertices does not guarantee a
+            # small global source imbalance. Require both before accepting.
+            global_charge=float(abs(np.sum(j)+current))/scale
+            if diagnostics is not None:diagnostics.append({'iteration':iteration,'relative_residual':defect,
+                'relative_global_charge':global_charge,'objective':float(objective)})
+            if max(defect,global_charge)<=tolerance:break
             if iteration==max_iterations:raise RuntimeError(f'Reactive dual-network Newton failed charge balance: residual={defect:.6e}, tolerance={tolerance:.6e}, iterations={iteration}')
             H=(self.S+self.B.T@sparse.diags(np.asarray(dj,float))@self.B).tocsr()[self.free][:,self.free]
             diag=H.diagonal()
@@ -234,7 +251,8 @@ class ReactiveDualNetwork:
                         and np.linalg.norm(new_residual[self.free])<(1-1e-4*step)*np.linalg.norm(residual[self.free]))
                     if descent or rounding:v=trial;accepted=True;break
                 step*=.5
-            if not accepted:raise RuntimeError('Reactive graph line search failed; no state accepted')
+            if not accepted:raise RuntimeError(f'Reactive graph line search failed; no state accepted: '
+                f'local={defect:.6e}, global={global_charge:.6e}')
             if diagnostics is not None:diagnostics[-1].update(step=step,slope=slope,roundoff=roundoff)
         e=self.eop.recover(v[:self.ne]);i=self.iop.recover(v[self.ne:])
         voltage=float(v[self.collector]+self.offset)
@@ -243,7 +261,8 @@ class ReactiveDualNetwork:
         power_scale=max(e.dissipation_W+i.dissipation_W+abs(reaction),abs(current*voltage),float(np.sum(abs(j*self.faces.equilibrium_V))),1e-30)
         charge=float(max(defect,abs(j.sum()+current)/max(abs(current),float(np.sum(abs(j))),1e-30)))
         if charge>10*tolerance or reaction < -1e-12*power_scale or abs(power)>max(10*tolerance,1e-11)*power_scale:
-            raise RuntimeError('Reactive graph charge/power identity failed')
+            raise RuntimeError(f'Reactive graph charge/power identity failed: charge={charge:.6e}, '
+                f'relative_power={abs(power)/power_scale:.6e}, reaction_W={reaction:.6e}')
         return WorkingNetworkState(_owned(e.potential_V+self.offset),i.potential_V,_owned(j),_owned(eta),voltage,current,
             e.dissipation_W,i.dissipation_W,reaction,charge,float(power),iteration,
             len(self.eop.terminals),len(self.iop.terminals),self.voltage_defined,str(v.dtype))
@@ -252,7 +271,8 @@ class ReactiveDualNetwork:
         """Backward-compatible fixed-kinetics/current conductance-only bound."""
         return self.changed_problem_bound(state,electronic,ionic)
 
-    def changed_problem_bound(self,state,electronic,ionic,*,faces=None,temperature_K=None,discharge_current_A=None):
+    def changed_problem_bound(self,state,electronic,ionic,*,faces=None,temperature_K=None,discharge_current_A=None,
+                              include_reaction_bounds=False):
         """Bound a cached nonlinear solution under passive conductance changes.
 
         No updated graph factorization or Schur matrix is constructed. With
@@ -272,6 +292,8 @@ class ReactiveDualNetwork:
         Support changes, unresolved gauges and uncertain voltage are rejected.
         """
         from scipy.linalg import cho_factor,cho_solve
+        if type(include_reaction_bounds) is not bool:
+            raise ValueError('Boolean reaction-bound control required')
         if not isinstance(state,WorkingNetworkState) or not state.voltage_defined:
             raise ValueError('A solved, physically defined working voltage required')
         target_faces=self.faces if faces is None else faces
@@ -339,7 +361,33 @@ class ReactiveDualNetwork:
         goal=np.zeros(len(self.free));where=np.flatnonzero(self.free==self.collector)
         if len(where)!=1:raise ValueError('Collector voltage must be a free physical unknown')
         goal[where[0]]=1.
-        return ReactionPortErrorBound(float(dual(goal)*bound),float(bound),eps,float(residual_norm))
+        voltage_bound=float(dual(goal)*bound)
+        if not include_reaction_bounds:
+            return ReactionPortErrorBound(voltage_bound,float(bound),eps,float(residual_norm))
+        # Each reaction row is a dual goal on the SAME gauge space. Bound its
+        # potential drop, then use monotone BV to enclose the physical current.
+        # This controls local lithium source errors, not only terminal voltage.
+        delta=np.empty(len(amplitude))
+        restricted=self.B[:,self.free]
+        for start in range(0,len(amplitude),32):
+            stop=min(start+32,len(amplitude))
+            goals=restricted[start:stop].toarray()*scale[None,:]
+            solved=cho_solve(factor,goals.T).T
+            squares=np.einsum('ij,ij->i',goals,solved)
+            if np.any(squares < -1e-13*np.sum(goals**2,axis=1)):
+                raise ArithmeticError('Negative reaction dual norm')
+            delta[start:stop]=bound*np.sqrt(np.maximum(squares,0.))
+        # Nonfinite upper bounds mean rebuild, not clipped or accepted fluxes.
+        with np.errstate(over='ignore',invalid='ignore'):
+            lower=amplitude*np.sinh(z-k*delta)
+            upper=amplitude*np.sinh(z+k*delta)
+        inactive=amplitude==0
+        lower[inactive]=0.;upper[inactive]=0.
+        current_bounds=np.maximum(abs(lower-state.reaction_current_A),abs(upper-state.reaction_current_A))
+        current_bounds=np.where(np.isfinite(current_bounds),current_bounds,np.inf)
+        return ReactionPortErrorBound(voltage_bound,float(bound),eps,float(residual_norm),
+            reaction_current_absolute_bounds_A=_owned(current_bounds),
+            overpotential_absolute_bounds_V=_owned(delta))
 
 
 def physical_voxel_network(layout):

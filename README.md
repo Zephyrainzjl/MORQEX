@@ -14,9 +14,15 @@
 不把早期容量变化、单位加载电势或高相场值当成已验证的疲劳失活/工作电势/开放裂缝。
 
 逐循环参考现已实际完成 20 次循环、970 个接受步；容量基本不变，不能解释为已验证的疲劳容量衰减。
-新的固定总厚度模型已完成一次对称 8C 循环，联立各微结构节点、隔膜与锂层的轴向力平衡。
+新的固定总厚度模型已分别完成 0.1C 与 8C 配置循环，联立各微结构节点、隔膜与锂层的轴向力平衡。
 其适用范围是等截面、横向固定的弹性叠层。空间细化仍暴露未通过的门槛：源码内新增
 MFEM 保形局部加密与 P2 位移/P1 损伤参考，保持原误差阈值并逐项验证，未直接替换循环默认模型。
+
+反应网络事件控制现已同时约束端电压和各反应面电流误差；接触/反应连接关系改变时
+重建，其他状态尝试复用被动分解并重新求解 BV。三种合成结构、NMC811/NMC532/LFP、
+0.1C/2C/8C 的 324 次给定状态查询通过独立完整图比较。含初次建图与重建的本序列
+总成本为 1.703 s，对照为 5.037 s；这不是完整 DFN 循环或寿命加速。428 项软件
+回归通过，科学验收缺口仍单独保留。
 
 入口及 TOML/API 见 [API.md](API.md)。证据总览输出到
 `morph_workspace/reports/network_study/index.html`，保留失败、未检查项和实际场数据。
@@ -52,7 +58,7 @@ TOP-DAMAGE 新增较密大颗粒候选计算：32³、8 颗粒、32 晶粒、孔
 
 ## 使用
 
-TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`research/top-damage`）。当前完成首轮审计、13 项文献初筛、物理/数学方案和接触网络、保库存分区转移、算子失效检测接口；尚未完成疲劳裂纹与长期循环闭环。`python -m morqex.top_damage status` 返回真实资格范围；`morqex top-damage` 使用同一入口。研究记录与全部 11 份阶段文档位于外部 `morph_workspace/research_archive/top_damage`，可读报告为 `reports/MORQEX_TOP_DAMAGE_phase_A.html`。该子框架不使用神经网络，旧求解器保持不变。
+TOP-DAMAGE 在 `src/morqex/top_damage` 内作为 MORQEX 子框架开发（`research/top-damage`）。当前数值闭环、独立对照和缺口见本文顶部；早期审计报告 `reports/MORQEX_TOP_DAMAGE_phase_A.html` 作为历史记录保留，不代表最新进展。`python -m morqex.top_damage status` 返回资格范围；`morqex top-damage` 使用同一入口。持续研究记录位于外部 `morph_workspace/research_archive/top_damage`。该子框架不使用神经网络，旧求解器保持不变。
 
 新增 MFEM 4.10 可编译库源码（`src/morqex/vendor/mfem`，BSD-3），以 TOML 驱动 CMake/Ninja 编译，通过 MORQEX 的 C++17/ctypes API 调用。`top-damage build` 支持单核限时断点编译；`top-damage reference` 运行三维力学—不可逆 AT2—疲劳历史参考，逐接受步生成 HDF5、ParaView VTU 与可切换步/切片的 HTML。具体命令见 [API](API.md)。这条新增路线目前是机械试件资格验证，尚不等于多晶正极—拓扑演化—动态 DFN 的长期闭环；不输出假定的容量衰减曲线。
 
