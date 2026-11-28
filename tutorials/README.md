@@ -43,3 +43,11 @@ is reported by `morqex.modeling.capabilities()`. No neural model is required.
 TIFF labels, five256³ morphology families, separate electrode/electrolyte/CBD
 regions, shared-interface partitions, COMSOL Selection0 objects, VTU/Gmsh/Medit/
 Abaqus exchange and physical-unit checks. 中英文在同一文件内；含完整代码与验证范围。
+
+## Fixed-grid preparation / 原尺寸几何准备
+
+[08 — Smoothing, resolution reduction, size advice and implicit FEM /
+平滑、降低分辨率、尺寸建议与隐式有限元](08_fixed_grid_smoothing_and_implicit_meshes.md)
+separates all three operations, documents optional CGAL compilation and contains
+full Python/TOML/CLI/notebook/progress/export examples.
+三种控制分开，含完整中英说明、可选源码编译与可运行示例。

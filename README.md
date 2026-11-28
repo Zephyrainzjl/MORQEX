@@ -28,6 +28,15 @@ requirements.
 
 ## Adaptive geometry workflow / 自适应几何流程
 
+[Fixed-grid smoothing, explicit resolution reduction and implicit adaptive FEM /
+原尺寸平滑、独立降低分辨率与隐式自适应网格](tutorials/08_fixed_grid_smoothing_and_implicit_meshes.md)
+introduces separate preparation and mesh-density controls, feature-size advice,
+phase-volume/IoU/contact checks, live progress/ETA and checkpointed TOML runs.
+平滑保持原数组大小、间距和物理范围；降低分辨率另用 `lower_resolution`。
+The optional source-integrated CGAL6.0.1 Mesh_3 backend is compiled explicitly;
+its per-component licenses and measured validation limits remain visible.
+
+
 `morqex.modeling` imports original TIFF segmentation, generates irregular
 granular/rod/platelet/agglomerate/bicontinuous electrodes, and stacks independent
 electrode/electrolyte/separator/collector regions. COMSOL export accepts
@@ -52,18 +61,24 @@ these checks do not certify arbitrary topology equivalence or PDE accuracy.
 See the [same bilingual tutorial](tutorials/07_complex_ct_layers_and_exchange.md).
 
 ```text
-Shapes / statistical recipes / user region arrays
-                   ↓
-          Complete VoxelModel (ZYX, SI)
-                   ↓
-  Multiresolution geometric residual → weighted ACVD
-                   ↓
-    Checked common or nested material interfaces
-                   ↓
-      TetGen nonuniform unstructured volume mesh
-                   ↓
-       HDF5/XDMF · COMSOL · actual mesh HTML
+Shapes / statistical recipes / TIFF / user ZYX region arrays
+                            ↓
+                Complete VoxelModel (ZYX, SI)
+   ├─ Same-grid smoothing → PreparedGeometry → implicit CGAL FEM
+   ├─ Geometric residual → weighted ACVD → adaptive TetGen FEM
+   ├─ Exact voxel PLC / conforming partitions → TetGen FEM
+   └─ Explicit lower_resolution → fewer voxels, same physical box
+                            ↓
+          HDF5/XDMF · software exchange · actual mesh HTML
 ```
+
+The separate `implicit_adaptive` route starts from a complete `VoxelModel`,
+optionally regularizes interfaces **on the same grid**, and builds a continuous
+multiphase CGAL volume mesh. Mesh density is independent of the saved prepared
+geometry. `lower_resolution` explicitly changes sampling and remains a separate
+choice. All quality, phase-volume and topology-change reports are visible.
+另一路线先在原尺寸体素上平滑，再生成连续多相体网格；同一准备几何可以调网格粗细。
+降低分辨率独立控制，默认不进行。几何驱动自适应不等于物理解误差认证。
 
 The `gemsim_adaptive` API reuses the original source-integrated weighted ACVD
 kernel and reconstructs a nonuniform surface before calling TetGen. The old
@@ -229,6 +244,20 @@ open its `index.html` for the independent reference, full NMC TIFF, five dense
 256³ native structures, layered cell, exact mesh sections and software exports.
 The earlier ten-family galleries remain in `atlas256/` and
 `adaptive_gallery256_gemsim/`; they exercise different mesh workflows.
+
+The fixed-grid conditioning and continuous-domain FEM results are in
+`../morph_workspace/microelectrode_gallery/implicit_geometry/index.html`.
+Open `conditioning_study/rods/index.html` under that workspace to compare four
+smoothing strengths on unchanged256³ arrays against the separate128³
+resolution-reduction operation. Complete mesh checkpoints and measured
+quality/phase-volume reports accompany the HTML. The synthetic256³ recipe is
+[geometry_implicit.toml](configs/geometry_implicit.toml); the supplied full TIFF
+recipe is [geometry_nmc_implicit.toml](configs/geometry_nmc_implicit.toml).
+Both are documented in the [bilingual preparation and FEM tutorial](tutorials/08_fixed_grid_smoothing_and_implicit_meshes.md).
+
+原尺寸平滑与自适应有限元的新图库位于上述 `implicit_geometry/index.html`。
+`conditioning_study/rods/index.html` 可对比四档同尺寸256³平滑与独立128³降分辨率。
+默认采用适中精度；原始数组、完整网格和实际几何/单元质量变化分别保存。
 
 Third-party source provenance, copyright and licenses are retained in
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) and the corresponding source

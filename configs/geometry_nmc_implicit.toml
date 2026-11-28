@@ -1,0 +1,36 @@
+# User-provided complete TIFF / 用户提供的完整TIFF。
+# Its phase roles and scan spacing are unknown.0.5µm is a modeling choice.
+# 灰度相含义与扫描尺寸未知；0.5µm仅是明确的建模选择。
+[geometry]
+method = "tiff"
+path = "../../NMC.tif"
+spacing = [5e-7, 5e-7, 5e-7]
+axes_to_zyx = [0, 1, 2]
+
+[preparation]
+method = "gaussian"
+iterations = 2
+minimum_feature_voxels = 2.0
+minimum_component_voxels = 8
+final_component_cleanup = true
+sigma_voxels = 0.7
+continuous_volume_calibration = true
+
+[meshing]
+method = "implicit_adaptive"
+[meshing.options]
+precision = "balanced"
+optimization = "joint_exude"
+native_radius_edge_ratio = 1.5
+optimization_target_degrees = 3.25
+optimization_seconds = 90.0
+maximum_local_repair_cycles = 2
+maximum_quality_retries = 0
+facet_distance_m = 2e-7
+maximum_nodes = 2100000
+maximum_cells = 12500000
+timeout_seconds = 540.0
+
+[exports]
+formats = ["comsol", "vtu", "gmsh", "medit", "abaqus"]
+length_unit = "um"

@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--gpu',action='store_true',help='Explicit, monitored low-priority GPU profile; CPU default stays disabled')
     parser.add_argument('--render',action='store_true',help='Headless software-render qualification: allow browser virtual address reservations, keep physical RSS/CPU caps and GPU disabled')
     parser.add_argument('--reference-memory',action='store_true',help='Explicit 6 GiB RSS / 12 GiB address-space reference mesh profile; keep one CPU and 8 GiB host reserve')
+    parser.add_argument('--reference-rss-mib',type=int,help='Explicit reference profile RSS budget in3072..7680MiB; requires --reference-memory; CPU and8GiB host reserve stay unchanged')
     parser.add_argument('--mesh-output',action='store_true',help='Permit an external full-volume mesh file up to1GiB; keep default CPU/RSS/host reserve')
     parser.add_argument('--large-mesh-output',action='store_true',help='Permit a single external whole-CT mesh file up to4GiB; RAM, CPU and host reserve remain unchanged')
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -103,10 +104,13 @@ def main():
     if not args.label or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in args.label):
         parser.error("Label may contain only letters, digits, underscore and hyphen")
     settings=tomllib.loads((ROOT / 'configs/local.toml').read_text());cfg=settings['resources'];gpu=settings['gpu']
+    if args.reference_rss_mib is not None and (not args.reference_memory or not 3072<=args.reference_rss_mib<=7680):
+        parser.error('--reference-rss-mib requires --reference-memory and a budget in3072..7680MiB')
     if args.reference_memory:
         if args.render or args.gpu or args.dependency_install:
             parser.error('Reference-memory profile is CPU-only and separate from other profiles')
-        cfg.update(resident_memory_mib=6144,address_space_mib=12288,file_size_mib=256)
+        rss=6144 if args.reference_rss_mib is None else args.reference_rss_mib
+        cfg.update(resident_memory_mib=rss,address_space_mib=2*rss,file_size_mib=256)
     if args.dependency_install:
         if len(command) < 4 or command[1:4] != ["-m", "pip", "install"]:
             parser.error("Dependency disk profile is restricted to python -m pip install")

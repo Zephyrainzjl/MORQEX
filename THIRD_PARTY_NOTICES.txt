@@ -136,3 +136,21 @@ the unified exporter). Its previous hash was verified against dd72515 and the
 current hash against the unchanged baseline source. Voxelization algorithms
 were not changed. The integrity check also recognizes all seven previously
 recorded PyBaMM adaptations; their per-file hashes remain independently checked.
+
+CGAL 6.0.1 Mesh_3 (optional fixed-grid implicit-domain meshing backend)
+Upstream: https://github.com/CGAL/cgal/tree/v6.0.1/Mesh_3
+Source: src/morqex/vendor/cgal; unmodified Mesh_3 implementation and transitive
+CGAL header compilation closure, not the full collection of CGAL packages.
+Archive and per-file SHA256: vendor/cgal/provenance.json. Original AUTHORS,
+GPL-3.0, LGPL-3.0, BSL-1.0 and other included notices remain in that directory.
+Mesh_3 headers are GPL-3.0-or-later OR commercial; the MORQEX native adapter is
+GPL-3.0-or-later. This is an optional, explicit local build. It does not relicense
+the other third-party integrations. Redistribution of a combined work must
+satisfy the applicable GPL or a valid commercial CGAL license; private local
+integration is not a statement that all existing components can be publicly
+redistributed together. Boost/Eigen3/GMP/MPFR development headers and runtimes
+are external build dependencies and retain their own licenses. No upstream
+examples, binary image data or manuals were copied into the source tree.
+The smoothing, volume balancing, sizing and joint quality criterion adapter
+are separate MORQEX implementation; Delaunay refinement and sliver perturbation
+remain CGAL methods, not claimed as original MORQEX meshing algorithms.

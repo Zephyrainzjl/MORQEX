@@ -15,7 +15,7 @@ if workspace == root or root in workspace.parents:
 # build/lib can silently reuse old files, so isolate by actual package content.
 signature=hashlib.sha256()
 signature.update(repr((sysconfig.get_platform(), sysconfig.get_config_var('SOABI'),
-    os.environ.get('MORQEX_BUILD_GEOMETRY'), os.environ.get('MORQEX_BUILD_TETGEN'),os.environ.get('MORQEX_BUILD_ACVD'),os.environ.get('MORQEX_BUILD_MMG'))).encode())
+    os.environ.get('MORQEX_BUILD_GEOMETRY'), os.environ.get('MORQEX_BUILD_TETGEN'),os.environ.get('MORQEX_BUILD_ACVD'),os.environ.get('MORQEX_BUILD_MMG'),os.environ.get('MORQEX_BUILD_CGAL'))).encode())
 if any(os.environ.get(k)=='1' for k in ('MORQEX_BUILD_ACVD','MORQEX_BUILD_GEOMETRY')):
     for name in ('numpy','Cython'):
         signature.update((name+':'+importlib.metadata.version(name)).encode())
@@ -26,6 +26,8 @@ build = workspace / "build/packages" / signature.hexdigest()[:24]
 metadata = build / "metadata"
 metadata.mkdir(parents=True, exist_ok=True)
 extensions = []
+if os.environ.get('MORQEX_BUILD_CGAL')=='1':
+    extensions.append(Extension('morqex._cgal_native',['src/morqex/modeling/native_cgal/bridge.cpp'],language='c++'))
 if os.environ.get('MORQEX_BUILD_MMG')=='1':
     extensions.append(Extension('morqex._mmg_native',['src/morqex/modeling/native_mmg/bridge.cpp'],language='c++'))
 if os.environ.get('MORQEX_BUILD_ACVD')=='1':
@@ -65,6 +67,14 @@ if os.environ.get("MORQEX_BUILD_GEOMETRY") == "1":
 
 class ExternalBuildExt(build_ext):
     def build_extension(self,extension):
+        if extension.name=='morqex._cgal_native':
+            import importlib.util,shutil
+            spec=importlib.util.spec_from_file_location('morqex_cgal_build',root/'src/morqex/modeling/cgal_backend.py')
+            backend=importlib.util.module_from_spec(spec);spec.loader.exec_module(backend)
+            library=backend.build_cgal(workspace,python_extension=True)
+            destination=Path(self.get_ext_fullpath(extension.name));destination.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(library,destination)
+            return
         if extension.name=='morqex._mmg_native':
             import importlib.util,shutil
             spec=importlib.util.spec_from_file_location('morqex_mmg_build',root/'src/morqex/modeling/mmg_backend.py')

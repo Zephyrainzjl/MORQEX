@@ -50,6 +50,12 @@ def main():
     assert (ROOT/'src/pybamm/LICENSE.txt').is_file()
     expected = {r['path'] for r in pybamm['files']} | {'LICENSE.txt'}
     assert {str(p.relative_to(ROOT/'src/pybamm')) for p in (ROOT/'src/pybamm').rglob('*') if p.is_file()} == expected
+    cgal_root=ROOT/'src/morqex/vendor/cgal'
+    cgal=json.loads((cgal_root/'provenance.json').read_text())
+    assert cgal['version']=='6.0.1'
+    for row in cgal['files']:
+        assert hashlib.sha256((cgal_root/row['path']).read_bytes()).hexdigest()==row['sha256'],row['path']
+    assert {str(p.relative_to(cgal_root)) for p in cgal_root.rglob('*') if p.is_file()}=={r['path'] for r in cgal['files']}|{'provenance.json'}
     for path in (ROOT / "src").rglob("*.py"):
         tree = ast.parse(path.read_text(), filename=str(path))
         for node in ast.walk(tree):

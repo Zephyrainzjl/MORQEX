@@ -430,3 +430,14 @@ conductivity, porosity inside CBD or electrochemical accessibility.
 See [GEMsim adaptive geometry](06_gemsim_adaptive_meshing.md) for all ten
 families, custom phase chains, shared junctions, precision and mesh visualization.
 十种形态、自定义材料顺序、共享交线及网格精度见该完整教程。
+
+## Same-size smoothing versus lower resolution / 原尺寸平滑与降低分辨率
+
+`smooth_voxels` regularizes geometry on the original complete array;
+`lower_resolution` explicitly reduces voxel counts and increases spacing while
+keeping the physical observation box. These are separate operations. The
+feature target1–4 voxels is an operation scale, not a guaranteed hard throat
+width. [Full bilingual API/code tutorial / 中英完整接口与代码](08_fixed_grid_smoothing_and_implicit_meshes.md).
+
+平滑不缩小数组、不缩小物理范围；降低分辨率另行控制。两种操作都保留原输入，
+报告体积/接触/连通性变化，禁止将丢失细节自动解释为“改进精度”。

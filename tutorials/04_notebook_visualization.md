@@ -331,3 +331,12 @@ select the desired material after choosing a mode.
 该范围只控制三维界面显示；体网格切面仍来自完整计算域。均匀材料内部可能没有物理界面，
 此时应看真实体单元切面。切面默认显示全部相，三维默认显示前景相；切换视图后可重新选择
 相过滤器，过滤器不影响计算数据。
+
+## Preparation progress and before/after views / 准备进度与前后对照
+
+[08](08_fixed_grid_smoothing_and_implicit_meshes.md) includes runnable
+`NotebookProgress` and `HTMLProgress` callbacks, original/prepared voxel views,
+actual Tet4 slices and a checkpointed comparison page. Unknown native work uses
+an indeterminate progress bar; ETA is explicitly approximate.
+同页含可运行的进度回调、原始/平滑体素对照、真实网格切片与可恢复页面，
+原生内部工作量未知时不伪造百分比。

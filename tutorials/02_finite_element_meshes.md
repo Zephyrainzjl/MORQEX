@@ -422,3 +422,12 @@ import meshio
 Periodic pairing, high-order elevation, mechanical cracks/cohesive nodes and
 mesh adaptivity are not implied by a successful volume mesh generation.
 周期配对、高阶提升、裂纹黏聚节点与自适应不因体网格生成成功而自动具备。
+
+## Fixed-grid smoothing and independent mesh density / 原尺寸平滑与独立网格密度
+
+[The full new tutorial / 完整新教程](08_fixed_grid_smoothing_and_implicit_meshes.md)
+explains same-size smoothing, separate `lower_resolution`, continuous multiphase
+CGAL meshes, feature-size advice and all progress/TOML/notebook/export controls.
+平滑保留原数组及物理范围；降低分辨率不属于平滑，必须明确调用。
+Existing TetGen, ACVD, exact voxel and MMG entry points remain available.
+原有各种网格与重网格 API 保留。

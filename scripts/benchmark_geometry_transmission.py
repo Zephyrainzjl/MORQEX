@@ -40,13 +40,20 @@ def reference_energy():
     return .5*total
 
 
-def solve(size,folder):
+def solve(size,folder,*,method='voxel_aligned',workspace=None):
     from morqex.modeling import from_regions,partitioned_tetgen
     start=time.perf_counter();z,y,x=np.indices((size,)*3,dtype=float);r2=sum(((q+.5)/size-.5)**2 for q in (z,y,x))
     phase=np.where(r2<RADIUS**2,7,0).astype(np.uint8)
     model=from_regions(phase,spacing=(1/size,)*3,region_names={0:'matrix',7:'sphere'});folder.mkdir(parents=True)
     model.save(folder/'geometry.h5')
-    artifact=partitioned_tetgen(model,folder/'mesh',surface_method='voxel_aligned',slab_depth=max(2,size//2))
+    mesh_report=None
+    if method=='implicit_adaptive':
+        from morqex.modeling import implicit_mesh,ImplicitMeshOptions,SmoothingOptions,ProgressBar
+        generated=implicit_mesh(model,workspace=workspace,smoothing=SmoothingOptions(method='none'),
+            options=ImplicitMeshOptions(surface_size_m=1.5/size,bulk_size_m=4/size,outer_surface_size_m=4/size,facet_distance_m=.2/size),
+            progress=ProgressBar(json_lines=True))
+        artifact=generated.save_hdf5(folder/'mesh.h5');mesh_report=generated.report
+    else:artifact=partitioned_tetgen(model,folder/'mesh',surface_method='voxel_aligned',slab_depth=max(2,size//2))
     with h5py.File(artifact.hdf5) as h:
         p=h['mesh/points_m'][:];t=h['mesh/tetrahedra'][:];region=h['mesh/phase'][:]
     basis=p[t[:,1:]]-p[t[:,:1]];volume=np.linalg.det(basis)/6
@@ -74,7 +81,8 @@ def solve(size,folder):
     energy=float(.5*u@residual);reference=reference_energy()
     import meshio
     meshio.write(folder/'solution.vtu',meshio.Mesh(p,[('tetra',t)],point_data={'potential':u,'analytic_potential':exact(p)[0]},cell_data={'region':[region]}))
-    report={'size':size,'source_voxels':int(size**3),'nodes':len(p),'tetrahedra':len(t),
+    report={'size':size,'source_voxels':int(size**3),'nodes':len(p),'tetrahedra':len(t),'meshing_method':method,
+        'mesh_report':mesh_report,
         'relative_l2_error_quadrature':float(np.sqrt(l2/norm)),'relative_gradient_error_quadrature':float(np.sqrt(h1/gnorm)),
         'dirichlet_functional':energy,'analytic_boundary_functional':reference,'relative_functional_error':abs(energy/reference-1),
         'linear_solver':'Jacobi-preconditioned CG, rtol1e-11','linear_iterations':iterations[0],
@@ -88,18 +96,18 @@ def solve(size,folder):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--workspace',type=Path,default=os.environ.get('MORQEX_WORKSPACE'))
-    p.add_argument('--sizes',nargs='+',type=int,default=[16,32,64]);a=p.parse_args()
+    p.add_argument('--sizes',nargs='+',type=int,default=[16,32,64]);p.add_argument('--method',choices=['voxel_aligned','implicit_adaptive'],default='voxel_aligned');a=p.parse_args()
     if a.workspace is None or any(n<8 or n>96 for n in a.sizes) or len(a.sizes)<3 or a.sizes!=sorted(set(a.sizes)):
         p.error('External workspace and at least three increasing distinct sizes in8..96 required')
     from morqex.modeling.voxel import external_path
-    folder=external_path(a.workspace)/'geometry_transmission'
+    folder=external_path(a.workspace)/('geometry_transmission_implicit' if a.method=='implicit_adaptive' else 'geometry_transmission')
     if folder.exists():raise FileExistsError('Archive the previous benchmark explicitly before rerunning')
     folder.mkdir(parents=True)
     # Analytic transmission continuity and normal flux continuity, independent
     # of the FE mesh, on the exact spherical interface.
     beta=BETA;gamma=GAMMA
     if abs(1-beta-gamma)>1e-14 or abs(K_OUT*(1+2*beta)-K_IN*gamma)>1e-14:raise ArithmeticError('Analytic transmission identity failed')
-    results=[solve(n,folder/f'n{n}') for n in a.sizes]
+    results=[solve(n,folder/f'n{n}',method=a.method,workspace=a.workspace) for n in a.sizes]
     passed=results[-1]['relative_l2_error_quadrature']<results[0]['relative_l2_error_quadrature'] and results[-1]['relative_functional_error']<results[0]['relative_functional_error']
     record={'passed_error_reduction':passed,'results':results,'radius_m':RADIUS,'domain_length_m':1.0,'conductivities':{'matrix':K_OUT,'sphere':K_IN},
         'analytic_solution':'outside: -z + beta R^3 z/r^3; inside: -gamma z; centered coordinates',
@@ -114,7 +122,8 @@ def main():
     fig.savefig(folder/'convergence.png',dpi=180);fig.savefig(folder/'convergence.svg');plt.close(fig)
     picture=base64.b64encode((folder/'convergence.png').read_bytes()).decode()
     doc='<html><meta charset="utf-8"><title>MORQEX scalar transmission verification</title><body style="font:16px system-ui;max-width:1200px;margin:30px auto"><h1>Spherical conduction transmission / 球形夹杂导电验证</h1><p>Two conductivities, analytic boundary potential, exact potential and normal-flux continuity. 解析边界、电势连续和法向通量连续，独立检查有限元解。此处是数学验证，并非NMC电池放电。</p><p>Errors include voxel geometry and P1 approximation. Four-point quadrature estimates are not rigorous bounds; this does not qualify every full electrode mesh. 体素几何误差与P1误差同时存在，不是全电极PDE认证。</p><img style="width:100%" src="data:image/png;base64,'+picture+'"><p><a href="validation.json">Complete numerical data / 完整数值数据</a></p><pre>'+json.dumps(record,indent=2)+'</pre></body></html>'
-    (folder/'index.html').write_text(doc)
+    from morqex.visualization.report_font import embed_workspace_font
+    (folder/'index.html').write_text(embed_workspace_font(doc,a.workspace))
     if not passed:raise ArithmeticError('Refinement did not reduce the selected errors; inspect source geometry and discretization separately')
 
 

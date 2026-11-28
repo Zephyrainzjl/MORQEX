@@ -28,7 +28,7 @@ See [the complete bilingual workflow](07_complex_ct_layers_and_exchange.md).
 | `RemeshOptions(...)`, `remesh(existing_mesh,options,workspace)` | Source-integrated MMG5.8.0; measured size/geometry/topology gates / 已有网格疏密优化 |
 | `remesh_artifact(artifact,output,options,workspace)` | Large HDF5 input loaded only inside an isolated worker; separate input/output cell budgets / 大网格文件隔离重网格，避免父子进程重复载入 |
 | `build_mmg(workspace)` | Explicit one-job external CMake build; optional pip flag `MORQEX_BUILD_MMG=1` / 外部显式编译 |
-| `build_native_from_toml(path,workspace=None)` | Explicit `[native_build]` list of TetGen/ACVD/MMG; serial external builds / TOML统一编译 |
+| `build_native_from_toml(path,workspace=None)` | Explicit `[native_build]` list of TetGen/ACVD/MMG/CGAL; optional `cgal_dependency_prefix`; serial external builds / TOML统一编译 |
 | `remesh_from_toml(mesh,path,workspace=None)` | Apply explicit `[remeshing]` to existing Tet4 / TOML体网格重构 |
 
 `partitioned_tetgen` supports `surface_method='voxel_aligned'` (exact integer
@@ -3148,3 +3148,108 @@ physical incidence form so roundoff cannot create a ground leakage current.
 Newton convergence checks both local KCL and global reaction-current balance.
 `benchmarks/study_reaction_events.py` verifies 324 prescribed state queries
 against fresh full graphs, including reaction/current and topology changes.
+
+
+## Fixed-grid preparation and implicit FEM / 原尺寸准备与隐式有限元
+
+Full bilingual examples: [08](08_fixed_grid_smoothing_and_implicit_meshes.md).
+完整中英示例、全部选项和限制见该教程。
+
+|Public API / 公开接口|Contract / 约定|
+|---|---|
+|`generate_voxels(method, progress=None, **parameters)`|Timed generator registry / 计时的统一生成器；不修改原生成入口|
+|`SmoothingOptions(...)`, `.precision(name, **overrides)`|1–4 voxel operation scale; same grid / 原尺寸、操作尺度与保真门槛|
+|`smooth_voxels(model, options=None, progress=None)`|Returns `PreparedGeometry`; original unchanged / 返回准备结果，原数组不变|
+|`PreparedGeometry.model/scores/field_labels/report`|Complete ZYX fields and measured provenance / 完整场与来源报告|
+|`PreparedGeometry.validate()/save(path)/load(path)`|Hash-checked complete HDF5 / hash检查完整断点|
+|`lower_resolution(model, shape=None, factor=None, method='area', allow_phase_loss=False, progress=None)`|Fewer voxels, same physical box, `(model, report)` / 体素减少、范围不变，返回结构与报告|
+|`analyze_features(model, progress=None)`|Connectivity, contacts and thickness proxies / 连通性、面接触与厚度代理量|
+|`recommend_mesh_sizes(geometry, progress=None)`|Broad advisory sizes, not certified error bounds / 推荐尺寸，非严格误差界|
+|`ImplicitMeshOptions(...)`|Independent SI sizes, density, custom field, quality and budgets / 独立尺寸、精度、自定义场、质量与预算|
+|`implicit_mesh(geometry, options=None, smoothing=None, workspace=None, progress=None, regions=None)`|CGAL continuous full-domain Tet4; prepared input unchanged / 连续全域四面体，不重复处理已准备输入|
+|`build_cgal(workspace, dependency_prefix=None, python_extension=False)`|Explicit one-job external source build / 显式单任务外部编译|
+|`ProgressBar(stream=None, json_lines=False, interval=.5)`|Measured work / 实际工作进度|
+|`NotebookProgress()`|IPython progress without widget dependency / 无widget依赖|
+|`HTMLProgress(path, title=...)`, `.finish(message=...)`|Small live HTML, visible failure / 小型实时页面与失败状态|
+|`TimingHistory(path).estimate(stage, units, fallback_rate)/record(stage, units, seconds)`|External approximate timing calibration / 外部粗略耗时标定|
+|`prepare_from_toml(model, path, progress=None)`|Explicit `[preparation]` / 明确几何准备|
+|`run_geometry(config, directory, workspace=None, progress=None, content_addressed=True, preview=True)`|Generate/load→prepare→mesh→exchange→HTML; checkpoints / 全流程与断点|
+|`GeometryRun.directory/source/prepared/mesh/html/report`|Artifacts outside source / 全部产物在源码外|
+
+Generator `hdf5` calls `VoxelModel.load`; its TOML `[geometry]` requires
+`method='hdf5'` and `path`. TIFF, regions, all earlier generators and all existing
+mesh methods remain separate selectable APIs. `mesh(method='implicit_adaptive')`
+and `mesh_from_toml` accept `PreparedGeometry`. Unknown recipe options fail early.
+HDF5生成器读取既有完整体素，其他生成器及网格入口保留，未知选项直接报错。
+
+### Complete option names and defaults / 全部选项名称与默认值
+
+Defaults below correspond to the current source. SI sizes are metres; voxel
+scales refer to indices unless a physical sigma is explicitly selected.
+以下为当前源码的全部选项；SI尺寸单位为米，体素尺度指索引尺度，物理sigma另设。
+
+`SmoothingOptions`
+
+|Name / 名称|Type / 类型|Default / 默认|
+|---|---|---|
+|`method`|`str`|`'gaussian'`|
+|`reconstruction`|`str`|`'filtered_scores'`|
+|`continuous_volume_calibration`|`bool`|`False`|
+|`calibration_sample_power`|`int`|`18`|
+|`calibration_iterations`|`int`|`12`|
+|`calibration_relative_tolerance`|`float`|`0.02`|
+|`calibration_seed`|`int`|`20261128`|
+|`iterations`|`int`|`2`|
+|`minimum_feature_voxels`|`float`|`2.0`|
+|`minimum_component_voxels`|`int  or  None`|`None`|
+|`final_component_cleanup`|`bool`|`True`|
+|`sigma_voxels`|`object`|`None`|
+|`sigma_m`|`object`|`None`|
+|`preserve_phase_volumes`|`bool`|`True`|
+|`volume_balance_tolerance`|`float`|`0.01`|
+|`volume_balance_iterations`|`int`|`8`|
+|`maximum_changed_fraction`|`float`|`0.12`|
+|`maximum_phase_volume_error`|`float`|`0.12`|
+|`minimum_phase_iou`|`float`|`0.65`|
+|`topology_policy`|`str`|`'report'`|
+|`allow_phase_loss`|`bool`|`False`|
+|`acceptance`|`str`|`'strict'`|
+|`maximum_score_memory_mib`|`int`|`768`|
+
+`ImplicitMeshOptions`
+
+|Name / 名称|Type / 类型|Default / 默认|
+|---|---|---|
+|`precision`|`str`|`'balanced'`|
+|`surface_size_m`|`float  or  None`|`None`|
+|`bulk_size_m`|`float  or  None`|`None`|
+|`outer_surface_size_m`|`float  or  None`|`None`|
+|`facet_distance_m`|`float  or  None`|`None`|
+|`surface_minimum_angle_degrees`|`float`|`25.0`|
+|`oracle_tolerance_voxels`|`float`|`0.01`|
+|`gradation`|`float`|`0.35`|
+|`grading`|`str`|`'surface_driven'`|
+|`radius_edge_limit`|`float`|`2.0`|
+|`native_radius_edge_ratio`|`float`|`1.5`|
+|`minimum_dihedral_degrees`|`float`|`3.0`|
+|`optimization_target_degrees`|`float`|`3.5`|
+|`optimization`|`str`|`'joint'`|
+|`optimization_seconds`|`float`|`60.0`|
+|`maximum_phase_volume_error`|`float`|`0.08`|
+|`maximum_box_volume_error`|`float`|`0.03`|
+|`maximum_nodes`|`int`|`1500000`|
+|`maximum_cells`|`int`|`8000000`|
+|`initial_random_points`|`int`|`100`|
+|`seed_separation_voxels`|`float`|`0.02`|
+|`seed`|`int`|`20261128`|
+|`timeout_seconds`|`float`|`300.0`|
+|`maximum_quality_retries`|`int`|`1`|
+|`maximum_local_repair_cycles`|`int`|`2`|
+|`require_quality`|`bool`|`True`|
+|`require_preparation_fidelity`|`bool`|`True`|
+|`isolated`|`bool`|`True`|
+|`size_field`|`object`|`None`|
+
+See tutorial08 for validated ranges, fidelity/shape gates, independent
+resolution reduction, callbacks, cache identity, compilation and resource budgets.
+验证范围、验收门槛、独立降低分辨率、回调、缓存、编译与资源预算见教程08。

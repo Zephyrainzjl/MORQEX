@@ -1,0 +1,39 @@
+# Fixed-grid smoothing; no resolution reduction / 原尺寸平滑，不降低分辨率。
+[geometry]
+method = "coated_electrode"
+morphology = "rods"
+size = 256
+seed = 20261128
+spacing = 5e-7
+
+[preparation]
+method = "gaussian"
+iterations = 2
+minimum_feature_voxels = 2.0
+minimum_component_voxels = 8
+sigma_voxels = 0.7
+preserve_phase_volumes = true
+volume_balance_tolerance = 0.01
+maximum_changed_fraction = 0.12
+maximum_phase_volume_error = 0.12
+minimum_phase_iou = 0.65
+topology_policy = "report"
+acceptance = "strict"
+
+[meshing]
+method = "implicit_adaptive"
+[meshing.options]
+precision = "balanced"
+grading = "surface_driven"
+radius_edge_limit = 2.0
+minimum_dihedral_degrees = 3.0
+optimization = "joint"
+optimization_target_degrees = 3.5
+optimization_seconds = 60.0
+maximum_nodes = 1500000
+maximum_cells = 8000000
+timeout_seconds = 300.0
+
+[exports]
+formats = ["comsol", "vtu", "gmsh", "medit", "abaqus"]
+length_unit = "um"

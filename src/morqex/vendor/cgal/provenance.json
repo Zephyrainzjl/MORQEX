@@ -1,0 +1,4073 @@
+{
+  "version": "6.0.1",
+  "upstream": "https://github.com/CGAL/cgal",
+  "release_tag": "v6.0.1",
+  "source_archive_url": "https://github.com/CGAL/cgal/releases/download/v6.0.1/CGAL-6.0.1-library.tar.xz",
+  "source_archive_sha256": "c752737f91d1af71fa96038f0e37945ce82a5f1fffb6200172cfcdd77755a356",
+  "scope": "Unmodified Mesh_3 implementation plus its CGAL header compilation closure; not all CGAL packages, examples or manuals",
+  "license": "Mesh_3 GPL-3.0-or-later OR commercial; dependencies retain per-header notices and included GPL/LGPL/BSL licenses",
+  "external_build_dependencies": [
+    "Boost headers",
+    "Eigen3 headers",
+    "GMP",
+    "MPFR"
+  ],
+  "files": [
+    {
+      "path": "AUTHORS",
+      "sha256": "1c8e2e28bed439ddea5a44eb657a3b81baf48b66f678613ad950cda219e11c15"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "fd3dff464988799c21f65397a314eb48eae8288a69ac512967b161e79b92d89e"
+    },
+    {
+      "path": "LICENSE.BSL",
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+    },
+    {
+      "path": "LICENSE.GPL",
+      "sha256": "416213203479e27015c32d9e8b30f80a287962a46750441b2223706cdd392116"
+    },
+    {
+      "path": "LICENSE.LGPL",
+      "sha256": "374a43f625a1b877f6f13719d1bab4ca8791ede604da3e009c3ceda1f6f85489"
+    },
+    {
+      "path": "LICENSE.RFL",
+      "sha256": "3ceccb3129cdd12f0ccc1a176f44ee3ccaeb6e3daf284f8235f65959f22c088f"
+    },
+    {
+      "path": "VERSION",
+      "sha256": "728c84458fc225a123e3b2c79ae519ef7b9a44e80fb9d1a1acab92f23178ca6e"
+    },
+    {
+      "path": "include/CGAL/AABB_traits_3.h",
+      "sha256": "d5ad953c21e0192741a6b4352c90cdb4d4daa4a8eb2b913681ab201b53d13a2d"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/AABB_node.h",
+      "sha256": "08472d7c9242aa65af572b2cad7eb6c6103ada6f9ce4e9e6ccdd3786764c6243"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/AABB_ray_intersection.h",
+      "sha256": "3d8deaf6695fc15a19c029bb85f881a56cb99b6ae56b0aa2439ccacb2c221707"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/AABB_search_tree.h",
+      "sha256": "186b98fea3b140aaa3c42a0e5175de41a8138f84aaea5f4d4f30fa306b020802"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/AABB_traits_base.h",
+      "sha256": "7dc04c7aec2f73a6a173ac1e5a1a1788dcc1a24f6234d54f41d6a4b0556a7c61"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/AABB_traversal_traits.h",
+      "sha256": "51fa43c917de4451855ca93d4af87c9d3bc2d2828ef6fd5cbff73991c28fb44b"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/Has_nested_type_Shared_data.h",
+      "sha256": "d84e24019e04751347a8168f058e8f16a18caf25a708503b3cd9bb1c25384eea"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/Is_ray_intersection_geomtraits.h",
+      "sha256": "eeac0c276e86295b259b1deca7ea16c55e83203370c603704b853142ddc8f56d"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/Primitive_helper.h",
+      "sha256": "1bf6473f8eed701bfaab0f45ab2fb9deec3343f80701f94ae2c621a391d12149"
+    },
+    {
+      "path": "include/CGAL/AABB_tree/internal/Remove_optional.h",
+      "sha256": "669e70fb63dcb69303194a11f61f33a2e49d8cee0aeaddfe4ee9e599b6a5f983"
+    },
+    {
+      "path": "include/CGAL/AABB_tree.h",
+      "sha256": "e13154fa9ff942c1df4cd22187422556214635fdcc451f5426ecd4559d40913d"
+    },
+    {
+      "path": "include/CGAL/Aff_transformation_2.h",
+      "sha256": "66e87112c167a2bc31bb376438cdcdcdd69379dbb78cdba42e3f501f2a9f5d1c"
+    },
+    {
+      "path": "include/CGAL/Aff_transformation_3.h",
+      "sha256": "a0c37563936d989df5afa4ee463946fbd03c1f0e0d8498fb1ac62f2c1b934d54"
+    },
+    {
+      "path": "include/CGAL/Algebraic_extension_traits.h",
+      "sha256": "0e2f7eed528af8f25d9a2c8826ac743032ba84482c7fc4e73992b9ba79743dbe"
+    },
+    {
+      "path": "include/CGAL/Algebraic_structure_traits.h",
+      "sha256": "b47c1b59dcfe8d5ed08ff62cffdc0ef832f8e6d788ac33539f1694656d6e1ec8"
+    },
+    {
+      "path": "include/CGAL/Arithmetic_kernel/Arithmetic_kernel_base.h",
+      "sha256": "c83b9a7ef9e6455467d9e932cae996c62fcca12eae2b2a5cca8fb2e0f163cd9d"
+    },
+    {
+      "path": "include/CGAL/BOOST_MP_arithmetic_kernel.h",
+      "sha256": "d516156ba2e8144bf2bd31e199749e9926e171f74b4783c1ec9256f9e16e6cfb"
+    },
+    {
+      "path": "include/CGAL/Bbox_2.h",
+      "sha256": "4258dab3b2f55690021923403b1366be7c5cd73489c7450a9ed2036af1f6d351"
+    },
+    {
+      "path": "include/CGAL/Bbox_3.h",
+      "sha256": "1f8b665c3087e0e8e55b22caf570d9281269815c36d096c06ac47c5f66d7963c"
+    },
+    {
+      "path": "include/CGAL/Bigfloat_interval_traits.h",
+      "sha256": "bdd29340a6fe39e245c01ca6b3ea00a34634d47a07861ad04d40e2a20c66b8f8"
+    },
+    {
+      "path": "include/CGAL/CC_safe_handle.h",
+      "sha256": "090ddfa3b80971252fe774c24c617d06612625d33cfd17e044e2b01004dab8cc"
+    },
+    {
+      "path": "include/CGAL/CORE/BigFloat.h",
+      "sha256": "92ff80e425fd0ba853cfeb203c73e99bd403b2f4e674cdce1a24d16aa8c96680"
+    },
+    {
+      "path": "include/CGAL/CORE/BigFloatRep.h",
+      "sha256": "f73fcd2f508538a17747e7b1fb5f56145f0f5ed12f91efd616815bf10989891f"
+    },
+    {
+      "path": "include/CGAL/CORE/BigFloat_impl.h",
+      "sha256": "1a4ea966b1edcaf392672d6d6896f521b171813ef7aea3f38cc648fbf1c79c42"
+    },
+    {
+      "path": "include/CGAL/CORE/BigInt.h",
+      "sha256": "2438b9b8eb9f0ccf12d5046c87a034a28da3aa3b8e6a450d14c2630b37f7f136"
+    },
+    {
+      "path": "include/CGAL/CORE/BigRat.h",
+      "sha256": "5cea16c4e22f87fe9c1995e686231bc44af833f8e7e160faa56f3d33148d63d6"
+    },
+    {
+      "path": "include/CGAL/CORE/CORE.h",
+      "sha256": "f7a0fc897339c24b0955babacc96d035c4f1b6bd38299b4e3a22646306e1bc11"
+    },
+    {
+      "path": "include/CGAL/CORE/Config.h",
+      "sha256": "72e31cdf0a7c9edefcf6c6ea6c75bd03c2d8138279d3b7915a4d8ab399ef1c0d"
+    },
+    {
+      "path": "include/CGAL/CORE/CoreAux.h",
+      "sha256": "25001cd68ce87be4c43bb3339ea800aa54d15641f5a33ea486a13d5dc04011fd"
+    },
+    {
+      "path": "include/CGAL/CORE/CoreAux_impl.h",
+      "sha256": "25aa73d4804189801a34ef80aaeb699289a1e967ec8c11d3dfcc7fa262a9452f"
+    },
+    {
+      "path": "include/CGAL/CORE/CoreDefs.h",
+      "sha256": "2b4362f7416b73cd59a637d6eebcdc36c5548831614029e6dd8dbc7742a9db9e"
+    },
+    {
+      "path": "include/CGAL/CORE/CoreDefs_impl.h",
+      "sha256": "b59cbc61db08a39067d976875c98e212f1219ecdea4efac2a36224fb744e2f95"
+    },
+    {
+      "path": "include/CGAL/CORE/Expr.h",
+      "sha256": "a16ba84edda139a2da935b68b7051e5f5db7d07f1571c7693424724931f38127"
+    },
+    {
+      "path": "include/CGAL/CORE/ExprRep.h",
+      "sha256": "2f75bb04be33b52d19596d44955f29cf915a84f2b71050c93030deb775d9d931"
+    },
+    {
+      "path": "include/CGAL/CORE/Expr_impl.h",
+      "sha256": "db53319a8f39659e4d20317ea9266ef45d93c0c9fb8d1efa82c59081044caad3"
+    },
+    {
+      "path": "include/CGAL/CORE/Filter.h",
+      "sha256": "5f14d107c226b12aa7afdb0a721e4b7a0e302335257b1f1bae01a1fd472c9950"
+    },
+    {
+      "path": "include/CGAL/CORE/Impl.h",
+      "sha256": "2fb3d2c294440fac78c2f8d1b90cb1f2f678070f5a97051f0cc90553bb9347d4"
+    },
+    {
+      "path": "include/CGAL/CORE/MemoryPool.h",
+      "sha256": "1c7eb3f4758d1520e402f270d0e8f30215522a0e048d5537f19c931ff531f1cd"
+    },
+    {
+      "path": "include/CGAL/CORE/Promote.h",
+      "sha256": "829ff15e0724ae66f8b07645181f1994903f5438f09d998fa608a0095b9cf401"
+    },
+    {
+      "path": "include/CGAL/CORE/Real.h",
+      "sha256": "6c9a0b74a4adc4b1c6bdd10659cb5616c9f5e4a88dae42af23cb2c3276b3dc64"
+    },
+    {
+      "path": "include/CGAL/CORE/RealRep.h",
+      "sha256": "a80fb79f3e71c80a3f6d70df6a8cdbcd5222edfa9f7352da3611fe226aeafe75"
+    },
+    {
+      "path": "include/CGAL/CORE/Real_impl.h",
+      "sha256": "413ae2ebf86046f1b25484d0309ef284fae97b68d3dcc9c174427b441afa51f7"
+    },
+    {
+      "path": "include/CGAL/CORE/RefCount.h",
+      "sha256": "9645a0c630afad6c3df875131da83bc22c338d9d9f3df52cf82c140c936ed647"
+    },
+    {
+      "path": "include/CGAL/CORE/Timer.h",
+      "sha256": "48431f64b2b5c349ae7e415f1a7c8e1dc1791b110d93efb79c1408641af735be"
+    },
+    {
+      "path": "include/CGAL/CORE/extLong.h",
+      "sha256": "eb535c2799c6f476679ea112b2ae00af97bdf9438993ca8f02cf768951aafe17"
+    },
+    {
+      "path": "include/CGAL/CORE/extLong_impl.h",
+      "sha256": "da550ca61d24698e2971e55987fb35f97592f612a6e2d1d77510c19ecf653d41"
+    },
+    {
+      "path": "include/CGAL/CORE/poly/Poly.h",
+      "sha256": "18ef109543cc62c95d0f310a970cb49192043c4890fa341e852e835b307b6d98"
+    },
+    {
+      "path": "include/CGAL/CORE/poly/Poly.tcc",
+      "sha256": "8728ece46a8299bd723dda74ad0600d2ee7b8c5fb5762d7eda4401589c52fe2b"
+    },
+    {
+      "path": "include/CGAL/CORE/poly/Sturm.h",
+      "sha256": "6d3eecc4ba710dffa1c32b0ae1e3e097c5664fed9bc9e88377b7ec462be7f55b"
+    },
+    {
+      "path": "include/CGAL/CORE_BigFloat.h",
+      "sha256": "2063bd76e9e6c7ad394989d011fd3dd0460c7cbf8c9f904f27460a3ede080885"
+    },
+    {
+      "path": "include/CGAL/CORE_BigInt.h",
+      "sha256": "1ca202401445df1cb6948e7b6cc3c29487cf0bd776d070e2c2ad8e5285df8c24"
+    },
+    {
+      "path": "include/CGAL/CORE_BigRat.h",
+      "sha256": "09102f1736c41a8b47c4cb5eaea6108ef4f4aca5e1964b041094cb99f06d414b"
+    },
+    {
+      "path": "include/CGAL/CORE_Expr.h",
+      "sha256": "c1bb7727d506154025f8513dcb0e2318e45f7d322e044ba6c89fa73e141fd385"
+    },
+    {
+      "path": "include/CGAL/CORE_arithmetic_kernel.h",
+      "sha256": "91016fa59283f3596caa69d66f034877a01c7e4141abf54931f1c33fa69ea0e9"
+    },
+    {
+      "path": "include/CGAL/CORE_coercion_traits.h",
+      "sha256": "2adc2cf24dd4843dc3ebf282bdb71e294ff9449666c540728a40e1359c8fed55"
+    },
+    {
+      "path": "include/CGAL/Cache.h",
+      "sha256": "c35f1549ce225a391f8167320811ddf33b8cc6df4d9470995e1c26572a5e6d6f"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Aff_transformation_2.h",
+      "sha256": "b8b0b3407897fa1fe6494c4606e85b6baa8c85c87a2dcbaf885676a184e41c99"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Aff_transformation_3.h",
+      "sha256": "b5b5d71f8f1f75239c0151069f4c782b67f906a845ee6ea8277e6ce57b67066d"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Aff_transformation_rep_2.h",
+      "sha256": "5d01a4979d66ed718d48dc1989396af25f529b7c61e998d0e584970ea89f685d"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Aff_transformation_rep_3.h",
+      "sha256": "8a038bce32d161022cb4fc6dad2a7b465f8f20ed29fc08a09f719a286be2b831"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Cartesian_base.h",
+      "sha256": "e6433b955eb6cfa7147455fa0d371f5223101d04c52fbbeb6540712970eceadd"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Circle_2.h",
+      "sha256": "b05510296138058e839073c33824678546bbe996f9a4c3e021c81133b780c51b"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Circle_3.h",
+      "sha256": "ecaa1f1d3b162114c03f1cc9f5a55c2c0fd702446aab147134da4dbeb8072254"
+    },
+    {
+      "path": "include/CGAL/Cartesian/ConicCPA2.h",
+      "sha256": "52ab1c3d4b278ab523c93b820d511caeb70e1e0f8f989fe63f12d8382dbc73e8"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Data_accessor_2.h",
+      "sha256": "303f62e4bd9ccea565d1a174e2f2915975214e5c230939acff7fdae8db8f5906"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Direction_2.h",
+      "sha256": "e753a9974427baaa286b44b172976fc8921121fb1ddaa36be2eca9956fa5f2e2"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Direction_3.h",
+      "sha256": "eee34bf7c6af76e91f98efc3c4cfa05a96b82f44866bec7e8a8ab5b1db6ab1fd"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Is_trivial_construction.h",
+      "sha256": "b0265c0cbc7b6875ef4add586a3eaa879099dfd23069e93b0db58c42f86b2105"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Iso_cuboid_3.h",
+      "sha256": "445e855c0c7542db8b04440655e2c382ff483cee4e8b5fe7342a616ce7334274"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Iso_rectangle_2.h",
+      "sha256": "2c330e0b59dfe7fceb3eed6fac4e95ef297b49ed1a2b471b337bcd6e4bf8cc77"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Line_2.h",
+      "sha256": "836c0f091d8651c62d9e6245d91daebdd4c4e8d16936665512076d25094205ce"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Line_3.h",
+      "sha256": "5d84585a6a0a6f2abf8a88d43d0618772dc6c50d382ff615357be28b45b6de31"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Plane_3.h",
+      "sha256": "73cf69860da9ccc8380ac11bb46617155b05aa86d12688c5d8503aafefd74e7f"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Point_2.h",
+      "sha256": "6615f01e45dd6c38e0dad7eca127aa66e16fc343dce773e1e5793c60126aa569"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Point_3.h",
+      "sha256": "5015c15326cbd01cbe4a79162468dab634bf1b566c3f7bf0a50cec3fdcce448d"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Ray_2.h",
+      "sha256": "d5da1bb39d46d4bb70a73a8651a02a23eb5d09cf862c42b5673c2631451e29b7"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Ray_3.h",
+      "sha256": "9b9dbd203890dff6fdb3b0c0690e4f87f6dd30cc131431309af9c4c941df03e6"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Reflection_rep_2.h",
+      "sha256": "3d7f17378ec5b567f6d28ab8c0a781dd98ff8531bb660c3fb2c031cba2e77a67"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Rotation_rep_2.h",
+      "sha256": "824baa2078cdb42fa04fe31917c91ad574343813aae248af9436751f24e366ed"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Scaling_rep_2.h",
+      "sha256": "3988c5a31a8cb54015a0dcbf25a0846aa3ad90d729ddbaf8b41d21f0464d3dec"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Scaling_rep_3.h",
+      "sha256": "2b3ae2804219fcbbe6414033968784777b4fe4f35b3ab488c2544ba690c15a6f"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Segment_2.h",
+      "sha256": "1df5e239d25b42ec37501ee82f8479891158e71f051b0e725b6491cb3fc57554"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Segment_3.h",
+      "sha256": "221f8f37767f7622dc937252911fecf259908f3012cc21dd974d210234e26c2c"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Sphere_3.h",
+      "sha256": "3f2ef93713fe84b0def729c8ea8ad1acb01bda9343ccbb12414171d5ae46b178"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Tetrahedron_3.h",
+      "sha256": "65fbd9ba4582114b5e4476560114dcc511e2d16f1c7a6bb52e3d825c87c0ff14"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Translation_rep_2.h",
+      "sha256": "5c3113a232c05baecfa19da98241e096ecc992f962bcf8b8b053ab82426c9bfb"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Translation_rep_3.h",
+      "sha256": "6eef91abfffb8882714a46657b20d1dfd940837b29f8e330e7ed9e9f7af651d4"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Triangle_2.h",
+      "sha256": "15432bcc2c3d7a52167a4642c292e0286722d143a0474a6e4ca88bcad6f90cd6"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Triangle_3.h",
+      "sha256": "652d5b12b9cf5a00e85333fb12a7ae15d7369957addcd50b4008fb90bc5581e4"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Vector_2.h",
+      "sha256": "c436a5af67ecd1af62c63b60c239e88f17c7693f028ac24f7674e4a58e0821b3"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Vector_3.h",
+      "sha256": "8140df5ddac2142c84faba048e83ad4016230ddaf2cac6e7f0ecc861215ff0a7"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Weighted_point_2.h",
+      "sha256": "09212b070659cd2f0bb3e62165ba1ccc240afbbb702fa579147caa52e26c191c"
+    },
+    {
+      "path": "include/CGAL/Cartesian/Weighted_point_3.h",
+      "sha256": "90d0e977a9d2c1abb6a2bc4a809d6b2f1f59173709d6c2083535cc601a8bf859"
+    },
+    {
+      "path": "include/CGAL/Cartesian/basic_constructions_2.h",
+      "sha256": "d4f609e9fd08f1fe7b27a48fce85d446c20e3173fcb2c3a6a97f927d3b857090"
+    },
+    {
+      "path": "include/CGAL/Cartesian/basic_constructions_3.h",
+      "sha256": "64498ea20b4021ff4855a7bd6b2bc6be74d3c42a688b59bd99eefa3b3da70771"
+    },
+    {
+      "path": "include/CGAL/Cartesian/ft_constructions_2.h",
+      "sha256": "5c108c68c4b1641051ad4ce61aa55aee0099ba4a81c8abe17875abaee377f9fd"
+    },
+    {
+      "path": "include/CGAL/Cartesian/ft_constructions_3.h",
+      "sha256": "512a044a2587520cd87257a6a5b61294f685d11999801d7c16c1cd6bde22a1d2"
+    },
+    {
+      "path": "include/CGAL/Cartesian/function_objects.h",
+      "sha256": "5a1e56e49e9961cb3803f096031cb5f90899ef12310ce78b3c69c919d9b03fb5"
+    },
+    {
+      "path": "include/CGAL/Cartesian/line_constructions_2.h",
+      "sha256": "c71515999e88ac3784dd8957b63ca8a9e5fbb502d889f8ca777c4d85045946d8"
+    },
+    {
+      "path": "include/CGAL/Cartesian/plane_constructions_3.h",
+      "sha256": "ecc51809f51cc7016fe9cd44a602e1438a109ce2a6eb31c5ff8d7b643ae43e32"
+    },
+    {
+      "path": "include/CGAL/Cartesian/point_constructions_2.h",
+      "sha256": "3fcd05fd2a0a04004fbb29fb1976f21a9d23b3c46c155bf9d2db729c1dc83e89"
+    },
+    {
+      "path": "include/CGAL/Cartesian/point_constructions_3.h",
+      "sha256": "af75dc78d2ad1b2667046dfffd1de666a2b0ea77c703ba97cd84072c6b109820"
+    },
+    {
+      "path": "include/CGAL/Cartesian/predicates_on_directions_2.h",
+      "sha256": "f656e6c12de0980f4568708b36c1829220f469d09bc17da40598bad0f9acd7fc"
+    },
+    {
+      "path": "include/CGAL/Cartesian/predicates_on_planes_3.h",
+      "sha256": "6278a9c9f86bc5aa89f71964a1462837d1e4b2329bee8569b8dd709284cf1d01"
+    },
+    {
+      "path": "include/CGAL/Cartesian/predicates_on_points_2.h",
+      "sha256": "49d985b4fbc47bb8b24e31d3be05b50aac9b082a2513c736b777852dbfa2a74f"
+    },
+    {
+      "path": "include/CGAL/Cartesian/predicates_on_points_3.h",
+      "sha256": "0082de86b2f7707cf1d644ad6a74e473cfe77376b4c2f9bc71c8e24fdc3f0c7a"
+    },
+    {
+      "path": "include/CGAL/Cartesian/solve_3.h",
+      "sha256": "3800f7fd7f0ade39be2a77ecf40e286109d93f6ecd8448c271c9ae4471877900"
+    },
+    {
+      "path": "include/CGAL/Cartesian_converter.h",
+      "sha256": "52717d8fe21d16ca393ec771196233c3d1476084341a4b6abeb4dd168bee7fa6"
+    },
+    {
+      "path": "include/CGAL/Cartesian_converter_fwd.h",
+      "sha256": "3a7b6c489fa01211c091014b891b063858ec0b9c785462bb56fb4dd8999b3b9a"
+    },
+    {
+      "path": "include/CGAL/Chinese_remainder_traits.h",
+      "sha256": "6d9ea79fb6a5047a9d6e8e7221a56274465114efd942a4685f23bd3301b8948d"
+    },
+    {
+      "path": "include/CGAL/Circle_2.h",
+      "sha256": "1e769c05af4e72ad801722e5c217bffc5a6e75169f78f1cbabef03cd048f0ae7"
+    },
+    {
+      "path": "include/CGAL/Circle_3.h",
+      "sha256": "21498735e6109327b480e59229ac3c7c1d1133212531a76c716c13bcaf67fe64"
+    },
+    {
+      "path": "include/CGAL/Coercion_traits.h",
+      "sha256": "75e0e3412136a58b2bf36cbc382372d069d345c862bc61282fe61b8c87dd3f69"
+    },
+    {
+      "path": "include/CGAL/Compact_container.h",
+      "sha256": "4a7f1cd1bd52174c168e9b9dfb1ea46155ebaf413ce0266c80fefbe0e7894f89"
+    },
+    {
+      "path": "include/CGAL/Compact_mesh_cell_base_3.h",
+      "sha256": "ae1c1eaa252f8161d96d5ccf2af83974f19bc73b6b4aa259464f0e0719798bcc"
+    },
+    {
+      "path": "include/CGAL/Complexity_tags.h",
+      "sha256": "906aec4940161c44ab993c0bafb7bc69f377cee9a5349e87de34b921f4a7952b"
+    },
+    {
+      "path": "include/CGAL/Concurrent_compact_container.h",
+      "sha256": "168d767e7b1b09e2f26226c9745359c8cc6f40c0e40dc4dd3724e984128c013b"
+    },
+    {
+      "path": "include/CGAL/Conic_2.h",
+      "sha256": "3b09950e7c60cd6f04ca22d723df35eb50c0e6ef8b93e233d72a92bff52abcdb"
+    },
+    {
+      "path": "include/CGAL/Converting_construction.h",
+      "sha256": "8c7cdab0afbd2dcd872c64adf3ecd7f0374f0875713a42a4f9accc74213c5f13"
+    },
+    {
+      "path": "include/CGAL/Convex_hull_2/ch_akl_toussaint_impl.h",
+      "sha256": "5b1754c35f6263bb575d01999741c0768981bf4cbd818d1744cf9b0ee36b0dea"
+    },
+    {
+      "path": "include/CGAL/Convex_hull_2/ch_bykat_impl.h",
+      "sha256": "efbbbac134dbf01254472d6cfe19ab2934dc84da1b98517d8c6f0134aa194979"
+    },
+    {
+      "path": "include/CGAL/Convex_hull_2/ch_graham_andrew_impl.h",
+      "sha256": "96126ceb65009e7ecc21717e68f3c66197441ec1f355fb0e249db2f0569e21ae"
+    },
+    {
+      "path": "include/CGAL/Convex_hull_2/ch_selected_extreme_points_2_impl.h",
+      "sha256": "c50cc1c04047419e61eaea537257f10f61847aa855ca09f6907c785d0620fb23"
+    },
+    {
+      "path": "include/CGAL/Convex_hull_2/convexity_check_2_impl.h",
+      "sha256": "a31e5c18bc7c0f124989660458ef8a0c192732de19fb173ce8b3c10241d3be14"
+    },
+    {
+      "path": "include/CGAL/Default.h",
+      "sha256": "54f11c83bb8bbe90bd51f60e52192e00a913839fe735cbfe203acd2436fef361"
+    },
+    {
+      "path": "include/CGAL/Default_diagonalize_traits.h",
+      "sha256": "37efbf449c04ed0ebe9e4690d4d10eadf0702c4ae82a537aed3d43c0e37e0daa"
+    },
+    {
+      "path": "include/CGAL/Delaunay_triangulation_3.h",
+      "sha256": "6b82b37975666fe9f16cbed8c1e22dfff3b3225c0d8df9b567927857d8da8ccc"
+    },
+    {
+      "path": "include/CGAL/Delaunay_triangulation_cell_base_3.h",
+      "sha256": "a4fa37848c35e3bd6d4c70586e689da559ce2101acfcb96f488479ab4d07fc2a"
+    },
+    {
+      "path": "include/CGAL/Dimension.h",
+      "sha256": "a5af9e3ff7e12a5f30e5c9013f4be8602cc499fd094c090cdf5a22b78ad67655"
+    },
+    {
+      "path": "include/CGAL/Direction_2.h",
+      "sha256": "cfc22e28ccfce27e0b3d34f405eb94d09b09a1f6dded0fc28658c27667c7d490"
+    },
+    {
+      "path": "include/CGAL/Direction_3.h",
+      "sha256": "cb889bdc0d3dccbe9e256abd6331e28d1f9449099c69e76eb184192b23ce0012"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Line_2_Line_2.h",
+      "sha256": "81a7d94f225273afd40b35df25e02e91c91f11e305fdc8f8c4aa710525af051e"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Line_2_Triangle_2.h",
+      "sha256": "94add20c8dc076cd919cfd14b5e3f3ebe683ef1d810719f19370850c7795c1ca"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Point_2_Line_2.h",
+      "sha256": "2111d8a4a01a1638c2ed83c3b0e760de84e5f019a812d9757739515d6233a280"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Point_2_Point_2.h",
+      "sha256": "6568e1b13aa617519e9ed3cce2af58578d5205cc1745ed5de20693d27125d344"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Point_2_Ray_2.h",
+      "sha256": "ce6381a820fc0746455b68eb8aae047c82d09e22ea762359421a4967fc0e7dee"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Point_2_Segment_2.h",
+      "sha256": "7e3e0388b5f09260dddb9774e659f3f7abef4239dfcd9b613600d85212427353"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Point_2_Triangle_2.h",
+      "sha256": "b917a8765f5fd388583026b36518a32a00efa75e8cd7d3e875ec80265086b6f3"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Ray_2_Line_2.h",
+      "sha256": "49ad98ce2efd97018f8ded2aaa7ed16c38ea534cc093ddf8249dea70694e74a7"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Ray_2_Ray_2.h",
+      "sha256": "ec4e64a308b40b1f48332ac0c442d76ab37d4d115e2c51dd1b80ac16b9372544"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Ray_2_Triangle_2.h",
+      "sha256": "384fb94418aa46a9103dc4cb862c0c788c78a402496e0e05cea3e0f8377cd2a8"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Segment_2_Line_2.h",
+      "sha256": "1adb0e24790efa460fca1d4b11795b6c109af1a4841e0e47553ece32b9e6dcf2"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Segment_2_Ray_2.h",
+      "sha256": "996a59e548e91bfeb43b165a6b4869ee1c196fdc132c6274e06856936864bd31"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Segment_2_Segment_2.h",
+      "sha256": "ae88344c437400e1e133d569738a4588b7dde30a90fa52992e1edffd0113dfff"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Segment_2_Triangle_2.h",
+      "sha256": "caf453736f35f40d7427d336843298eec00095dccd130a799b5e378ceeef0ebe"
+    },
+    {
+      "path": "include/CGAL/Distance_2/Triangle_2_Triangle_2.h",
+      "sha256": "b7424aacf05036ab71ea3caa909da51e8bade123be4d5a7a72e9cda1f0c4b9fc"
+    },
+    {
+      "path": "include/CGAL/Distance_2/internal/squared_distance_utils_2.h",
+      "sha256": "73d8b5db52b028f437aa26546871061d3ab0352b9d4dd02b308be8c05d726f26"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Line_3_Line_3.h",
+      "sha256": "11d01cc3e188af2511f56ad40919a1529642a2ea24bfe466474d75406c319480"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Line_3_Plane_3.h",
+      "sha256": "7eed27673c1c37d2460d424e522c21580e2f3670d7f1769d4217885c25e7b13e"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Plane_3_Plane_3.h",
+      "sha256": "7e4e795247e03c05b1c62e88ddf78ba1bf836b5c86a1783e51de1f6a8764eb7f"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Line_3.h",
+      "sha256": "df33a8baa7e6afe283a58c8f2d6c414ed584956e0cf7afb00bb39919c7a7717c"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Plane_3.h",
+      "sha256": "74243c8f7974a5f8a9672d181b8bef7b080fc75d48ae050fd2cb05e908dde644"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Point_3.h",
+      "sha256": "94b3b52f963f3e2601d6befb5ff2d965856317c3c4f55be70bb46bace6fd0a33"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Ray_3.h",
+      "sha256": "c6b00d928e04f438939608e51562b79c74cb4c0a2d6ec95cf27d47f5a199b020"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Segment_3.h",
+      "sha256": "0d388050fc16b54d09cff2438ed888fc3ab881937f61e8608cdca13957b74dc5"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Tetrahedron_3.h",
+      "sha256": "d8af2056a249064237f4630d2ec33f656d9bc6f00a15dd16a497aa097961a494"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Triangle_3.h",
+      "sha256": "0ff127405a1c29ea01404ee931d477a0b9c21d6799584bdf5a902fa04895b255"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Point_3_Weighted_point_3.h",
+      "sha256": "71eae8f4fc0f4e95c2fb0fa006ca15dd1fba7f859896fd2d20817b9ed137089d"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Ray_3_Line_3.h",
+      "sha256": "046b2c9852922d0d6f35a05a3ba5d3af587d789a1278c011ce35f5c0d39e455f"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Ray_3_Plane_3.h",
+      "sha256": "6eb48d8377d24c9d0cb4fff37f9cefa1e5ccdb1c63588c667aebc4e9ca36dfec"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Ray_3_Ray_3.h",
+      "sha256": "a03b21f0209d60651d671cfe9c7ad8c7788406af04bdd628e1e80855de2081e0"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Segment_3_Line_3.h",
+      "sha256": "b6b80a7d52eff1c06bf9b5fd87038cf4c83e60077c5cbb5e78eb8827e5f0d304"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Segment_3_Plane_3.h",
+      "sha256": "829c25b9f36d996f41b1ab57c737a93af13d44a419676e46dfcbf1ceedde2794"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Segment_3_Ray_3.h",
+      "sha256": "457bc281d596c4517c5897c4ab61c2ff6cd0a07c66ba49fa569916e726b550d9"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Segment_3_Segment_3.h",
+      "sha256": "1e0530549515462821437406f219340469e0c40d4b2cc962a7d202fd18d9ad68"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Triangle_3_Triangle_3.h",
+      "sha256": "3114014c90e1f8580e5305777adcd78e18d26a19b7966c7312db4e75573c517c"
+    },
+    {
+      "path": "include/CGAL/Distance_3/Weighted_point_3_Weighted_point_3.h",
+      "sha256": "8312bab766b10370d203dc1cc86032fa20aa32ca3a019aed27079068650c42fd"
+    },
+    {
+      "path": "include/CGAL/Distance_3/internal/squared_distance_utils_3.h",
+      "sha256": "675fea37c3522759bd3418c492613429a189f8e7aa31c631d787c00a648d4c05"
+    },
+    {
+      "path": "include/CGAL/Double_map.h",
+      "sha256": "2bb0b09ffeb9f3843a3b4ef41c47e54c8e91295f9858bb3bece352e05be71481"
+    },
+    {
+      "path": "include/CGAL/Dynamic_property_map.h",
+      "sha256": "1d6a58a877cbf7988aee2fa75eee57ff35a4ae6e1f4c8a6c0240f8aa3080b96f"
+    },
+    {
+      "path": "include/CGAL/Eigen_diagonalize_traits.h",
+      "sha256": "85c65247008b4d293eeae05d3fe9d0e5441738f55742bfe1f19f6d2928ff6d39"
+    },
+    {
+      "path": "include/CGAL/Enum_converter.h",
+      "sha256": "4276323bb0852a8970810354ce02bc80dd8d21cedb617ccdb1c7af8d253aa9f3"
+    },
+    {
+      "path": "include/CGAL/Epic_converter.h",
+      "sha256": "d706e171800c67785a978900aadfa901138c6c41403467408cd2ab12f3c9126d"
+    },
+    {
+      "path": "include/CGAL/Euclidean_distance.h",
+      "sha256": "0f8e5761786a2c3299b6405ad818afdb1e87083bcce2239eadbad432df803fff"
+    },
+    {
+      "path": "include/CGAL/Exact_kernel_selector.h",
+      "sha256": "28838c765e767112d0bd6b926c4645ec15dccb5c0207e62cbf614b8e43e7a404"
+    },
+    {
+      "path": "include/CGAL/Exact_predicates_exact_constructions_kernel.h",
+      "sha256": "e6d493404634d8aea55a51ac82a635001833493f67e58cfb8bf316ed0a63a6be"
+    },
+    {
+      "path": "include/CGAL/Exact_predicates_inexact_constructions_kernel.h",
+      "sha256": "a95cbfb49186b16488672cab80aad9084cca9809eba7fd0549974dacad8feda6"
+    },
+    {
+      "path": "include/CGAL/FPU.h",
+      "sha256": "3e285406e47c0597e9d40adea94a0621b8ec72080982b7f69d40cfed64f0a89f"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/Cartesian_coordinate_iterator_2.h",
+      "sha256": "526da44cda806ec262c3f0e7b3c7db3e2cfc77eceab59ffc13a5a77c264a40e0"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/Cartesian_coordinate_iterator_3.h",
+      "sha256": "bc3d11ac0da9e6b067454cf95d37807fd0d3fd26d182efe794bdb9b55664f834"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Angle_3.h",
+      "sha256": "daa4ad97144d1d5a3291cdc2d34f0048a5ffa2cb33c664ccc6d4c3dc9d2b2319"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Collinear_3.h",
+      "sha256": "8d29b607c0b92c93fcf42616b120eb46684b8b7f9f134dd3335738d9def80d63"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_distance_3.h",
+      "sha256": "4f3e05910759ad8fc1534ffe4a05736f277fdbf72f2c61dbd75d8839ae014dbb"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_squared_radius_3.h",
+      "sha256": "167d80f5bd45436dce2fc0f00e7cb43d15d59681b217402b280fa676082f2fcc"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_weighted_squared_radius_3.h",
+      "sha256": "23f8ee88b9376e917f86bd9bebe2114fa91cb4f603bd37018de8bc47c009f907"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_x_2.h",
+      "sha256": "3ed88c97f4ea3bf1ccc8c4685ad60869292df205c92d44d38be9cb74eb17addc"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_y_2.h",
+      "sha256": "b2e8e9586385da502b01990e0d53c25aadd5d1df4026052b1e1778633f6eef6a"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Compare_y_at_x_2.h",
+      "sha256": "d2b4ae64a37196a70a796aef5d8d122c9df9368bc721afcbdcee843ac5f6fc0c"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Coplanar_3.h",
+      "sha256": "e60f3912dc4a20d35b05fb63a9fcde088a78cd0bb0abe5a112f3b08132bb7bbd"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Do_intersect_2.h",
+      "sha256": "cb487ba320687ae3c7db32a27e908d8780fcbb65e8996f27bc0f78cca5961f21"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Do_intersect_3.h",
+      "sha256": "a5f129dbb951d33bc6bd3e225d116d6a80a323d77e9c4f8427278dcd16c5529b"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Equal_2.h",
+      "sha256": "fe0bf378c50c5e8f054fd7369578d7188544f34ec8041e5d555896dec56e88ad"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Equal_3.h",
+      "sha256": "b3ad70c7d063644565519a901699e13ad175ef6ba589767ffa93113971bd26ce"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Is_degenerate_3.h",
+      "sha256": "7a4a0f33b5854cac2028735cedbc527993f583c02c92f6b0746ac8f22a24d659"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Orientation_2.h",
+      "sha256": "c1ab67c6a45c5d598096ea956355d9421eb37908151f97b66b8c573b58f5b00a"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Orientation_3.h",
+      "sha256": "27ef924cade702366f7af21ada9055a0f89470fd8e604397a252c88e702c2167"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Power_side_of_oriented_power_circle_2.h",
+      "sha256": "a700d032a6978decf578b57071b9a00d9bd47cba3beec47e5096c258da0e1aa8"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Power_side_of_oriented_power_sphere_3.h",
+      "sha256": "2c93056f1f66a7c7567dad9878e9bd4634444da4957361c503c395ade5d4fa02"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Side_of_oriented_circle_2.h",
+      "sha256": "f463e3b3a06cc2696eb1ca0dcd248b2bc45004d9993544d16a3ee96deb3e0a8e"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Side_of_oriented_sphere_3.h",
+      "sha256": "9c0ea690f52f9bb043854fa7602cefae799337fb191c7b4f491b1e17bad5dada"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Static_filter_error.h",
+      "sha256": "01c81777291dd7fc3d0189a29290f11ce6fee545baddfd86a8cd872a58aa5b4c"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/Static_filters.h",
+      "sha256": "cf64dd3ee1bfd4f846fd0fb32f8ee228f46906ef1c8f35adeee44726bf1f1890"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel/internal/Static_filters/tools.h",
+      "sha256": "3e61ec7880c59147bb448d19adef130bd67d91743ef6328b30917aa3d4447310"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel.h",
+      "sha256": "d41db1687e43ca2d315464b9d509c8ad00ce37a3b1857ab9fbfeee5d07be4ba8"
+    },
+    {
+      "path": "include/CGAL/Filtered_kernel_fwd.h",
+      "sha256": "c8ea231d2892ef2308b469f561cea518949a3835b10a9b890c0940e6ef974633"
+    },
+    {
+      "path": "include/CGAL/Filtered_predicate.h",
+      "sha256": "90a4ccd58a79c9cec47bc2f8e1bda269c32bb7914785d5e9511f6fd7e748b9ce"
+    },
+    {
+      "path": "include/CGAL/Fraction_traits.h",
+      "sha256": "5eceb0c1a1dd7450365fbb005dc43375540264d73f552926691d951a0134c42d"
+    },
+    {
+      "path": "include/CGAL/GMP/Gmpfr_type.h",
+      "sha256": "a849ba80bc31bc2bf933d90828e6da1567d1d763fcc05cb054b229f9a8e898b1"
+    },
+    {
+      "path": "include/CGAL/GMP/Gmpfr_type_static.h",
+      "sha256": "b25161147fe10080d57513e57f76f7e1aa6481ccb9d6da08e23d5c4de83331a8"
+    },
+    {
+      "path": "include/CGAL/GMP/Gmpq_type.h",
+      "sha256": "43d1548d0a853445f3cf99097e16ad6942271547e2ba3a1bae115e8d50f3fc21"
+    },
+    {
+      "path": "include/CGAL/GMP/Gmpz_type.h",
+      "sha256": "103338e1daf266e5abce1863c58f0d0db7a620a2037dfdd40599122f5ad3dedc"
+    },
+    {
+      "path": "include/CGAL/GMP/Gmpzf_type.h",
+      "sha256": "399d47c783c7ea637e435add0128032fa9cd84e9cf44f0ef6c672d938a635f89"
+    },
+    {
+      "path": "include/CGAL/GMP_arithmetic_kernel.h",
+      "sha256": "32e1e58b696e09fd4bf7588ae971a32d1491acd368e580bc1ff7bca01279390e"
+    },
+    {
+      "path": "include/CGAL/Generator/internal/Generic_random_point_generator.h",
+      "sha256": "2cf461f7331d34bda1d505959dd8ef6fae17739d0fb5b6c5af8870bf3326c867"
+    },
+    {
+      "path": "include/CGAL/Get_arithmetic_kernel.h",
+      "sha256": "d753b968e8dd6720f1ca101c37e73fa43db2a837392158899743c528c4e4873c"
+    },
+    {
+      "path": "include/CGAL/Gmp_coercion_traits.h",
+      "sha256": "ebc2046471964c380d1e108e880e3015a7e7cb1400564e2f234db46751d743e7"
+    },
+    {
+      "path": "include/CGAL/Gmpq.h",
+      "sha256": "e752b311f658010c066830b52ab0ba50fae1531d621715f53da544ee0ed7fa1d"
+    },
+    {
+      "path": "include/CGAL/Gmpz.h",
+      "sha256": "4143379e7542b697a7f19fe76cd733e6f9aa028bdc12690789b8a5f11fd1616a"
+    },
+    {
+      "path": "include/CGAL/Gmpzf.h",
+      "sha256": "3f4962b5bc8c89d8a0d03d07213e2d9f1a0723d3cba62572904902ecce8c7c04"
+    },
+    {
+      "path": "include/CGAL/Handle.h",
+      "sha256": "69391defbf6a2bf8de39b5673dd2a8a2714a1b01cab7ab4e363a564ef45996b9"
+    },
+    {
+      "path": "include/CGAL/Handle_for.h",
+      "sha256": "2eca09e69112721f3f584bee935b8e1d0cd037683b08ec9fb2b7b825ba4616ca"
+    },
+    {
+      "path": "include/CGAL/Handle_for_virtual.h",
+      "sha256": "688efa0f44c35964f845ff80d20fb1b3feed7969a197f71bd29cd773f2d3a3fa"
+    },
+    {
+      "path": "include/CGAL/Handle_hash_function.h",
+      "sha256": "337dd9e8525ab41ca5cede45e9bd39fbb89323c170ffafe66a89c9aa52ff7e5a"
+    },
+    {
+      "path": "include/CGAL/Has_member.h",
+      "sha256": "782aa3711f2d6c7434dd6340b84c0d2cc482f263c410c6ff4237a224730415bd"
+    },
+    {
+      "path": "include/CGAL/Has_timestamp.h",
+      "sha256": "3f0cdeec5008c227e8387b7a10c15cd5b934ed063a42fd239028b158fff34f17"
+    },
+    {
+      "path": "include/CGAL/Hash_map/internal/chained_map.h",
+      "sha256": "6a298609d658fcf8b640b7ae24cf0e922db7e95f2a040555c3a7b4a8712d446b"
+    },
+    {
+      "path": "include/CGAL/Hidden_point_memory_policy.h",
+      "sha256": "fe29aa0e42f753c5a374b9a8df8a8729f5e50dae2af8524a6c7a1acfb9ba369c"
+    },
+    {
+      "path": "include/CGAL/Hilbert_policy_tags.h",
+      "sha256": "34a631212f57e09de7a8aaf06201cac76431f83f3f8805bc556cb4090d3f6d86"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_2.h",
+      "sha256": "915cbf4e67ba06515643b03a2f03d7473ee26cabe95edddc9fd7a75b5f0d8acd"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_3.h",
+      "sha256": "43755fff00d32ae8ddf2f06855e9d5e25ba6429d4e5fef094f8a9600f9b7de23"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_base.h",
+      "sha256": "ea0ea7ad700f5234c2f8c16e57084de42007728caad6146a197dd52ef61d7ad7"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_d.h",
+      "sha256": "455b3a0e5e5f74fa544336c285f346f4e4f92e81dcfd0cfe0e64a9feadc981e0"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_median_2.h",
+      "sha256": "e539aabe0f1b3c6947bfa11e3d725edf4cf15c908fd2f6a4c298a3dacbfaabeb"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_median_3.h",
+      "sha256": "605e039dccb385d0626874b17cb7fd11b3b8ce15745339b684ac150e5358ea61"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_median_d.h",
+      "sha256": "7677c75c2f762e1f05e35c28f4ab22f37842a54918d349fd721cf1aa9c4b8e86"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_middle_2.h",
+      "sha256": "d363f21d5dff4c67f6b1755d2ba0bcb3a8708bfd910d15d17a659aac8749f9b5"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_middle_3.h",
+      "sha256": "926e2cf481f163e06025cf6e91f0f9694e5eeb6f752293202ef783e890aa857d"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_middle_base.h",
+      "sha256": "b122c04183ac5e6da67c93107ca19d9ee469d5021a4abbd11068891cda64b2e1"
+    },
+    {
+      "path": "include/CGAL/Hilbert_sort_middle_d.h",
+      "sha256": "551f638c3946c41dc9d57bbc492dfa24adec35662f9844027fd9fe777f5e6189"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Aff_transformationH2.h",
+      "sha256": "e127d068aee2f23d9e03853f341f58aac94f840ce29d1243c59499a00db777bd"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Aff_transformationH3.h",
+      "sha256": "b369ff71e1c39d70d3b727f28f81209c418928f81a9b5b2142a1f17efc3a3df2"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/ConicHPA2.h",
+      "sha256": "fbf83e072b4c1cc772620d824664593062880a0006896946a245fac1308696fe"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Data_accessorH2.h",
+      "sha256": "72a21615f76179eaad057a299d4a89a25e408e291a3f3fa3a540c52c5b86c933"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/DirectionH2.h",
+      "sha256": "7ff8e92eb1ea64857e3c9e5120990b9974eadbeff9a0688a9bf6c5a9d847c9e2"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/DirectionH3.h",
+      "sha256": "5a1c70c3c8a928bcf4bf073c5a4e1f7d864b0ccd5b6e765b539aabb077dacebe"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Homogeneous_base.h",
+      "sha256": "aea215fcff01353122781312c70393eb12f11249f78e5e1d5c8d1c7b96d6f022"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Iso_cuboidH3.h",
+      "sha256": "8b2d32b3a1f12e0b62d75977bd5e19aa6767c81e3a30bf69306cc4b351ce4a58"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Iso_rectangleH2.h",
+      "sha256": "1926d2da5b0c864908c2d9ba89907f9838705d1dc28644efe49eabbb66539ed3"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/LineH2.h",
+      "sha256": "b01e10a7a1aa9abd9ad94eaed75315ad628e199ad38f3090ae9b73a06213b03e"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/PlaneH3.h",
+      "sha256": "8dad3460ad4933a807a5869c6e3da5d41f9362628da57ab3230220df0b43fb79"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/PointH2.h",
+      "sha256": "d30633d61b4423aec31f5dfd7554a0b6d3630758e28fc277d36a8c8910dabc0c"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/PointH3.h",
+      "sha256": "3d6bd562c92e83ebe1d15d02af696783c3e0d68db91c3e266859b17c543b7913"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/RayH3.h",
+      "sha256": "e478464d99bfb411d1bc2a19b604994f820b1adc233f3529002320089aadd82e"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/SphereH3.h",
+      "sha256": "116d677a25a2f39d0d72ee4c17791f88afefa194e4bad11bf48f13df7f1d0107"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/VectorH2.h",
+      "sha256": "b893495dc64114fa1036a0eb08f15a4e62c1e8e7f6e1008a4cd7b50db8fad7bc"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/VectorH3.h",
+      "sha256": "4ca8c526eb528b9dbeffdaf57c3e080f8e77597181d1edc87801c149a639be3e"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Weighted_point_2.h",
+      "sha256": "b0a51de6c6535f0fcc885d564ad9a9ffa3917bc9780a8640062bf03180a6c8f2"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/Weighted_point_3.h",
+      "sha256": "471aad68bf4be7dd4de3e2731f29292e6948b2223f814627466f20be042b7f06"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/basic_constructionsH2.h",
+      "sha256": "f2f1676839e6a0741158f6c8fdabc09bc72cd93f7eb7413a069cafeb59bcab2a"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/basic_constructionsH3.h",
+      "sha256": "0517e078e51d827850ca5dcee56d5b1bc15aa3cc9d7a5ee1d00f734b8fc3dde3"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/distance_predicatesH2.h",
+      "sha256": "f8c2d7357725ba577add6e3796a3037e0df1773103daa243d958f0347e60c734"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/distance_predicatesH3.h",
+      "sha256": "b1f73109a895f8e6ca3df041769c3cb24cc3e4880988b4224d2516f04edd414d"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/function_objects.h",
+      "sha256": "051c6300ae2413d5097c8f2ac07970ed95c1bc2b753a326c0d89ff2abb59a85a"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/predicates_on_directionsH2.h",
+      "sha256": "3544f1ff3919f1f0cf83bde2b08d751e62137469f93b384c6a23fb319c89272e"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/predicates_on_pointsH2.h",
+      "sha256": "fbbf49ebb472207fe60cb7c362048d9d89e5eb13afbcceac57520d1e8e4d87ff"
+    },
+    {
+      "path": "include/CGAL/Homogeneous/predicates_on_pointsH3.h",
+      "sha256": "7a7fbac8e0256cbc2752ffee07790724412d4a427fe9926f3cfaf817a9f944dd"
+    },
+    {
+      "path": "include/CGAL/Homogeneous_converter.h",
+      "sha256": "edb8ac200abd27fdc5f06447779b00855ab881db3770e943b9c1cea10c522fcd"
+    },
+    {
+      "path": "include/CGAL/IO/Color.h",
+      "sha256": "71e6096f9b8c8539d4950a2b466d458533c449b411434c968b8963cb79f625ce"
+    },
+    {
+      "path": "include/CGAL/IO/File_maya.h",
+      "sha256": "3083691633aa0978e60d334b4a2184d7fe53baf096e41bc70920260fbe86dbe0"
+    },
+    {
+      "path": "include/CGAL/IO/File_medit.h",
+      "sha256": "487a48542d59d299c58d7576850f25a04531bb3ce25b4fae99e6fb53b5c94d7d"
+    },
+    {
+      "path": "include/CGAL/IO/Tee_for_output_iterator.h",
+      "sha256": "3b55b1a4b4d64fbfdde40c523300ea2e78991d4783d28e6a8f8b4d76870e2a6d"
+    },
+    {
+      "path": "include/CGAL/IO/Verbose_ostream.h",
+      "sha256": "a03aac82c12677c53f5f67003f427c13a1cf929851247c2109409e46dc612619"
+    },
+    {
+      "path": "include/CGAL/IO/io.h",
+      "sha256": "b555214e2703843e4552c5872ac6ed99a68b227d0a2ddfc6c270de5c627d9e9c"
+    },
+    {
+      "path": "include/CGAL/IO/io_tags.h",
+      "sha256": "221166f095f93040b0d8e378b0590531011721ecfe7fe933aaa3e711f70e7983"
+    },
+    {
+      "path": "include/CGAL/ImageIO/analyze.h",
+      "sha256": "7d4dfbe7cbd703ce1c2e4acf6eb68658ae46269fd69b113a1dc601af08f23d17"
+    },
+    {
+      "path": "include/CGAL/ImageIO/analyze_impl.h",
+      "sha256": "22cd981a94c37e9310e6e45fd7f5a03dbf589ef647c7173773edd306b7ea3ff0"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmp.h",
+      "sha256": "1689dcb548739266a66d76f5c7be9629c3777e9d1fbc86ed1c9ee7b263fc5bd1"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmp_impl.h",
+      "sha256": "24e08ecb338d2e52da810dee7644055ec3068ece69c1828f2175fdeb06a41a04"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmpendian.h",
+      "sha256": "a68d83ac758cd0959a2b3bd31435c775f37d2586874123825b7438c68ae8073d"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmpendian_impl.h",
+      "sha256": "a94093b589ef6bf37f0ba11c9f465feeee9c441ce986bcb168d82df819af704c"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmpread.h",
+      "sha256": "eb3a86f5d770b1e26f31e845efc85231c98799cd5c94401962dc30c888a32c07"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmpread_impl.h",
+      "sha256": "20369e48fae93c3a464e4571d3d981a4e6538f61a2da4f9e62ccd6ea40f0258c"
+    },
+    {
+      "path": "include/CGAL/ImageIO/bmptypes.h",
+      "sha256": "7b63743358f60cb263ae3a2f5704af8f74ffe67b53d50fa35ab81bbdaf98d7a7"
+    },
+    {
+      "path": "include/CGAL/ImageIO/fgetns.h",
+      "sha256": "a08b52dd7b16ca51a6af0e950f96beec89280f0184f6659c32bd50606cd016fa"
+    },
+    {
+      "path": "include/CGAL/ImageIO/fgetns_impl.h",
+      "sha256": "bd8589d81dfdc244670ce75dc455c8a3696fc5c10658f1951ba7db4372d7ca4e"
+    },
+    {
+      "path": "include/CGAL/ImageIO/gif.h",
+      "sha256": "95ea9c5ddcaf9c4c4f1dce29f1278ea782f1e54a232872df5fd3b252839c254a"
+    },
+    {
+      "path": "include/CGAL/ImageIO/gif_impl.h",
+      "sha256": "36de6a7bbc4a367ea573fce8f0352717fef974c957d36ce4e3c461c971a9f168"
+    },
+    {
+      "path": "include/CGAL/ImageIO/gis.h",
+      "sha256": "3fc5206f4c3b649265126fa84814704ad62267c0f24162d9abd39ef61cdcfea1"
+    },
+    {
+      "path": "include/CGAL/ImageIO/gis_impl.h",
+      "sha256": "143b5df453dece5e1b58212cfc92b6497519fbbe775de25402dd98fadd18952d"
+    },
+    {
+      "path": "include/CGAL/ImageIO/inr.h",
+      "sha256": "e1487e909e1fd3af362cc147fa7f9f93d4ff79c6a92266315ea01160d3f7ee54"
+    },
+    {
+      "path": "include/CGAL/ImageIO/inr_impl.h",
+      "sha256": "2d137ba1a6b144345734a141b7f1a7392667208fdd4a9b80a258b4024b31a2d5"
+    },
+    {
+      "path": "include/CGAL/ImageIO/iris.h",
+      "sha256": "32c9eebf009dd914cdef84249e04b99b95365ad2d20f9990c8ab468fdc4700f7"
+    },
+    {
+      "path": "include/CGAL/ImageIO/iris_impl.h",
+      "sha256": "3345fd0dfec6125f1a95824a7207d97cd53f8cf80f32563a54d49fb1211cdd82"
+    },
+    {
+      "path": "include/CGAL/ImageIO/pnm.h",
+      "sha256": "8f3cd6d0d266e755930b3973ef93299bcf9ee9681dccb522e98866f9f52f0615"
+    },
+    {
+      "path": "include/CGAL/ImageIO/pnm_impl.h",
+      "sha256": "33534d97a72b9f1506985ec256840f1023cfd1a88a2c5eaae719e8f56af65873"
+    },
+    {
+      "path": "include/CGAL/ImageIO.h",
+      "sha256": "1ddf4c99c3f100fa1b1456a9ee51c15dd2e58734aa299b00c4445497e9b24ee0"
+    },
+    {
+      "path": "include/CGAL/ImageIO_impl.h",
+      "sha256": "3202af31db83e24a9177336522c6cdeb064243f4002b2a3a3e8933669247f745"
+    },
+    {
+      "path": "include/CGAL/Image_3.h",
+      "sha256": "305570dbe907e2b1cdeaafdb2d912083179fb163c96c4fdef35eb74afc020218"
+    },
+    {
+      "path": "include/CGAL/Image_3_impl.h",
+      "sha256": "8fb1103f665eb960d5b430b3fd9e6be1531345b7a38567b4a8e3d82919a085d6"
+    },
+    {
+      "path": "include/CGAL/Implicit_to_labeling_function_wrapper.h",
+      "sha256": "43dcff58590aaa4214e18a9869412f0d37f4be06a8564de3eead5f902683dada"
+    },
+    {
+      "path": "include/CGAL/Installation/internal/enable_third_party_libraries.h",
+      "sha256": "12211170759313b87e56306cff5359934dd867b0618dd1f9cbda95d01975758a"
+    },
+    {
+      "path": "include/CGAL/Intersection_traits.h",
+      "sha256": "6a6a13e8a846f95fa38a127008c082694d42e199c607ac94c256b478a449e57b"
+    },
+    {
+      "path": "include/CGAL/Intersection_traits_2.h",
+      "sha256": "95c5fe104a4cc6f8caec78386702e1feb58f37e6c8ee857df48b4c08618ac1a6"
+    },
+    {
+      "path": "include/CGAL/Intersection_traits_3.h",
+      "sha256": "a9612b1106bd5ae2c9e498734b0748472a230cee80e681e99aae0779f0c44a91"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Bbox_2_Circle_2.h",
+      "sha256": "1f80eb648decd9dde3612537d1dde5c4ba58f2e5da6a4daadcf67b658e0a26ae"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Bbox_2_Line_2.h",
+      "sha256": "4ea6ab57b468a88edf58fda9f6074b21397633612e18358f69016e61779cbea9"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Bbox_2_Point_2.h",
+      "sha256": "adbcd2ac81f2ec2995cd57217cf0e9ed8b78599b0f640154840bc29543ede8d2"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Bbox_2_Ray_2.h",
+      "sha256": "3c5ab69d7128c79b3d6cc3e62f853a9282a9d70a4864a47c89e36899531e9642"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Circle_2.h",
+      "sha256": "ab3e16739597d0e6440673ab17d76c871f8a1ab63ad2c78324a15baf50d5077a"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Iso_rectangle_2.h",
+      "sha256": "fbd7ccb9c3cc44b6f65f438474759904cc899eed27fa17226eac8cea6446fa13"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Line_2.h",
+      "sha256": "823c4750a4c8d4c5b244aaa594e112bdf33e547977e882c12d931a9a32861514"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Point_2.h",
+      "sha256": "cf16531a96342d028a501f1e65892df73340b5c9ff15b8da95f7e1652d6238c7"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Ray_2.h",
+      "sha256": "c083403f1231a3af15c7fa229634896286a00162a5134f0dd975a3c32ea6d17b"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Segment_2.h",
+      "sha256": "934a1a5a192f12793f423f20f504ac11a5a7fcd18aeeaee0b6401425b81c146d"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Circle_2_Triangle_2.h",
+      "sha256": "c2bf5c863bbd643d9e3cf8fd3fcf6e744bc305f46cfe1e3e504a8ba9cab9779e"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Iso_rectangle_2.h",
+      "sha256": "ec0d02981148d5eedd548b734a87e6bea1f6593320c9c469945b81fd59e53c64"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Line_2.h",
+      "sha256": "614c01bfdc18e440e32b0b69ff5efd8810c1210f71a8353a4758d0e24fd7252a"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Point_2.h",
+      "sha256": "d34cd548b5595241fe0c18a7e7e3c107a5692857503dc46616e0fa323669db87"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Ray_2.h",
+      "sha256": "c0d3acfbe36c785efa3031a7b019ae7f1aea6d560e1d469d200a36352d587c9f"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Segment_2.h",
+      "sha256": "3acfa5f62bd6e9299b9a911ed2d227ad949b71f61db3950d090a5e8883019816"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Iso_rectangle_2_Triangle_2.h",
+      "sha256": "1afb454fcdce0ca7a6ce3c621a3fbda2aa8cc7b4908e34b0ef25ebdd3a0100e3"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Line_2_Line_2.h",
+      "sha256": "71cebf69aeded8877d3e74dc5e8d9b3f03ef2f85ab4cfef5dc6b88ff59ec1e7d"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Line_2_Point_2.h",
+      "sha256": "17e955d8056e1eca7f600914e6a74291b982504d22b0aea39459c8b554b70761"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Line_2_Ray_2.h",
+      "sha256": "2ad8e4e157d4769b40442866e14cf1b54fda59321e80f1c2fbe99588977306e4"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Line_2_Segment_2.h",
+      "sha256": "5394786b6d20ce68e884ee244bc2658bb423fbc0604f7bb39aa990a2d847ce18"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Line_2_Triangle_2.h",
+      "sha256": "0a96d34edc5d79c904151c3dfee90f25141ec547b115e997f256442152e8e929"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Point_2_Point_2.h",
+      "sha256": "1404f7d565321be21cf919d4f430666f1fe4f981da00af8462f078bea8c2c35b"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Point_2_Ray_2.h",
+      "sha256": "2782f6d839bd6bbebe861e468d3a731c83aca01de38b051d423d7092dcedeff7"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Point_2_Segment_2.h",
+      "sha256": "099eb669e020cddc150b719a05f276ba49af15faedb19b08ad2d807b64c08944"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Point_2_Triangle_2.h",
+      "sha256": "75c6693951aeb38f197f4d77640d396bc5e8626b50bb95f3b49e6743c704df83"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Ray_2_Ray_2.h",
+      "sha256": "26d6c74997a1fd4cdef74bea1fffc145fcbbcbdb9be886fbff7f35af4ef82f31"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Ray_2_Segment_2.h",
+      "sha256": "5c900c24ee771bfb2f9e2fca7a3105ddd6a27ee90904082a7e66237baa6275c4"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Ray_2_Triangle_2.h",
+      "sha256": "6b5905bf416ab9be69879c6dd5ef6ea0fa10f5b55b3f7add5eb2455a8f95f53d"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Segment_2_Segment_2.h",
+      "sha256": "24273d9436e6e8fa832c0758b63d6091280fea6c8c059853f858ae1eb9549fd6"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Segment_2_Triangle_2.h",
+      "sha256": "00e9ffb31bb362c4491c544343acd00f8518008ea748bc3013ec1aa8437c1fec"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/Triangle_2_Triangle_2.h",
+      "sha256": "374814e260a14eeedd9b65caab8e73a9cfc73bc44b1313a18b436d0cf6df73e1"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/internal/Straight_2.h",
+      "sha256": "3a75f14eb9fba07e10bc4008af4269727d3750ec2e5e347e655cf116b732df39"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/internal/Triangle_2_Triangle_2_do_intersect_impl.h",
+      "sha256": "058d27ea7d0ea7231c3e733b2f343993a286514667ba29a692f01794a75ec710"
+    },
+    {
+      "path": "include/CGAL/Intersections_2/internal/Triangle_2_Triangle_2_intersection_impl.h",
+      "sha256": "e8427120dacc5cedd646cb83df0ec652f72aa852a71bfd05f8be904c44b73dfa"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Bbox_3.h",
+      "sha256": "facac212c9ea9bc820c40c435c84ffbf55dcce2ecc5a4a654e1959f62bff582a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Iso_cuboid_3.h",
+      "sha256": "b386906dbf091201a3e287f77e7bc7656fb771220b7cabdd7d5d2936fd43ddf5"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Line_3.h",
+      "sha256": "eef49ee20121b7df288b81acbc9728424f6dbb60639e9bb885a981b2f4649f7c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Plane_3.h",
+      "sha256": "4fa817b5b12687e6f45f25c52825b362534ba273707e9df44d47e0c51989eaed"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Point_3.h",
+      "sha256": "cbe1d3d41914314d0c2a2b122adbe5a2b14681c08a92ef3895421d2381b37998"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Ray_3.h",
+      "sha256": "b11cc56317c58b0bd9498f60ed331ef5d296c78cc6eb3871b9abf151b4b33aa6"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Segment_3.h",
+      "sha256": "e30c70218af705dbcd9ea7bcb5a996b5a531ca8b16feabefb15591fa9de4542e"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Sphere_3.h",
+      "sha256": "5e2f0c9679f0ed0e33957c3a2f89d06a083fa468643824444c6dcb17d71d9304"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Tetrahedron_3.h",
+      "sha256": "9cab987e11f33b54311f2420912f77457e2a42eddf6218cf091140e411f55540"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Bbox_3_Triangle_3.h",
+      "sha256": "daaad9b91b98f377d4a0c29d4415f7cdb587911a304fb7e7c4089cd139ec6ee5"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Iso_cuboid_3.h",
+      "sha256": "4fb03bbbc48a7ecbf41c51fa496037f76be71a8467e461760c1aa348915c32f7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Line_3.h",
+      "sha256": "e60b84bddee14d872bfe86a51851205d415cb9d66e9829acd122d4caed005e59"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Plane_3.h",
+      "sha256": "35089486e9ee7eaefc2df2ed03b57e21ade90ceaf75203e4883fbd817c0c812f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Point_3.h",
+      "sha256": "0dd9a18b4b06bc93b5dfdaac87b2d4f4d90589342634680a9fe836dd7615f9e7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Ray_3.h",
+      "sha256": "142cbdaa8a0c9aa6e96e1a2cabd66af3d7b651ba582493fcc8e23c0cca9ecca5"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Segment_3.h",
+      "sha256": "139ec36dca7afb659443d5f665887d2b59bba80464b85281de0dae32c59bc4e5"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Sphere_3.h",
+      "sha256": "c964902ad93d44594c04b30e8b48a815c602c365db0bcf061fb9417eb84d0f97"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Tetrahedron_3.h",
+      "sha256": "366c3405c66adfbdaaf89f717a8af34228659603a2b359bfe4149970bfa4c43e"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Iso_cuboid_3_Triangle_3.h",
+      "sha256": "b4482332bfd4dd77d67289c18dc17cc523cf7470ed3ec665852b6a078cdc60d7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Line_3.h",
+      "sha256": "c8503b50aff06152c4ea862132b7d435bd422c71320db3f94dd2bc9ebdd35eeb"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Plane_3.h",
+      "sha256": "84334ab7c9bc4f2266dbaa0b4c925c8d50fd79819de6f5d75b12f728fbaeda9b"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Point_3.h",
+      "sha256": "f14f2d03f388c247504efce0a9f69478c29ac68a8604df943d616b52b380d791"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Ray_3.h",
+      "sha256": "cc1c84c3b7fabb951587100e323f4d9e837600d7a9b6e167b2749a9422140336"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Segment_3.h",
+      "sha256": "89015a3adb5855a80907529cabc6a60e57fb0e19e7206f9104eea43cc87d4253"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Sphere_3.h",
+      "sha256": "3be58e84c4cfaf6f32ee00ad69c779080e7e7fd72d3b3c72acef2ec46bd25153"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Tetrahedron_3.h",
+      "sha256": "60c3b652f2a117d20a894bf7a04488c1b86823c7b81ca5a2e513ed85ed46f669"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Line_3_Triangle_3.h",
+      "sha256": "1d1aa4c205040aeaa1c0d0929c0f0f5cc194bd6e594dcb6ed2a383c248d95525"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Plane_3.h",
+      "sha256": "f457074ef32a49eff228761db9c6e68f00a51e12b54895fe11bc162d439af5c6"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Plane_3_Plane_3.h",
+      "sha256": "e56015d869be9b6af0f7829ee3af326ce017874ce773cd8f4285694d19fc6375"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Point_3.h",
+      "sha256": "2ddcce64474cffe770509c34befbf854d1c481b9f639a944ff3695baf4cb401f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Ray_3.h",
+      "sha256": "8eeae995574988b7d9d1c9192193694d99cf572e783f60b947caef50b6a22857"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Segment_3.h",
+      "sha256": "f1a11d246b78d14d9b6bf59acc203bffd5dcb7ecae206e0f5a58c5b134834c32"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Sphere_3.h",
+      "sha256": "2d415eef6be452caac26862409e544b244c5989280c91c852bf421c20483a6c9"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Tetrahedron_3.h",
+      "sha256": "db45b167ac0eb367ea91365f55e69e3a6d99a718cead3d4abba88be279b704a7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Plane_3_Triangle_3.h",
+      "sha256": "3b9e140604f091bc9a3a1520a09b267f2e8a4eeb220614c8c304a80818d34aaa"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Point_3.h",
+      "sha256": "629044bc0ad5e8d8c1c5df84bc70b7d071dfb5cd82bbada846bb574a2b724f26"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Ray_3.h",
+      "sha256": "2380fa9158fc372e17c5360eedee07470230fc81ef6ddbd0a48698b144fc0f17"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Segment_3.h",
+      "sha256": "b5d87f9eedf5247ce716454e696f9f65b3c962ab341baf640c433215c15a158b"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Sphere_3.h",
+      "sha256": "b95e673c4267f4ea85f939c98c596634621dab0aba91cb1a5d217382c9b765c2"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Tetrahedron_3.h",
+      "sha256": "95d6677c6ef0e14be9e23f17e55808332530440460f268703e2a15af23e64c37"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Point_3_Triangle_3.h",
+      "sha256": "4ba139ce688ec8c12b6c43805ca60ae0d6e0d238a47699d21413dd36fe80f0f1"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Ray_3_Ray_3.h",
+      "sha256": "3aa62b60f4287059c89f8910dd2af57fd7ac0698067cefdb2c3c130f4666ee6f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Ray_3_Segment_3.h",
+      "sha256": "9058ef9754541c9acde1288f4e3d7dfa8d2b491f0681685248f36c46ee2dfd7d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Ray_3_Sphere_3.h",
+      "sha256": "e5a0913490a4e001871e3ca474a5c2cabffc3601ed48a7e15f0d1045506b9188"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Ray_3_Tetrahedron_3.h",
+      "sha256": "067a6c97197af1f8693e8735e91a5efb1a2f5220c0012eb63f44d1ad51268ada"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Ray_3_Triangle_3.h",
+      "sha256": "866c6d01bb02ac3210312c23b4b96bfef05891c1d45322f6f2c64bbb5ff6f556"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Segment_3_Segment_3.h",
+      "sha256": "8f16d85c464d357a1862d5fb84cc6970fa388720783c50e700665e59b315e61f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Segment_3_Sphere_3.h",
+      "sha256": "d5651f1664d814d51857c128567107beebe7b5641cddb444741c4446039724d7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Segment_3_Tetrahedron_3.h",
+      "sha256": "7817fecb2b1f0406bf5864978de1ff2c6097da167b9fdf95a5b0e2d5e88c9734"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Segment_3_Triangle_3.h",
+      "sha256": "16f9204918488cef03d4ee07cbd414924a8026ba83d634a78efbefb6f51baeaa"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Sphere_3_Sphere_3.h",
+      "sha256": "91673b629ee7f4d124b4da3557cfe95794c6733300b48bf5e224ebfd45ae6242"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Sphere_3_Tetrahedron_3.h",
+      "sha256": "8169fe8047f3a0129556b4900443e0cbbbffc13fc11171bce9ee282a7d4a3333"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Sphere_3_Triangle_3.h",
+      "sha256": "4051aeadf3c2cc8d49617579baa97ae6c2248f2fb3e04839ac2e56b3513a0eda"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Tetrahedron_3_Tetrahedron_3.h",
+      "sha256": "f1893367aa1688f68c966ec042df40eddf1e4b6f24525fa5a26ca7e560c7b8e8"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Tetrahedron_3_Triangle_3.h",
+      "sha256": "e574263f9137bdc29962337cc58fc6899b01818976ed9bea6fc02ce3529756c8"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/Triangle_3_Triangle_3.h",
+      "sha256": "aa96a671d44e86f91bdaea1d2ae4e66b5a9e785d149ffbd6f54342d999ad47ef"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Iso_cuboid_3_do_intersect.h",
+      "sha256": "6579cc3fdd2e6f7395f488e15b6f48d99019e88cd01ee7ee5ef7ad7d33588942"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Iso_cuboid_3_intersection.h",
+      "sha256": "4c5066652a4413b9cd4c8bcc160c1a227191e24c16d3ccf3177c1d346a577006"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Line_3_do_intersect.h",
+      "sha256": "d6721ffac35108392282bbec43d51d7b068b29afc1e8c0e878ec258fac84fb6f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Line_3_intersection.h",
+      "sha256": "c90425ed4ad042a261d60f726b6c08282d964f2e6451deb97cf651597e95a3fe"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Plane_3_do_intersect.h",
+      "sha256": "191b15a09645960344c8b4b2b5a1cb769dc135189cbaba8c47769494b6ec316a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Ray_3_do_intersect.h",
+      "sha256": "37be1a09da9fba597430ab241ad0589b1be4d80f05ea392047e9f9c733f6fcec"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Ray_3_intersection.h",
+      "sha256": "a3a1e40d5bbe870328759e0f86abeef2fc20a83d5c10ef0d108b9e726a8d88bb"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Segment_3_do_intersect.h",
+      "sha256": "16d6b850be9d1172b386ca6cbb75b4ad17d496f262aefcc57356de1db5ea48e5"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Segment_3_intersection.h",
+      "sha256": "fe8d571dc1b49e2f3a56cca7586836267e0b0b40c174e373f8da480454945392"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Sphere_3_do_intersect.h",
+      "sha256": "7cba112fc18a2d6621bda271ecda10fa1c72288d14aa3cfd117abc1a9720c7b8"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "e703b291c81e695e94c3ad7a3b0e17151c595dc500ca82842a7ab35219dda49c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Bbox_3_Triangle_3_do_intersect.h",
+      "sha256": "563abd7ac9e3c61917d9cc527257515f5448bf6349c8c783318b34aee4f3e994"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Iso_cuboid_3_do_intersect.h",
+      "sha256": "e12a541f5fc24edb796a8a612467915c02e033e84d0c33e1093d805bf83f6575"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Iso_cuboid_3_intersection.h",
+      "sha256": "1d5fb771e4f0b95341586733f40a3cf79461d02c63a94a8a0683ea09eddfaa14"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Line_3_do_intersect.h",
+      "sha256": "e226d2873a63969db44f809791dcb17f266ab9bcd7871143c51884a60185382c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Line_3_intersection.h",
+      "sha256": "508d61882845d7f2e70b32a9b063976494a45d825c6441b8076971a95997eb6f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Plane_3_do_intersect.h",
+      "sha256": "d5cca3039a12abe06d126fa5b83ea85c5e014b454af942c60b639884cde54500"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Plane_3_intersection.h",
+      "sha256": "1c68f1c340c0d54ac4f18045cc8b510e5306db1141714adfdfbb0b00512e3cb1"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Point_3_do_intersect.h",
+      "sha256": "ead66ff1d4aa38f23b47b2a921f8addf3bea2e11b015a783f20b2f36ed67453c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Point_3_intersection.h",
+      "sha256": "d0dfecf545dcb2244b908058d3435634b44445a685c51adc86a4fdd866741a0d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Ray_3_do_intersect.h",
+      "sha256": "03dd5184df20600e01e943e48b196e92bd65c039c42d715b00bb50b75140813d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Ray_3_intersection.h",
+      "sha256": "79035746c99e7cbc81aa32a37aec42f857249fe3dd550a7bbf0d3564390d2f67"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Segment_3_do_intersect.h",
+      "sha256": "6c77c105f3ae89b0809893ca726d7f9f87b50ba919eef9e023be411c5eb3d89c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Segment_3_intersection.h",
+      "sha256": "228b4b364cf3387cee723df6e822a20894bae3fe5a2fe435a0971f62413f9e63"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Sphere_3_do_intersect.h",
+      "sha256": "7b4ea85d5b639baf253493b93e6cbd5a60043f90f593935a2f0c031b23c46991"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "8bd9a12fad26610ad0905011f98eba449beea4f5d17ae3909cee1fc6fcaedf7f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Triangle_3_do_intersect.h",
+      "sha256": "3c45b11273d8e2df72a20c17ddebee9c93c6702c9faa11ad95b092e95c3fa3cc"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Iso_cuboid_3_Triangle_3_intersection.h",
+      "sha256": "58aa1218ff75c55f074e480094a3cb85367863ea592ad306d4693d92ca0a478e"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Line_3_do_intersect.h",
+      "sha256": "220ed9f6f65568f401fabcf1b311c8de990d059571d62ccaaf257fb0e4000a07"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Line_3_intersection.h",
+      "sha256": "5a27e444cde8f7aa24205299feb012e54e158094930e831b5a1b55e607d4df64"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Plane_3_do_intersect.h",
+      "sha256": "84bb7be31a66ac2671f9cfed33c90c5466c29f560cb2498c64104e541eb3e673"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Plane_3_intersection.h",
+      "sha256": "302e2fddc54934d09427fc672ccd564b58fc37f3f2bbb82dec341676079507aa"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Point_3_do_intersect.h",
+      "sha256": "3083e4455a46999254fd6152f6e705efbad5e4e3de0fa79288be8ac1142daf50"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Point_3_intersection.h",
+      "sha256": "e414e7246dac00f14bf79789abaca1b3c0471a6897e59ae6fba2a8a5d6c2971c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Ray_3_do_intersect.h",
+      "sha256": "d532e6b5c0c4ead9b20681eaeec66498b18ff20f4cc44aacd9d935f925a31231"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Ray_3_intersection.h",
+      "sha256": "ce8c01613c018398ee0dceffde0af478bdf4072ab35cd4edabbd48a29c2f9189"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Segment_3_do_intersect.h",
+      "sha256": "62d07d6c819f4aa6ed66693fda00dd63b399828cecc960155b2200073c9d93ac"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Segment_3_intersection.h",
+      "sha256": "4fb29aae0b101c25cd79a9cf5b7c0154f3de9849e83e75a9a04f937e5c7a23e7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Sphere_3_do_intersect.h",
+      "sha256": "26d46cd8fa9027d1f9050b977486cf6625e443dfe4c24a91b03a1e6ab3ea7d7c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "e3484302ece0c15fd084b21aab26e02adfa67689caa4c1029238ad28f3477334"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Tetrahedron_3_intersection.h",
+      "sha256": "6789fb2a3757093652f9a4bfd8107ece822dfefb958e0f5e498d0dbbf397b092"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Triangle_3_do_intersect.h",
+      "sha256": "b854cdd01db96e30c59fda664e0a431aa11f2f7c6f8fe45db0f440c14f055468"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Line_3_Triangle_3_intersection.h",
+      "sha256": "550eaa38aec940d0fb6574b5df35b0683027ecbf70542bfc046149bacdaf8607"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Plane_3_Plane_3_do_intersect.h",
+      "sha256": "1643c6f7b53c0d7f6928a2cc4bfe38e2f8180e92639426c26f255bcab336c2c0"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Plane_3_Plane_3_intersection.h",
+      "sha256": "0339d3bc10762a4f9ca70389d595b9d4f84d18104a83b1de491a072f30d5e6a1"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Plane_3_do_intersect.h",
+      "sha256": "55422cdd7bf8040d9d0882b699334787a23bffd0443485be2d287c2ccd184df0"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Plane_3_intersection.h",
+      "sha256": "22a436f54c541956793f44c0f4605df6a44c94ffc6212f034e376af1b58ae01a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Point_3_do_intersect.h",
+      "sha256": "19e7e6a8a32b28d96b5684547c0332be6a2d73fe61ee102ad2b6f46219f55d02"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Point_3_intersection.h",
+      "sha256": "59d22bf743d0468d459a40b9cb028e7dec6173cac9a963d715e920e7731a6468"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Ray_3_do_intersect.h",
+      "sha256": "cc004dcefdacc6214a8155d8f3ed05735e82441ba27491598d179b7ad5e4a6b1"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Ray_3_intersection.h",
+      "sha256": "04f08357d2ca2d768b9d8d259f0281680c3b310a6b339ad64cf189c3c2fa06ca"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Segment_3_do_intersect.h",
+      "sha256": "77fb1c99ec2fe10fa1de90d4afb39a31faa75bc7aa00ded605b5b67fc1ad1acc"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Segment_3_intersection.h",
+      "sha256": "f389e713234d788e545ed930d9130eb6a5b36fe92ebbd0708c1b77e3f12cd269"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Sphere_3_do_intersect.h",
+      "sha256": "3cf4abbe1452d676c1ec854dde2b9d5220e367b5b045aca42d95e4257f56df56"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Sphere_3_intersection.h",
+      "sha256": "a18a853d53aa0062d593e109e9a0faee4ab322fdc1585832a993d41e88b08511"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "11b562b1f061538f02973b279c28288d9295031ed58c884300978e010889e89a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Tetrahedron_3_intersection.h",
+      "sha256": "f76550d3af268937c190ba8d9eb6c85646326deed33b691e768580e47666b9e0"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Triangle_3_do_intersect.h",
+      "sha256": "13f6eb9e101bed6d1111b6c111fe6237a679d165bfb78094eaa93fd1429d3eee"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Plane_3_Triangle_3_intersection.h",
+      "sha256": "62ead72da40b5893c083a3c86a9456a959c0e89331091908561cc106c13d24c8"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Point_3_do_intersect.h",
+      "sha256": "f3fda103eda136478bf3d10265c2c50681c64b50262d8dc1c614bd37545cf46b"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Point_3_intersection.h",
+      "sha256": "af8c00489dcce6b311e307aac094590f6f018c6b17189b39f40325c1b4bbf610"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Ray_3_do_intersect.h",
+      "sha256": "c1ddcacf54b435becbd72ac6c0c9c393dd6572af1e5cfa6923d4d2f0f510373e"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Ray_3_intersection.h",
+      "sha256": "3003e1aaff88d763312891e927b540183d8f5709906673424f84e6b521b838eb"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Segment_3_do_intersect.h",
+      "sha256": "ecf7c6f7283bc64021eb6aed539f71b2452053800b16ae084227e1d61ac1fc2f"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Segment_3_intersection.h",
+      "sha256": "b27a9274567ac00139f009c021467512951f9c3c9e95b861b3d8cf61f5ca2c02"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Sphere_3_do_intersect.h",
+      "sha256": "f53820265e355089853af001682ec7234d686a5c748fd1e838b38b67096fe10a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Sphere_3_intersection.h",
+      "sha256": "bfdbe4cb2df4b83c0fc396a5f66668a0d75dfb032fda2c6fd06d3e96d9ac4245"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "db32d49224027ea4626a9b79c636179a6294eb173a8f0be2381a65dc2ef0ca59"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Tetrahedron_3_intersection.h",
+      "sha256": "d45ae7f3efe4a587c0adb1717145dc674505ebafe70e7957050200a5beb106e2"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Triangle_3_do_intersect.h",
+      "sha256": "e422a4eb71d744ae12a6b064ca6c3804fb2332ca5ef03647f839e53ccc2ec24d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Point_3_Triangle_3_intersection.h",
+      "sha256": "569a66043f29015aab1e25949753a21a2f3523cbfc2d02ba6a2c3ebd60b35e35"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Ray_3_do_intersect.h",
+      "sha256": "c822afc1eb45af56a8bc76029a36d59a0697e679b82d1702b31b98dace9b8d61"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Ray_3_intersection.h",
+      "sha256": "934ea8e0270c8b07315df337d356177af6078528ef6e3926b74ee70a5ceea481"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Segment_3_do_intersect.h",
+      "sha256": "c6c13d7e8bfad718b9593e93a2a2ff63e592e9907405063e5f9183ffb7bc8a0a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Segment_3_intersection.h",
+      "sha256": "98af01aa346e9dc2743a92eca985571dd7fa7a3131f361bbc0f3a167ee5a2e71"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Sphere_3_do_intersect.h",
+      "sha256": "0ec9870fa670319a73489e9dc5981edc7cee136a71ab8a696c2cffcfed1d4ae7"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "6c102ab4aa6e6dbb060beb50be4ecbdc89826f72288de41afa92936179bd60ca"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Tetrahedron_3_intersection.h",
+      "sha256": "5cd1a3c34de8fd54ca76761753836595bfef8dee072eac0d9c0ea61678586b6e"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Triangle_3_do_intersect.h",
+      "sha256": "ee960c8f708ce228c33cfc1d4a61a1dc824cdbe2665e19a74486da6f93c758bd"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Ray_3_Triangle_3_intersection.h",
+      "sha256": "29742d265dbe4aee36624407278adc0f0d46f20e549440a63928a31c8e130a61"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Segment_3_do_intersect.h",
+      "sha256": "57aebea482cc5a975a34b236a00897ef8722f428a4e930ca4c4f457c5cf440bb"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Segment_3_intersection.h",
+      "sha256": "e9e43a6cbe97dc6920ace8b71729e7e8385b47c02bc440037a872fb4b0ecb423"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Sphere_3_do_intersect.h",
+      "sha256": "52880bc6f87562cb2831be3a949724a6e7b2aca4dbccde8369ffc650fd58dcc9"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "c35bf055d0fbe850ed3d9f009eb16dd3cf3ae5e82dd2b30adcc6ee47644da67c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Tetrahedron_3_intersection.h",
+      "sha256": "5e386d86015790370cbf7cddb11f071d33a4cfd9cc42ef452e9d8b2a10f681b6"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Triangle_3_do_intersect.h",
+      "sha256": "5ba94ced1f6c18fa6f93fc8da46d893f43fb0a2c4dec9ac95997d74201f6b63d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Segment_3_Triangle_3_intersection.h",
+      "sha256": "a26e19c8d381d0bb8ec5a61e07fd4e8691e71100c9fc64f8ec6b58fdad9b17f3"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Sphere_3_Sphere_3_do_intersect.h",
+      "sha256": "35809ab5d127762f63d95162107fbad63e391a53f6846db714e5a3ef9aedd334"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Sphere_3_Sphere_3_intersection.h",
+      "sha256": "17203c55b4f50f3845e96f3c6c7627c0ab36593ce41037d265d675979242f7f1"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Sphere_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "c83fa0f107e546e861134560b5d8c2822b026d5da538ecf002aee61faf6d8d2a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Sphere_3_Triangle_3_do_intersect.h",
+      "sha256": "7dc507d96f5f656274e1ac1ec7c8302f43e53abcfd05f9365a290fabe698af86"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Tetrahedron_3_Bounded_3_do_intersect.h",
+      "sha256": "c9da50caedf949d83badba7abab99bc5f74c7d62388251f35621f8339617685b"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Tetrahedron_3_Tetrahedron_3_do_intersect.h",
+      "sha256": "074d2830660d16842b27edd2a719c4eea7a4448ea8e3361ab9b1de2bb28948ec"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Tetrahedron_3_Triangle_3_do_intersect.h",
+      "sha256": "4399de445c229998698a8c7e55f7adce2b0fbeeb0551ab5cd79d0efeaa00a43c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Tetrahedron_3_Triangle_3_intersection.h",
+      "sha256": "751a687a02b3cad2e47a6e4e3d2d62cd9e900a77d2fdbb7f7ce91d264215184d"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Tetrahedron_3_Unbounded_3_do_intersect.h",
+      "sha256": "d1d7426149396a396c74582d2ae35481ae56b9f4fc6a8ffd6b87d81d407c956c"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Triangle_3_Triangle_3_do_intersect.h",
+      "sha256": "a159840c0f2a64f433a0eeece5e5b2df5f5660051a83057f7a6516cd383a0f7a"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/Triangle_3_Triangle_3_intersection.h",
+      "sha256": "baf567bf2141ce97e38101c2a37d0a675a4bced47ae00c43132f939f39558890"
+    },
+    {
+      "path": "include/CGAL/Intersections_3/internal/tetrahedron_lines_intersections_3.h",
+      "sha256": "bdfb6bb44d763da804e7f7836cd67b864edc4137cd2aa9281d262c3278bfcd67"
+    },
+    {
+      "path": "include/CGAL/Interval_arithmetic.h",
+      "sha256": "89040c6ff4c4a9f7ea3ed739f074f1ad8e9e820a4b1cf130cb05a0b9abdad4ef"
+    },
+    {
+      "path": "include/CGAL/Interval_nt.h",
+      "sha256": "e1e0bd8f2ac18d89fce1c19509f048f6d651ac2ffa366bea60ef0648f8bea452"
+    },
+    {
+      "path": "include/CGAL/Interval_traits.h",
+      "sha256": "a4131614d8f43090944ccf317fe24f65e87e6877369356645a95bb42c5ee8d09"
+    },
+    {
+      "path": "include/CGAL/Iso_cuboid_3.h",
+      "sha256": "0fdf815ecb268f7024dcf792e11c153663d86024cccaf1560f718d183b8bc933"
+    },
+    {
+      "path": "include/CGAL/Iso_rectangle_2.h",
+      "sha256": "7ed9da6034d6e2de3acc25124d1c37d61619b2d8c6e01cc087acf143ee3d69bf"
+    },
+    {
+      "path": "include/CGAL/Iterator_project.h",
+      "sha256": "511c88401146f1beb82a4afdaab55eca6dfa439837fb46ab98c30476b123655a"
+    },
+    {
+      "path": "include/CGAL/Iterator_range.h",
+      "sha256": "f898137cfbb9604c51afe88e09b0f07e32d65449d634c897ef5a91a7c901e537"
+    },
+    {
+      "path": "include/CGAL/Kd_tree.h",
+      "sha256": "35ed82e2566b03b3683ab24e6d9b1b0cf63c1ff9a60952ede345f780d5f9c4df"
+    },
+    {
+      "path": "include/CGAL/Kd_tree_node.h",
+      "sha256": "855810bf9967e699101b128b9513e6685921dccdd79aff790b347aefde8fdd12"
+    },
+    {
+      "path": "include/CGAL/Kd_tree_rectangle.h",
+      "sha256": "11013633360a60f3ff29f24942d522681891e9fd63870951e361ff9a039518cc"
+    },
+    {
+      "path": "include/CGAL/Kernel/Conic_misc.h",
+      "sha256": "d9506eb7b1348643f2da7e76cc0c9fcd5c2e3629449faadce92a5358dfb0eb6d"
+    },
+    {
+      "path": "include/CGAL/Kernel/Dimension_utils.h",
+      "sha256": "e8c44221e6edde4f7c521ea16f17407ff105075d7d727219d5f055f94f356b07"
+    },
+    {
+      "path": "include/CGAL/Kernel/Return_base_tag.h",
+      "sha256": "ad76fe7b6aa23f841fb98487dd4745c48554b1b442e0747742b4c5d5b7c7b581"
+    },
+    {
+      "path": "include/CGAL/Kernel/Same_uncertainty.h",
+      "sha256": "b91e97dbb540aa90b9810738b59a256b626989d1048bb77d578506e02c478234"
+    },
+    {
+      "path": "include/CGAL/Kernel/Type_equality_wrapper.h",
+      "sha256": "56f158d3b9c314fb19abe09ed7247eae050072afcfdad28d630703564cb38c89"
+    },
+    {
+      "path": "include/CGAL/Kernel/Type_mapper.h",
+      "sha256": "653bd700562c707607878ea8d383711968790d7544a3b14813bbed5c9897d796"
+    },
+    {
+      "path": "include/CGAL/Kernel/Wutils.h",
+      "sha256": "f600fb788f3be7b20f0ab4de4040f22e466dfc36251c235f3c22ed6bfd97b7ad"
+    },
+    {
+      "path": "include/CGAL/Kernel/function_objects.h",
+      "sha256": "18fc6b02ff4bfa282f37f491140c90d8515fda5dca5bdc2385789e585f3f8888"
+    },
+    {
+      "path": "include/CGAL/Kernel/global_functions.h",
+      "sha256": "7408bb2e7d620533efcaa536e2f63197c97273a6241898a27f2c101a8c497e98"
+    },
+    {
+      "path": "include/CGAL/Kernel/global_functions_2.h",
+      "sha256": "c2efcb608dfd4143fe9043b5cf20668e5317cb7631a74435f1ffb12b55c873ed"
+    },
+    {
+      "path": "include/CGAL/Kernel/global_functions_3.h",
+      "sha256": "f449a4b5cf59f93c70aa4c271a76db73e5d4cb7265237b417cfc95a4e650faef"
+    },
+    {
+      "path": "include/CGAL/Kernel/global_functions_internal_2.h",
+      "sha256": "948076957102660c22b891338df58ef18a72ac07648fa34d51ceb5912ffaa003"
+    },
+    {
+      "path": "include/CGAL/Kernel/global_functions_internal_3.h",
+      "sha256": "46b6180b9a8ee94d80391997190fee0a24f2d8c6f5c69085088334e987f18e44"
+    },
+    {
+      "path": "include/CGAL/Kernel/hash_functions.h",
+      "sha256": "754cc88836da4615dd5d6c07df460e4bcb289bc9bdd09f04da4c36163e562215"
+    },
+    {
+      "path": "include/CGAL/Kernel/interface_macros.h",
+      "sha256": "4e5db99cc9c34b09d78d488c9fa8f55ffeb8109cbd941e12c2755559aa86d625"
+    },
+    {
+      "path": "include/CGAL/Kernel/mpl.h",
+      "sha256": "96c925c70248393dcec8e9fb6976cbf7dcf0f437f40ba24b282238537af351db"
+    },
+    {
+      "path": "include/CGAL/Kernel/solve.h",
+      "sha256": "c09b952626f135508a0037ff3d7e5d8e5ef04c9804061f9abfab9cf3eb75260c"
+    },
+    {
+      "path": "include/CGAL/Kernel_23/internal/Has_boolean_tags.h",
+      "sha256": "53aa8234201f8162e05f5720c09fea9718ce6bf98a9ca5280ae8b61780d87832"
+    },
+    {
+      "path": "include/CGAL/Kernel_d/Cartesian_const_iterator_d.h",
+      "sha256": "d1ae822b8da6f74978794cd16fd7a0a0c03c8690f0bba20a303c32aa675f9250"
+    },
+    {
+      "path": "include/CGAL/Kernel_d/Linear_algebraCd_impl.h",
+      "sha256": "56264682dcc2a0c5b235d8150c91919305ba569683cdad9ee38576d1b92639d7"
+    },
+    {
+      "path": "include/CGAL/Kernel_d/Matrix__.h",
+      "sha256": "c6a65bdece01f42bd600c603fec99e328214b290332198bf39dbf1354cf57a4e"
+    },
+    {
+      "path": "include/CGAL/Kernel_d/Vector__.h",
+      "sha256": "3438041c20e05abd68cbcb4c286df980f6e59a08f6478e1f0e7d7397241dc008"
+    },
+    {
+      "path": "include/CGAL/Kernel_d/debug.h",
+      "sha256": "e5025a3e06d5b7cb2df6b8f59bad61f084b332db49bf5a8be83166026d35ba40"
+    },
+    {
+      "path": "include/CGAL/Kernel_traits.h",
+      "sha256": "baf93f9c2661d3e5389cfb8f007b4915402b862df60c1477eb2cc7cbed29c8db"
+    },
+    {
+      "path": "include/CGAL/Kernel_traits_fwd.h",
+      "sha256": "deada4e2b991a0ac8277c76725e84af92e3caa81acd40c1d1b788376275af3c3"
+    },
+    {
+      "path": "include/CGAL/Labeled_mesh_domain_3.h",
+      "sha256": "e9663487a1b238952c3ce7aa558d4ee89701e3439890ab46461f9cb65b52797d"
+    },
+    {
+      "path": "include/CGAL/Lazy.h",
+      "sha256": "d806eba73fe383fb73bf214ab9d4d7fce47fa44ccf84bc7ead07403f2a038c7b"
+    },
+    {
+      "path": "include/CGAL/Lazy_exact_nt.h",
+      "sha256": "68b93eb5a312f38114d1375ad34add04cf2c57fd1d54d8dc092ba446ba02f6e3"
+    },
+    {
+      "path": "include/CGAL/Lazy_kernel.h",
+      "sha256": "c3ca1bace5ee94316045e4a381b74b625e7df2b21c857a9f65aa2a1d99038671"
+    },
+    {
+      "path": "include/CGAL/Line_2.h",
+      "sha256": "01aa957f88b02eaf7d5d5f46b5874db8a13b3a10294f7da070603d6cbd85b602"
+    },
+    {
+      "path": "include/CGAL/Line_3.h",
+      "sha256": "65430081da0eeb2232d0e7670a0c902dbb1f071117eadf0ad14ac5b92cdad71c"
+    },
+    {
+      "path": "include/CGAL/Linear_algebraCd.h",
+      "sha256": "25d78ca60f83f47b95a7f0cd24fd4fcb5e2f165959fb0cd2048b5dad5ef24faf"
+    },
+    {
+      "path": "include/CGAL/Location_policy.h",
+      "sha256": "0c6c965273ae5370c1829b9b646851bea2d1fbcf5f658662e5723a9e527a36b7"
+    },
+    {
+      "path": "include/CGAL/MP_Float.h",
+      "sha256": "7be55662abe80cc6c77afb4158a635ad36c9eeb26075d773968f16d48bfbf195"
+    },
+    {
+      "path": "include/CGAL/MP_Float_arithmetic_kernel.h",
+      "sha256": "ff44791a5c2f41d4e6bb2d79e4afa1a4d586ab4f388aa4f92d99ee9710b66548"
+    },
+    {
+      "path": "include/CGAL/MP_Float_impl.h",
+      "sha256": "20bac4bc897b38c6dee8498fc67a2f1f3bf2e6f7892f42ecdefd10c42a630c19"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/C3T3_helpers.h",
+      "sha256": "8552bdc4bc70dbea1f2f7408477965acfef27bd11abc10316bd3551c08e0fb36"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Cell_criteria_visitor_with_balls.h",
+      "sha256": "d0563a24959afdbd9ee374aae23a40fbd6ddda9e3cc85cdb60ecb6c4c62b641f"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Concurrent_mesher_config.h",
+      "sha256": "666738e724c292d537797c82fd3d3a93950fabb49538a2f5d0987e105d6033ff"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Detect_features_in_image.h",
+      "sha256": "6556c1975edaa5b8bc702e039a7fa447feccea6bcd7748757993a0e83a9b7d2b"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Detect_features_on_image_bbox.h",
+      "sha256": "3b17e0de52a6acd339d82e47b7d054fe706f5e7cc2115df97d244eaae90936a0"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Dump_c3t3.h",
+      "sha256": "01bb28d1e21cd10172dce87adb3a1b76dd73e830efd0201bcfec551f24046b19"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Facet_criteria_visitor_with_balls.h",
+      "sha256": "79110cb645435e687e03a030b3a4384006431cbb27a1946f93fd202f7cfbf1af"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Facet_on_same_surface_criterion.h",
+      "sha256": "a5d8527e2d281a012021011c810abbcdaaa6fe2255792ac495319600892ca903"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Image_plus_weights_to_labeled_function_wrapper.h",
+      "sha256": "92f6885741d018eac610ab697e08248b1474345a443d838562ffa1e64051edc9"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Image_to_labeled_function_wrapper.h",
+      "sha256": "64f85b348a7be3ffac8af9076f967e5f68441d1a7310f67375d21cb529d892e9"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Implicit_surface_mesher_visitor.h",
+      "sha256": "5f4e00304de200336c45753e5c7f4ac9af69300ea40437f0b400eed55f39f279"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Is_mesh_domain_field_3.h",
+      "sha256": "21c53195a4bb1d64f128429c5ae0d6ca443c7d8e7b3ba321a525ce5b62b41dc8"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Lloyd_move.h",
+      "sha256": "b6f033671789de5b94d2bd73d3ac4525d38864cff3d8bb17a750a1839c6b5e02"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesh_complex_3_in_triangulation_3_fwd.h",
+      "sha256": "feb3d4e87905496a65512321a4091bc3c5faee56c1812175c97e599fe568ee30"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesh_global_optimizer.h",
+      "sha256": "8ba21b9d3764c1ff056432b698baceb696f473e610e15339b22a86ff20580868"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesh_sizing_field.h",
+      "sha256": "3671c014178f3c96379b6ce90c9be9bb621869b1f87d077c6788880bd410f613"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesh_surface_cell_base_3.h",
+      "sha256": "037ad9b6e0d3f24064fddabee3c764418bcbbbe32a84b46c5eafc92cd57c5a94"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesher_3.h",
+      "sha256": "2572e43fa3014ebff3b97355c9717a5671059dbeb2337d4aee06711eb6d602c5"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesher_level.h",
+      "sha256": "541413342f63938d8c77b9b4724a7cdb155e6b9ffebe3175f2c5f1d4129a19b0"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Mesher_level_default_implementations.h",
+      "sha256": "a04611b4b581e9846900c495f4de60f41b6ab1d73b520017e5b130001db71068"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Null_exuder_visitor.h",
+      "sha256": "d36b2c9edd4fb957f16f06c85a5820286db35983d32e581ad28c259a4e14eade"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Null_global_optimizer_visitor.h",
+      "sha256": "fb13505c40adfcc65c30780db646d11272bd88d51d9e86d725575d4c8e5e0993"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Null_perturber_visitor.h",
+      "sha256": "44bdded6c7f7d412f764d389e46cac03a17c5c9c6cd1d701dd19f6ea57921f34"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Null_subdomain_index.h",
+      "sha256": "eb0aa3a75af8169b0bd4a40b4e55ff802e5d7fc5e9a1cd6cfd23f32df3e7394b"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Odt_move.h",
+      "sha256": "6ced077aeba619c92864e786fc171e83d3f5d361cd10e52b66b65002f7ada81a"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Poisson_refine_cells_3.h",
+      "sha256": "dc2a38e00b76e9812ae5c49856686a7a90ec4207773df23d39fdd65166949de5"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Polyline_with_context.h",
+      "sha256": "66274a854eb9c7889909e296da9e52d902f10ae2932b4ffe90701195a1efd639"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Profile_counter.h",
+      "sha256": "e0881048d6087d65d75f3a021072de630e49e66c1faa29123728570b48b73ba2"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Profiling_tools.h",
+      "sha256": "4f42227b1e6e56a2a34a5406afc27631094f7c95f31d78251023445f0055d8ba"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Protect_edges_sizing_field.h",
+      "sha256": "f327fbe0b6a90c392e01e0c18ea65d20f25ade1b8859a18ad4721bcfb6ccd0d8"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Refine_cells_3.h",
+      "sha256": "11dc169f64e991cfc9f80f0a17ec0852d65945f9717ecc42ad63ff54d7c8bce2"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Refine_facets_3.h",
+      "sha256": "643bebd207b65a0919c44510c9f9dce6cdd606a9c23b3fd5ea86e4ab4720d0e2"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Refine_facets_manifold_base.h",
+      "sha256": "2a11db5cc70d91fa9aa5af1a45282d12848883e60c748918cd196866a7019fb5"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Refine_tets_visitor.h",
+      "sha256": "e07e82f182b98962ffe85a0bd1a6a46ba802f98c8498df2b9f107856c3ad7a51"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Robust_intersection_kernel.h",
+      "sha256": "1819a75165ca7bdab7590562599b633bc43e5fde27c42ca81a8f4e7f8338fe4e"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Robust_intersection_traits_3.h",
+      "sha256": "511d7c91cb1cebda9d233249cb283e3a0fb954cf678e2ae54f82b511406538eb"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Sizing_grid.h",
+      "sha256": "28c5258b552088cecab21c48a1fff53295d8b149a15cac600fe81154016d5811"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Sliver_perturber.h",
+      "sha256": "992c47df3e762fa50ce37ab0be777947dee1f550b577043d96fe5cb4ef44b72b"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Slivers_exuder.h",
+      "sha256": "9d6ba5f4cd1006a8fbab683332cb45c3a406a0b5a060b596aabffb18f4c79b01"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Slivers_exuder_cell_attributes_traits.h",
+      "sha256": "6630e1d0cdd5ab5236e03158ca5afa2bac65608f5aa30b08d9b7c62bbe01a3b3"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Triangle_accessor_primitive.h",
+      "sha256": "d127f45ac28ed7755c308a3ab663ff93e7e803d79a95a5d7d60cdf23c0d71e17"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Triangulation_helpers.h",
+      "sha256": "b6ad6e1d613c5a9821499189d05dbbf89df9bd307d3f8901f914744e61de4757"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Triangulation_sizing_field.h",
+      "sha256": "a795cc593f8d422254d2e91aa365aef9df485d855f01e8485040cc7825be4f63"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Uniform_sizing_field.h",
+      "sha256": "b6c3df848da81ae48a3d8c2c191716edec436f84dc196651b6b5425fb906b6b2"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/Worksharing_data_structures.h",
+      "sha256": "c3827df7171c502ae7dfc89e122743f796b98fe8ce90708bd5edabdba2a550d3"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/config.h",
+      "sha256": "8e3876775c757933114a1ed5bdb828f4d5f937d9f3c3c520805d43aa5001cc9f"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/dihedral_angle_3.h",
+      "sha256": "eba0644a5010a03b85a9eab7011e0f73d306301ce9c16957dee6baeebf7ad6cc"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/AABB_filtered_projection_traits.h",
+      "sha256": "0ce821640032f98a3cc782ce6e444cb0b7f804b85bc67de9b7910b086c3c1f1f"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Facet_patch_id_map.h",
+      "sha256": "6f5e526a10e7affa7972d9ea858aa7b556738bf17e7df6eae030e3d597e8d6bc"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Facet_topological_criterion_with_adjacency.h",
+      "sha256": "686f6eb08bdfb18ebeed30804d3e6feae7b2e6e5cadca0d2021cfdbcef477708"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Get_curve_index.h",
+      "sha256": "b5088585f0aa132c9b4883a58133d4f62fa1a66640c69fce6ed1825fc3a0b1e1"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Get_facet_patch_id.h",
+      "sha256": "c1e14d6c3c04bf85e2ef8a6e2c62a5e9725342caaf3a569db14355e2a0eb5ad4"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Lipschitz_sizing_experimental.h",
+      "sha256": "a05f2e56d6281a0d2da34244f4a0b4064a0812264a8db22e74c11262da1e3a93"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Lipschitz_sizing_parameters.h",
+      "sha256": "3e2ab3625ff244365dc219c0b93269a16edf552c1c4a0767f4430294e6d8c3ed"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Lipschitz_sizing_polyhedron.h",
+      "sha256": "4479445f9688e198b1e34aa89ef0fea8e1a5345d59615ac6b65e69f7ec1ec447"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/experimental/Sizing_field_minimum.h",
+      "sha256": "6e74f5636c2ed374ea0b0707dc08b5a25625731be4da3368be39dd570007e751"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/cases_table.h",
+      "sha256": "a4ec0c7f2d09fb1532c14b9ae03b0fd2ccb65cfa96fee7b79262cee56d43b58d"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/combinations.h",
+      "sha256": "715a5ec2eb1c7e7d5a97304240feefa687daa133c551bd1139e245e7a998792c"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/coordinates.h",
+      "sha256": "c199cd262ad4bdcc1dbc9877768c687d9bfc2be29a4aa3fb0db2fd4ea27667bc"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/cube_isometries.h",
+      "sha256": "3ef18408b36d0891d350df9fa943ebf8eee8391c82e599f99a6fc6758dd5f2fd"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/features_detection.h",
+      "sha256": "f694e70d6bf4ca0bd8ac61d0bec4a489f03c8117784f937c5c5530fb05d0c19e"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/features_detection_helpers.h",
+      "sha256": "e90df94258aab02c7721eda32a8fad0f20968c5d37a50963165619f867064da7"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/features_detection/postprocess_weights.h",
+      "sha256": "fdd0cda7b698338a16831fbacf756c9052eccf8714bdef3061b24541d8d75bf6"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/generate_label_weights.h",
+      "sha256": "84ba5e5e07eb7d05a8c5ef6d3afc44e9bccb2e92476d608481ee9527c4e1eece"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/initialize_triangulation_from_gray_image.h",
+      "sha256": "f0f3e1673039faaefbbf2faec0cd0af6ded13c6ac5f96dacd27504237e6de4fb"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/initialize_triangulation_from_labeled_image.h",
+      "sha256": "06a76548ec3de12589a7514a6e9e10c167e9f54aac9c7cb86288139f33bd4866"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/internal/Graph_manipulations.h",
+      "sha256": "0064ca52ff6f8b297c6f0aae7aa6b2b33d3e17ce7a50fbea00f2f5327f78aa4b"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/internal/check_weights.h",
+      "sha256": "84f7884f29916708068a2dd2ef4d19ddd0d0ea6bd9676cdd9f98e1df8f25ecd5"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/internal/helpers.h",
+      "sha256": "6b860e9b0731944cf441b213065147644f3153df44fdba1d269bc6af20ec97ed"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/io_signature.h",
+      "sha256": "51e10ca082c91b935cc7601a8fe672f58236f29699ee5e7668e09acb15cd0c06"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/mesh_standard_cell_criteria.h",
+      "sha256": "077c525f15b6cc4b807a3622986e29d62ab599f2ca7d1e7202b14d6a696510e5"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/mesh_standard_criteria.h",
+      "sha256": "debf1341fabb29ce0e374d51ca17c5b7190acd18c5155f864b28dc28d1470f24"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/mesh_standard_facet_criteria.h",
+      "sha256": "787c2ad6ffcd4ca08c881190f8abe2939fbb6c6cc19c842346c7d55be19cd6f3"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/min_dihedral_angle.h",
+      "sha256": "bf36f9a2a174bbfa28f3fe3620b851a51d7698d669201f36e234db201c0ec1c6"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/parameters.h",
+      "sha256": "16e595fd5f1d069df28de0817894c9b9fd73bc4d3cb861fa0921ac60fd496eee"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/parameters_defaults.h",
+      "sha256": "badb4f9d3ae0bd3ad4babc81a56bd6a66fe3e382ee4324e4ae2cc534db1d28a8"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/polyhedral_to_labeled_function_wrapper.h",
+      "sha256": "6215759251c77b57beea73a39f59308505821fcedf2cb1ced6af440df264949f"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/polylines_to_protect.h",
+      "sha256": "b1a4550e318b2f2bf9b67ef35f909a7133a974a4ad11a4298d060ae966b96af4"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/radius_ratio.h",
+      "sha256": "8c6fe1616121c5d7790e83814d3eb3d686eac3fe85b7d5531d122d57865401b3"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/search_for_connected_components_in_labeled_image.h",
+      "sha256": "f36a4aa8df4783c77e60ef9a916db9661c88390671f322330824b637aff9fe61"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/sliver_criteria.h",
+      "sha256": "75ff9a148a5702bbb71e7147a6378529a1e86768ec7f2028a1e4dd1d5c29379f"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/squared_distance_Point_3_Triangle_3.h",
+      "sha256": "194e3a51dc7e055a0511c2b129fd525e3097dd5fc4d19787bac9f87b047325aa"
+    },
+    {
+      "path": "include/CGAL/Mesh_3/vertex_perturbation.h",
+      "sha256": "3225bacb1f60cc88aff82f0927654481ac54bdffe27d65234e0560a86885a8b9"
+    },
+    {
+      "path": "include/CGAL/Mesh_cell_criteria_3.h",
+      "sha256": "401336700a615f58f2df8ef7d63240e841ad666ab574638febd9838639f3d737"
+    },
+    {
+      "path": "include/CGAL/Mesh_complex_3_in_triangulation_3.h",
+      "sha256": "d4264299bf19bbd3953898ed1293756208109b399e38b3e2b1463b5ecc5a3b6a"
+    },
+    {
+      "path": "include/CGAL/Mesh_constant_domain_field_3.h",
+      "sha256": "7946ba6faf9ee5d091bd04199439e1a3ddfba27a562f9f54605836ed62d66967"
+    },
+    {
+      "path": "include/CGAL/Mesh_criteria_3.h",
+      "sha256": "5528e568e6016fc839e94da4965fe99b19a023b9b7e408003909b50d730cebac"
+    },
+    {
+      "path": "include/CGAL/Mesh_domain_with_polyline_features_3.h",
+      "sha256": "f37d4fd87578caa22e73b391b2b8ba6ad46a0b94a8f4ab1020358fb7b83e222a"
+    },
+    {
+      "path": "include/CGAL/Mesh_edge_criteria_3.h",
+      "sha256": "654890503282f2f96fccc243ff9286d7364641d307fe0bd3e7c4f349eb0975c8"
+    },
+    {
+      "path": "include/CGAL/Mesh_error_code.h",
+      "sha256": "2868b8a2b4cf9344d5d26fe9d8a568c3f26a2ea96c44210b69a113435b3a8410"
+    },
+    {
+      "path": "include/CGAL/Mesh_facet_criteria_3.h",
+      "sha256": "c6b4489c546f1a19984a6781d210143e713c1452ad835f6fce272231040c3258"
+    },
+    {
+      "path": "include/CGAL/Mesh_facet_topology.h",
+      "sha256": "006d4122669e8b74f0d0632666b107204f9b176e8f47ed20b57132aa824fd6d1"
+    },
+    {
+      "path": "include/CGAL/Mesh_optimization_return_code.h",
+      "sha256": "67f5944c1c0582801f9e138a3792f4dd6c349cc9c7f5c7d35b9ff4ce7b497a7f"
+    },
+    {
+      "path": "include/CGAL/Mesh_triangulation_3.h",
+      "sha256": "fe3f4cefc3f7860c56dc890141fc0b8d3ccfebeab362b39a7ff8b821447c093c"
+    },
+    {
+      "path": "include/CGAL/Mesh_vertex_base_3.h",
+      "sha256": "0bcf7dd3b4cef7205893c3cc0bdef70d7f51c3b1aec599e66fa686d160a9b96c"
+    },
+    {
+      "path": "include/CGAL/Mesher_level.h",
+      "sha256": "be81592634803c30932d2972aa6398cd1f9ae32a5605126ed320c88b1c500546"
+    },
+    {
+      "path": "include/CGAL/Mesher_level_default_implementations.h",
+      "sha256": "b9dc1b76330132c1248b5f87ec27a4a6c895b9101d980f16cfb22cea9f9cc29b"
+    },
+    {
+      "path": "include/CGAL/Mesher_level_visitors.h",
+      "sha256": "8a756ffe6c065e5d5aafe3231220b54d19e45e228fd134d71ece74630bede7d0"
+    },
+    {
+      "path": "include/CGAL/Meshes/Double_map_container.h",
+      "sha256": "c3ea0e485b7302cdf986615df197139431a67d75c72e0474fd4c13527da11430"
+    },
+    {
+      "path": "include/CGAL/Meshes/Filtered_deque_container.h",
+      "sha256": "d69d7965167a49c8df64713b47d09698d4f97581c2e43d004c826a1e9f93652a"
+    },
+    {
+      "path": "include/CGAL/Meshes/Filtered_multimap_container.h",
+      "sha256": "a5db760c6aa92d00b4115c9ab76dc4f82afe5cfa6913a5ea998daf9b9c005f20"
+    },
+    {
+      "path": "include/CGAL/Meshes/Triangulation_mesher_level_traits_3.h",
+      "sha256": "a4c88d6366e8d2783644c0c67b2ff0b70fc720d7baf82409673869dc4ef78643"
+    },
+    {
+      "path": "include/CGAL/Modifiable_priority_queue.h",
+      "sha256": "ef37a6f0e47d7a4d0ad8328f4277645654703190f4c2b19a9d44ad5e87b95f3b"
+    },
+    {
+      "path": "include/CGAL/Modular_arithmetic/Residue_type.h",
+      "sha256": "2daf31a4b3d02eca6a7c9ac4bf5d48d9bfe2bde33bfed868017df060598d1fe6"
+    },
+    {
+      "path": "include/CGAL/Modular_traits.h",
+      "sha256": "ed5b67df6a7491e5ba4ebab10c1cc820419d3413499f80d2260a36a3a3214709"
+    },
+    {
+      "path": "include/CGAL/Mpzf.h",
+      "sha256": "0678ec4a6ea0d81f9957a0d5a251e685dbcfae80e8f4bbd65c66dcd4a43d60e0"
+    },
+    {
+      "path": "include/CGAL/Multiscale_sort.h",
+      "sha256": "0e83842169d2d49da73d3fdb96c590219f0c901f4fd7ce881d1e65c4a7da4d4b"
+    },
+    {
+      "path": "include/CGAL/NT_converter.h",
+      "sha256": "9496b9f46de42471061acd481ade4ab40cd736b0bc46671794c680a3a0732d6a"
+    },
+    {
+      "path": "include/CGAL/Named_function_parameters.h",
+      "sha256": "323f7fff08f7d197441f0e33e172b6cb3996b33bb7ed76f76f6b41f7f92470ca"
+    },
+    {
+      "path": "include/CGAL/Needs_parens_as_product.h",
+      "sha256": "25bb701c12d9ae98f1d965dd039e8ecb30ee114f68f1e5e33ada00447c4845a0"
+    },
+    {
+      "path": "include/CGAL/Number_types/internal/Exact_type_selector.h",
+      "sha256": "fa100804a6ec7cf037c038524f8951e4fcec8b1bc57487a2fad016b5c78b9ce4"
+    },
+    {
+      "path": "include/CGAL/Object.h",
+      "sha256": "913c635ffdacccc280a248714af8f934cd5d195aed16d2d4963ed5bf908c15c4"
+    },
+    {
+      "path": "include/CGAL/Origin.h",
+      "sha256": "049edb088c40ad3967dd2c6af17f6778f7000b89960b29391a3a3b88b1256e19"
+    },
+    {
+      "path": "include/CGAL/Origin_impl.h",
+      "sha256": "7e1920eb341acd02faf264e0aefbbf687e0317afba9d832bf2c3709f35cf8d59"
+    },
+    {
+      "path": "include/CGAL/Orthogonal_incremental_neighbor_search.h",
+      "sha256": "bc187469566566b425a1ca8ee39ed91b288d4db7e479778f93bf6de026737ebb"
+    },
+    {
+      "path": "include/CGAL/Orthogonal_k_neighbor_search.h",
+      "sha256": "ba4f40224306dc414a3f6d8cb1acdac3d0a35a980a1e15846ca28818b91aba11"
+    },
+    {
+      "path": "include/CGAL/PCA_util.h",
+      "sha256": "7160c2e62fd7421f4f1f0b2f2a836b3c2d0edb54a2a79022c07776495f8b3d57"
+    },
+    {
+      "path": "include/CGAL/PCA_util_Eigen.h",
+      "sha256": "02d2e7067628d5161618995a040631a8d4dbd4e7a1fe3fc08aa1b5e828f0406d"
+    },
+    {
+      "path": "include/CGAL/Plane_3.h",
+      "sha256": "a32ddef02d5338fb7634cf7e75624087652cca87133ef60d9e5a417ba701f082"
+    },
+    {
+      "path": "include/CGAL/Plane_separator.h",
+      "sha256": "3469acca17dda346a470548ffa0b75de5d3130af8d8ecaeec4dc4427b0ed41d5"
+    },
+    {
+      "path": "include/CGAL/Point_2.h",
+      "sha256": "818257498d682d2fca16dbf4f1a63e4f721ce1daf18e9b28683deccc7dc4a544"
+    },
+    {
+      "path": "include/CGAL/Point_3.h",
+      "sha256": "deb5e10dbd1144136020f6b3e930b70959c2f96956965e0a76b76023eab0bac8"
+    },
+    {
+      "path": "include/CGAL/Point_container.h",
+      "sha256": "209319e8e873835e5e7a1abfba13114ac9336bc3c13d2c765d33a187deef664c"
+    },
+    {
+      "path": "include/CGAL/Polygon_mesh_processing/orient_polygon_soup.h",
+      "sha256": "c306ba0615b317aa411047a99a106f02a6f47fcf53310c3c06d51fa5431d526c"
+    },
+    {
+      "path": "include/CGAL/Polygon_mesh_processing/polygon_soup_to_polygon_mesh.h",
+      "sha256": "ca87e00eabc03763e402cd7315de122adccc75ac82ba3357659c6f93b9f13da8"
+    },
+    {
+      "path": "include/CGAL/Profile_counter.h",
+      "sha256": "3404ea0b347d8b261b24667802aafce2c1bf121b8da08d6aa672d369a2caa495"
+    },
+    {
+      "path": "include/CGAL/Quotient.h",
+      "sha256": "215cb4a5d389c1e1694e1a71bc483bb1450d5d8fa03b9f114ab7bdfd1c3a87f8"
+    },
+    {
+      "path": "include/CGAL/Quotient_fwd.h",
+      "sha256": "78d49189b7a3935900172391a387adecf8bae64bcab65b426a82e23e2422df3c"
+    },
+    {
+      "path": "include/CGAL/Random.h",
+      "sha256": "1b5a43066765a42fca10284639ffa782165ec6d4b0ee9893d0d47456b858e923"
+    },
+    {
+      "path": "include/CGAL/Random_impl.h",
+      "sha256": "97005e6c9f20377848d0eb8c70e63c3731e221c14120708b0a5071ea237b1ef8"
+    },
+    {
+      "path": "include/CGAL/Rational_traits.h",
+      "sha256": "69bdd05895e2f6fcbe325dd013b15833466851da421fac0bd51ce6552a7b04bb"
+    },
+    {
+      "path": "include/CGAL/Ray_2.h",
+      "sha256": "7c5899775f1a09caaaad755860a629b3530c7a0d0f04ad294c0119231c2e639e"
+    },
+    {
+      "path": "include/CGAL/Ray_3.h",
+      "sha256": "31a84974e77fa7140bfa20c195eb006b02bf43ec2b0ff29a0a3f1cd74afb7911"
+    },
+    {
+      "path": "include/CGAL/Real_embeddable_traits.h",
+      "sha256": "7357d5cfa55ea86c2fa2af418e0f4c9a06acb27631f0dbdf5bb1fff5f5b0f956"
+    },
+    {
+      "path": "include/CGAL/Real_timer.h",
+      "sha256": "5aabe89689d8792f8e878d7bfcef5bc310496d5e91c61e8caabeb51bff5a817d"
+    },
+    {
+      "path": "include/CGAL/Real_timer_impl.h",
+      "sha256": "d877dfa03643a94a35dc4dd74f8385865599ee4a6263b0ce4ddd29e42bd3f47d"
+    },
+    {
+      "path": "include/CGAL/Regular_triangulation_3.h",
+      "sha256": "7906b07530e6a3233ed4e5320a09bf140514c0544addd3e225763eb4643ec0a9"
+    },
+    {
+      "path": "include/CGAL/Regular_triangulation_cell_base_3.h",
+      "sha256": "466c662c14a7dadc740d7e51f2634b3d72d9e01e77ac55877acd2cc75b87a9cd"
+    },
+    {
+      "path": "include/CGAL/Regular_triangulation_cell_base_with_weighted_circumcenter_3.h",
+      "sha256": "a83717802b62d8e25d203b2e32a102fa1603ab29366968a1a87f95f334b21a35"
+    },
+    {
+      "path": "include/CGAL/Regular_triangulation_vertex_base_3.h",
+      "sha256": "455e653c5b4dc2a7dcb45d75028ef8a746e4647e26d1a7346409680c99dc52df"
+    },
+    {
+      "path": "include/CGAL/Residue.h",
+      "sha256": "13ef81e276c7323fc7be78ab50e133c1fea090d24d1e0b6da171e40284072cda"
+    },
+    {
+      "path": "include/CGAL/Robust_weighted_circumcenter_filtered_traits_3.h",
+      "sha256": "987c20ff4822382c4151b55c3eb938f391412d8af185af0071bcc4193c6a03c3"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/Dump_c3t3.h",
+      "sha256": "3eacb6dea172e485851f01e761cc29380248d16c5874fa5fcd2d7c6472c9de6d"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/Mesh_complex_3_in_triangulation_3_fwd.h",
+      "sha256": "8f654309b5f759b88457c4dd98516ea348d3dcfe541db66f7ab037296173a5d0"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/internal/Boundary_of_subdomain_of_complex_3_in_triangulation_3_to_off.h",
+      "sha256": "b646444044d1fd1e42dd40474752ed58e5982881cdbf866ca053563ff9544182"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/internal/Handle_IO_for_pair_of_int.h",
+      "sha256": "b0f8673c545e2d5b07c01a4fbd44f0b5d58e3d37b92bdb803f539f1bbef2cb20"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/internal/indices_management.h",
+      "sha256": "018a06fd20a35e002a5ff7882d264626dab1b8b135ae07c7290d1bca39754430"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/io_signature.h",
+      "sha256": "a65c82000fab8b41a4c0ae39ca3e560adff1c1af0f52611a0a86f544a67f9952"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/tet_soup_to_c3t3.h",
+      "sha256": "af1c9cb0955c6279aa4accffeb5d717842a36026342f79360698145181f4b884"
+    },
+    {
+      "path": "include/CGAL/SMDS_3/utilities.h",
+      "sha256": "1fe014641d8b413e135bb573bfc473e330ca07bd8c85e03579240973b681a8a5"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/Has_features.h",
+      "sha256": "0c1dcc5bb4c69ce57fca131fbffd8f671273154f6b065808ae4ca502d79fd58a"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/Has_member_visited.h",
+      "sha256": "20f10c977ecf50a27d1e98bf9973508f2a92004a3369a22e6ad341ebde017ac9"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/Has_nested_type_Bare_point.h",
+      "sha256": "777b3b6c567ff7fd5e3447d79df6ec2eae7726622e7feced4fcbd682df8b42aa"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/boost/array_binary_tree.hpp",
+      "sha256": "ec1350a5708a0fd7b9fedb4ef228b6028745759f3c61fd7e0a8112919ce2bc52"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/boost/mutable_heap.hpp",
+      "sha256": "bd77e0bb08c3c74965d5e55ee0e8682d5e1c3425451cc9eacf114b25bb591096"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/boost/mutable_queue.hpp",
+      "sha256": "f35c2633b414764f97a439ef39ffcbb93164007506d5035a9211f7c4b0c82f64"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/boost/relaxed_heap.hpp",
+      "sha256": "b7010daea11272971e494b21b43b5db1dd1b983b1bdf50c04a554a66809d681b"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/info_check.h",
+      "sha256": "5085aaa6a04ae7611d08f44bf948a505d93c0b4493cedb7e39ed2adef872714e"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/mesh_option_classes.h",
+      "sha256": "29d89da54090077911d9e9b3155b6e367a19bec06dca07149f0186f4dece029c"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/mesh_parameters_interface.h",
+      "sha256": "c98461613eee2a1913b52409b70d0d15a3c19bde84744ab8ab9d44672c3ae923"
+    },
+    {
+      "path": "include/CGAL/STL_Extension/internal/parameters_interface.h",
+      "sha256": "11e23d86af60cee5b375e2bbd11ec36bd5ef3246bf7a3e6d88666dcf53434bed"
+    },
+    {
+      "path": "include/CGAL/Scalar_factor_traits.h",
+      "sha256": "2685d25e2cf5f74bc3dfc0f86c49e3ac1d052c8bdf260d0ed0c0a4f408c5b8d8"
+    },
+    {
+      "path": "include/CGAL/Search_traits_3.h",
+      "sha256": "83dbf5f0aeac552521ba32ecedcc1bbc8757ecbbc4316d65821c53bfdf22a9e9"
+    },
+    {
+      "path": "include/CGAL/Search_traits_adapter.h",
+      "sha256": "6df67d92916604f4f0d8f5858121d1b1b7943bf59ebf9bbdda792e8002303130"
+    },
+    {
+      "path": "include/CGAL/Segment_2.h",
+      "sha256": "60f4659d58fb40a87e75bfc1113485afba3da0a0d7a7497e1a1b946877651265"
+    },
+    {
+      "path": "include/CGAL/Segment_3.h",
+      "sha256": "cc294045744cb74d004dd4501037da2c7750d9a552413f2a969b5cf083153068"
+    },
+    {
+      "path": "include/CGAL/Simple_cartesian.h",
+      "sha256": "f04d18cc56734bdc8ab3fce55f7aad14e4ae52138448f538dd2c71b06e813224"
+    },
+    {
+      "path": "include/CGAL/Simple_homogeneous.h",
+      "sha256": "057dd6daeb5a7aa3d8a6521bb8680e2ed09d396e1820599d2e3f8cc3ad04a645"
+    },
+    {
+      "path": "include/CGAL/Small_unordered_map.h",
+      "sha256": "dabf949eeab57141f97230cce5836060893b81b5cc54af21bd9bbd945683d7a8"
+    },
+    {
+      "path": "include/CGAL/Spatial_lock_grid_3.h",
+      "sha256": "cb7a566f72276df838ec2cb621fb318bfcc37a589ba3a348d7b2e4015e52016f"
+    },
+    {
+      "path": "include/CGAL/Spatial_searching/internal/Get_dimension_tag.h",
+      "sha256": "af318f0f37c3aae97f3f171fb6b2540d566396abb3b8299ed4f6e4954e6fab39"
+    },
+    {
+      "path": "include/CGAL/Spatial_searching/internal/K_neighbor_search.h",
+      "sha256": "0285bde2963d8658b7a6f5b0b573bffd0700ab59beb742b8342cb0fa9e6eba1f"
+    },
+    {
+      "path": "include/CGAL/Spatial_searching/internal/Search_helpers.h",
+      "sha256": "7ebf55d1e9efad7ebe16fcf8f5760d0fe3b85de2254874d501b6c9f6329aedad"
+    },
+    {
+      "path": "include/CGAL/Spatial_searching/internal/bounded_priority_queue.h",
+      "sha256": "83598804d115b3851706c7996aa51feebf3e870254785a64dcea8a958c4cc78f"
+    },
+    {
+      "path": "include/CGAL/Spatial_sort_traits_adapter_3.h",
+      "sha256": "dd41ef883e14859713703b3845df7703ffc47c10f5971fa9e4550c6e384163f0"
+    },
+    {
+      "path": "include/CGAL/Sphere_3.h",
+      "sha256": "7dc908eb2a587999e164b791feede4085660da58c9cbfc173135a7ccebb19a80"
+    },
+    {
+      "path": "include/CGAL/Splitters.h",
+      "sha256": "704a89b125eaad23ba9662de88c70d45d6f0a5b6b98dfcae7fd0bb65bae93b96"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Algebraic_extension_traits.h",
+      "sha256": "90121353801862811cf523dac64f888130e4ac211b9f99f545ea872da0fed3ca"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Algebraic_structure_traits.h",
+      "sha256": "072c35882f6c95f1c9dd50311cb649c779290d047cbe55381f5a9ac29d126d4a"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Chinese_remainder_traits.h",
+      "sha256": "c827bc506f273fa12c19933d43f56d6bad1624872f2b82795115f301f9b8901b"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Coercion_traits.h",
+      "sha256": "c6ee0fe91f2b8926be06ca0db21b8c72e91000efa943221a8864d86d213c9ce8"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Eigen_NumTraits.h",
+      "sha256": "555311aa5807c6d555e9055513b850603e9e2d86bc666e381d2b96b9166615b0"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Fraction_traits.h",
+      "sha256": "b60dbae8b4ed9d992e80ef2261f85c87577e2f1bebf8971eb9a7a5b6a269331a"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Get_arithmetic_kernel.h",
+      "sha256": "cc814c04520fd0ad05e5ba688082311f619ead1302ef7814feb4dbdef854271f"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Modular_traits.h",
+      "sha256": "245cd81bc0bcbfd175ae5806df8a4db4439e514528201263877f92b63c04dea3"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Real_embeddable_traits.h",
+      "sha256": "c41f0b2cdc8cde5560abf4076d41b233b817e560ab727825cf2542f619607e0d"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Scalar_factor_traits.h",
+      "sha256": "029421c49952607e619ad51df9e430bc7641f5535142378846294164e617f207"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Sqrt_extension_type.h",
+      "sha256": "f21d994af0a7928fab01c4ec727a9f945668d6598c39eb0f7ce8583b78b43df8"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/Wang_traits.h",
+      "sha256": "f3b7617b90ffce558185ee44350f4422a8908ac2a17c0324f5bba9026fb26363"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/convert_to_bfi.h",
+      "sha256": "a7f2ec987553b803d3a09f81f49655db03017bb9b9888836a1ef811c1a1b8ba4"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension/io.h",
+      "sha256": "1f6916643c189a7a3fab075940b3d7b068e13a6ceddd9e2b56ef0a17870d1be7"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension.h",
+      "sha256": "828107f38da74711490c52f6416e9a9f3f5289921c3d2ea1a8ee979c9def29e8"
+    },
+    {
+      "path": "include/CGAL/Sqrt_extension_fwd.h",
+      "sha256": "e09292273417578e74f65aacf2544be94e23da2c1da7db8202403f15130923eb"
+    },
+    {
+      "path": "include/CGAL/Static_filtered_predicate.h",
+      "sha256": "f25c539b80f12508a8f28fab7931e7de56e6913d285655f678f489f817753c57"
+    },
+    {
+      "path": "include/CGAL/Subiterator.h",
+      "sha256": "62b872bf003d12ec3cc3fee3e94a584777e851d0f9ea9c583b914bd29382a525"
+    },
+    {
+      "path": "include/CGAL/TDS_3/internal/Dummy_tds_3.h",
+      "sha256": "602e0973c5e08a51392000a6fe15ddde9af78e08fce63aa7654be0684f0e6248"
+    },
+    {
+      "path": "include/CGAL/TDS_3/internal/Triangulation_ds_circulators_3.h",
+      "sha256": "53a2845000fff3de7c196434ec15df97c81f813d856a5adba6eb688e94d8ecde"
+    },
+    {
+      "path": "include/CGAL/TDS_3/internal/Triangulation_ds_iterators_3.h",
+      "sha256": "7d02e96f8a7ea62070e5dc25bc715010e07c844f2a7c13ac31ceb555b9beff56"
+    },
+    {
+      "path": "include/CGAL/Tetrahedron_3.h",
+      "sha256": "f32a142b679938937793a9c487b0a62815e8de7e0707e05be0d3205d38db3089"
+    },
+    {
+      "path": "include/CGAL/Time_stamper.h",
+      "sha256": "47b2f913b635215c50a413b5764c4f553c5105b814f9fb367218b973fed1f50b"
+    },
+    {
+      "path": "include/CGAL/Triangle_2.h",
+      "sha256": "3f0add4cd67a8ba79314c85a211d07528a13ca79d370968d7135c4aa577b2170"
+    },
+    {
+      "path": "include/CGAL/Triangle_3.h",
+      "sha256": "b3e92727bbaf8b2a09c744659958f053f10f129356d126ccec0de6d9a4988ee6"
+    },
+    {
+      "path": "include/CGAL/Triangulation_3/internal/Delaunay_triangulation_hierarchy_3.h",
+      "sha256": "9cf62b8543dd93a8ed8779d941d0a2dfc5e9959b4cec0316a1cd601c89f1a4db"
+    },
+    {
+      "path": "include/CGAL/Triangulation_3/internal/Triangulation_segment_traverser_3_impl.h",
+      "sha256": "c34a421ccbb59530c30428a4fc2f5f3456c2713de6f5f42c81b78179b39f76a5"
+    },
+    {
+      "path": "include/CGAL/Triangulation_3.h",
+      "sha256": "5e6102013726f07747bd53e6b12a06b4b446ee4fda6fdc176a26d26a4674dcee"
+    },
+    {
+      "path": "include/CGAL/Triangulation_cell_base_3.h",
+      "sha256": "c3bc49e0bce4546359948099cdaae613fbe383a953e59d0c405590ffbeff8592"
+    },
+    {
+      "path": "include/CGAL/Triangulation_cell_base_with_info_3.h",
+      "sha256": "b3ae14d55b928aa8d75f7ae25c6b4e3ecc6f90d5b784461402376737b4afccec"
+    },
+    {
+      "path": "include/CGAL/Triangulation_data_structure_3.h",
+      "sha256": "f7b07edd93e8e74dac3bac9b5d432ebdde9e088051d0c43e7280870cb914eac8"
+    },
+    {
+      "path": "include/CGAL/Triangulation_ds_cell_base_3.h",
+      "sha256": "98dc9678af63cd9f33d642645bf82e618288301fa90bf3b41e373ab52cc43a81"
+    },
+    {
+      "path": "include/CGAL/Triangulation_ds_vertex_base_3.h",
+      "sha256": "db7715d2103fa909cdb608c59dc63f7028d6eef290095cc9900ee0a28f4ee03d"
+    },
+    {
+      "path": "include/CGAL/Triangulation_hierarchy_3.h",
+      "sha256": "948dcd53cfb6f0d0452abc425b72cd64654214b6f19f786c5114bb4c6d4b2505"
+    },
+    {
+      "path": "include/CGAL/Triangulation_hierarchy_vertex_base_3.h",
+      "sha256": "ffc57d8b615bc8a1c9a7f568db48f748dffd65929f720b9bda8437e10ca1f543"
+    },
+    {
+      "path": "include/CGAL/Triangulation_segment_traverser_3.h",
+      "sha256": "65848c0b5b8fb1f160f8d5a69fba371b05f7a4bd32c4c434b412c555216b1bf6"
+    },
+    {
+      "path": "include/CGAL/Triangulation_simplex_3.h",
+      "sha256": "603b2635814c64eb8b8c3d1c524bceed9c2d2fba07ab2f3d14e983db2dd4dbca"
+    },
+    {
+      "path": "include/CGAL/Triangulation_structural_filtering_traits.h",
+      "sha256": "afbb114559d23567985779a7c4799adb78d159f8e661b1b1e031037f83d87bd3"
+    },
+    {
+      "path": "include/CGAL/Triangulation_utils_3.h",
+      "sha256": "6a85ac073953928d8c526365a574b0003628a3b253eeb48ae18c48583f205c81"
+    },
+    {
+      "path": "include/CGAL/Triangulation_vertex_base_3.h",
+      "sha256": "d24eb1808abe942d399ffb0982d029abdaebb4001b8e5b07007ef7fdda4491f9"
+    },
+    {
+      "path": "include/CGAL/Triangulation_vertex_base_with_info_3.h",
+      "sha256": "3190cdcb7e71ec9508c28a1a53d4b0a442976d7674b962e64ffc3c1dd4b495f6"
+    },
+    {
+      "path": "include/CGAL/Uncertain.h",
+      "sha256": "c0eac11884b7db8429db4c5f1b7ffaff8247228cb2f922980cb25050d7d150dd"
+    },
+    {
+      "path": "include/CGAL/Union_find.h",
+      "sha256": "a1ddf995c99662ab4bff611fe34baa38692f9b26fad28c669c9bebb71feda8a4"
+    },
+    {
+      "path": "include/CGAL/Unique_hash_map.h",
+      "sha256": "1074916407a73eecfe8771013745dab45894b2abd73c47ad9badd98a05ed06ce"
+    },
+    {
+      "path": "include/CGAL/Vector_2.h",
+      "sha256": "d1d0effc0fef2b8b002d46af2ccca42cc59da851352c44155068613ec760a6d6"
+    },
+    {
+      "path": "include/CGAL/Vector_3.h",
+      "sha256": "4ee691f0ea3b1eaadf802cd50a1d153ea241261d99dca49ed0d41d5d8d4d08da"
+    },
+    {
+      "path": "include/CGAL/Weighted_point_2.h",
+      "sha256": "50d87747bd39da4b26287757db2acd65be24c1c37490451cef6174b489658f41"
+    },
+    {
+      "path": "include/CGAL/Weighted_point_3.h",
+      "sha256": "742bf97ab6f94478e72641d7ca012a56d49820e8ba2dd658f68fcf86ff75c4a9"
+    },
+    {
+      "path": "include/CGAL/aff_transformation_tags.h",
+      "sha256": "976d2568290f8abf1f658c5989f0a6cd67584a630890d5f020886febd2d221fb"
+    },
+    {
+      "path": "include/CGAL/aff_transformation_tags_impl.h",
+      "sha256": "6564ec96a2646ecf72512ec088bb0280037ae538f6361a9857ab5d61f8c10a48"
+    },
+    {
+      "path": "include/CGAL/algorithm.h",
+      "sha256": "ebf23459028a3f45ee7bbc2dd367ac4ac21e75b1331735aa4b68ab9e722d1941"
+    },
+    {
+      "path": "include/CGAL/array.h",
+      "sha256": "843b74a232e4fd6ad5b28041b6862e5462e49adbdcf24f6d5cf94af1cfec0213"
+    },
+    {
+      "path": "include/CGAL/assertions.h",
+      "sha256": "58cebacf4bd5e3af71a7cb0cb73cbea274d16e3486801b407fea7e420b2a693c"
+    },
+    {
+      "path": "include/CGAL/assertions_behaviour.h",
+      "sha256": "cf96aee927d354fd2534f0be9016fb2ae92c1806bb2d978e57d9ae59c2b1b2d5"
+    },
+    {
+      "path": "include/CGAL/assertions_impl.h",
+      "sha256": "ddd345fbaecf2fd8047f8ecfd1368ae000e187e549d0c0cf7b9cb49560a4d719"
+    },
+    {
+      "path": "include/CGAL/auto_link/CGAL.h",
+      "sha256": "c8dd27d3ff0c5b69940f1c00654096e79cd136d664ad09a6e18f131f87292b76"
+    },
+    {
+      "path": "include/CGAL/auto_link/CORE.h",
+      "sha256": "fa19156d7a8bd2dede3844ea86ed17431830c279b666dc8029a7dc8bd0a517e9"
+    },
+    {
+      "path": "include/CGAL/auto_link/ImageIO.h",
+      "sha256": "a27aa6f4bfb3702beae7774bbd5decab3f2f5a5ede3c9ca78f08de92dbba6720"
+    },
+    {
+      "path": "include/CGAL/auto_link/auto_link.h",
+      "sha256": "f11c30806217b32593c4841098e8a17baf3f4df4f4260a2eadd75732a7ce46c9"
+    },
+    {
+      "path": "include/CGAL/basic.h",
+      "sha256": "5f67872f06ad25f2444cca0ab43f58f97dcdf2c03c7d165116f8345517d9a725"
+    },
+    {
+      "path": "include/CGAL/basic_classes.h",
+      "sha256": "2f2bdc63157c146b96812b8fb6a0039555f68017b8f7b53698b640823f41c703"
+    },
+    {
+      "path": "include/CGAL/boost/bimap.hpp",
+      "sha256": "b463e359b5d0c7b8eefe3108e4fea5ea8b612f5cee01da4bd131ade9e00229d1"
+    },
+    {
+      "path": "include/CGAL/boost/graph/Euler_operations.h",
+      "sha256": "e71da019a1f30177b10eba202951a15a38f957a57f8d9d649c66685b76463396"
+    },
+    {
+      "path": "include/CGAL/boost/graph/helpers.h",
+      "sha256": "5b3af18cada2f7d0243712235a5aba488e2e81a66cf890df2df59aad57a64fca"
+    },
+    {
+      "path": "include/CGAL/boost/graph/internal/Has_member_clear.h",
+      "sha256": "8161686a634d399f1b7a22a3d1ad6507b2c496d18a5daab983018fbd1471c977"
+    },
+    {
+      "path": "include/CGAL/boost/graph/internal/helpers.h",
+      "sha256": "7961957c6434a200191ddf6756f4e10f0069d7d87b07b3afb74f2880e4bad597"
+    },
+    {
+      "path": "include/CGAL/boost/graph/internal/initialized_index_maps_helpers.h",
+      "sha256": "6207bfe9e4cff6d17ec96b38c0b92618bab5657190aff893b445ad8e755a844f"
+    },
+    {
+      "path": "include/CGAL/boost/graph/iterator.h",
+      "sha256": "024909ad2e88be4bae6745b01e95304fb5c3cc97bfcce4ce3f17e018349649a8"
+    },
+    {
+      "path": "include/CGAL/boost/graph/named_params_helper.h",
+      "sha256": "4e3d033e7807141cb32d5b83c2b23431a95c31c1a413c95d6efdfe39512f1f06"
+    },
+    {
+      "path": "include/CGAL/boost/graph/properties.h",
+      "sha256": "d8bd3e7369e4693709da141cbefc8357a3cf669d42cfda845ba44c7701318463"
+    },
+    {
+      "path": "include/CGAL/boost/graph/property_maps.h",
+      "sha256": "9158f0695abc19a7bfa55fbec66dc7e091fe56f044f06c675dee7b4e965e61ba"
+    },
+    {
+      "path": "include/CGAL/boost/graph/split_graph_into_polylines.h",
+      "sha256": "70f2a7914e762204bbf0684f3375bdfe5add298eee725e3093d28b07143882dc"
+    },
+    {
+      "path": "include/CGAL/boost/iterator/counting_iterator.hpp",
+      "sha256": "07c0b9c28f8d7d5a5ea7e7d2ded946e99eda48ccbb8528e7b0d9741843255486"
+    },
+    {
+      "path": "include/CGAL/boost/iterator/transform_iterator.hpp",
+      "sha256": "71d91e5f9aece44d39fc07b996720cdb184f5a68cba0d4e41e12b7f6a09c8328"
+    },
+    {
+      "path": "include/CGAL/boost_mp.h",
+      "sha256": "1c885baa15f44cd2611479cc0ffe91f72621c6002af84eba21dd86eb5c9e5f3c"
+    },
+    {
+      "path": "include/CGAL/boost_mp_type.h",
+      "sha256": "abfd8e19d42e33ad9887d435d38bfc9d9fa31cf41e219434cb396b793c8be18b"
+    },
+    {
+      "path": "include/CGAL/centroid.h",
+      "sha256": "1dd09c152ba407f86378e8e88e9252c50a4209d18e7960c89fb0fda1ee0b802e"
+    },
+    {
+      "path": "include/CGAL/ch_akl_toussaint.h",
+      "sha256": "18275a50b7a161ad5f974a0f3ace44a26d15739f752bcd6a727e0db13ddfcf26"
+    },
+    {
+      "path": "include/CGAL/ch_bykat.h",
+      "sha256": "3c0275b6f09102f3a766913bab4e7404443e02050e3401e0bf42fa9fe252b6a2"
+    },
+    {
+      "path": "include/CGAL/ch_graham_andrew.h",
+      "sha256": "89e6483c4d170951e977bd7495e8c2d2f84834cfcdc36591f3eea97f6181ea23"
+    },
+    {
+      "path": "include/CGAL/ch_selected_extreme_points_2.h",
+      "sha256": "ba346499b81a14f650b87bc1c0a5b170e77756e383d6a56f48d9ead30439c68c"
+    },
+    {
+      "path": "include/CGAL/circulator.h",
+      "sha256": "c5280401acff7f25b070f7abcbe6ad331ee29d73084dea06a91696f5675a9a39"
+    },
+    {
+      "path": "include/CGAL/circulator_bases.h",
+      "sha256": "f45cb1d8448b599f030f1fe9c17884e46bd621b10cb5b280367760fbd419c2b8"
+    },
+    {
+      "path": "include/CGAL/config.h",
+      "sha256": "ee22ef805e7ab7281cef5eeeca715abf8b2e01fc37f5c42bf77e0ea06e71deaa"
+    },
+    {
+      "path": "include/CGAL/constant.h",
+      "sha256": "f077e874a67a9889a9c3f1f08aa4cfdf1f091c7a3d41a8f44502af5fc250aac5"
+    },
+    {
+      "path": "include/CGAL/constructions/kernel_ftC2.h",
+      "sha256": "a58c8c1424c298a73143a9bc12f47af724edaeb87e52657fdd7089e7cb7ebe4e"
+    },
+    {
+      "path": "include/CGAL/constructions/kernel_ftC3.h",
+      "sha256": "3fdeaf81f185656e695bb96bce8b2001a72a1bdb8c747771dbd0716fad81f2bc"
+    },
+    {
+      "path": "include/CGAL/convert_to_bfi.h",
+      "sha256": "fcd7a64333439e7e630891415eb4e6b49a2d6b217c87e5906331a18b21e61b19"
+    },
+    {
+      "path": "include/CGAL/convex_hull_2.h",
+      "sha256": "e90ef7b133135a5fde7c2cd72ffff97e3203a0f1bd8cffe692c9d1af6182bf0f"
+    },
+    {
+      "path": "include/CGAL/convex_hull_traits_2.h",
+      "sha256": "9741960771324679fddff622ca06dc0c55410903da480c5d8d1dcab1d5048a72"
+    },
+    {
+      "path": "include/CGAL/convexity_check_2.h",
+      "sha256": "fff6f32259f774324c2e1e1c14520300d862366a4419c6cbc8f27c8c204e3e0b"
+    },
+    {
+      "path": "include/CGAL/cpp_float.h",
+      "sha256": "a9621bac85c4b4daf12f750a8555cfb8330382a7522102bcad2a85a102a8d84c"
+    },
+    {
+      "path": "include/CGAL/determinant.h",
+      "sha256": "2b48f9cd6ee987405fdc5f66de31793b78e0181bc2dfc44f5c7a0d9def565427"
+    },
+    {
+      "path": "include/CGAL/disable_warnings.h",
+      "sha256": "d822f0d66a23b72cf6a2f022875c9d5f97d3d399359b98fa18f97c2966483032"
+    },
+    {
+      "path": "include/CGAL/distance_predicates_2.h",
+      "sha256": "ec4fe876d4d02f0542ba33b29f2ff24fcda262e5886a4483601c0b19ca95a4bf"
+    },
+    {
+      "path": "include/CGAL/double.h",
+      "sha256": "40128626efc26fe92462ae6dbfd79a91d7a3adbf39bda1aa11626eef3194d0f8"
+    },
+    {
+      "path": "include/CGAL/enable_warnings.h",
+      "sha256": "94dab89846a8047e61956411054664edb806f4c00973f4fcc08b1e60942d66f4"
+    },
+    {
+      "path": "include/CGAL/enum.h",
+      "sha256": "31053913d06170990727c2fa023b765609cea8180a16b1ba8dffe6e64123681f"
+    },
+    {
+      "path": "include/CGAL/exceptions.h",
+      "sha256": "9aa3bd72b41ecb7af71afd0685e1fbe1cab83c29e684d5a6a6e3b8a5c52ed537"
+    },
+    {
+      "path": "include/CGAL/export/CGAL.h",
+      "sha256": "e8471435635cbdfaa695f3538da4e037e72dfb9a11c8da0211b4c036028abd1b"
+    },
+    {
+      "path": "include/CGAL/export/CORE.h",
+      "sha256": "47c63c39163a9e061d7268c9d9e8d1a7b6491558eecdd844daa0f312960a6540"
+    },
+    {
+      "path": "include/CGAL/export/ImageIO.h",
+      "sha256": "bed50b8a30eedb6e8f56a78b32e705bbb455f066c04c3ed598ad84a98730f140"
+    },
+    {
+      "path": "include/CGAL/export/helpers.h",
+      "sha256": "36a97044b54464b2dd828f4f66eb256839ede294169569389e0ecfc4348f3b71"
+    },
+    {
+      "path": "include/CGAL/extended_euclidean_algorithm.h",
+      "sha256": "c3f7d5b602d2074a91ca41bdcf9268e04fa69fb624bb24a118b5f99916d5b6b2"
+    },
+    {
+      "path": "include/CGAL/exude_mesh_3.h",
+      "sha256": "34309166b12b3ceff67520eeb4dee15438e5ab303f32d54cb202d0b420b0f435"
+    },
+    {
+      "path": "include/CGAL/facets_in_complex_3_to_triangle_mesh.h",
+      "sha256": "e9e7a78cf96c604eca284f22ed5985f480205964548944fc00f23ffd3f9238a5"
+    },
+    {
+      "path": "include/CGAL/float.h",
+      "sha256": "7e80d84ae8ffb213851f2661e27eba8dd1ea8b8aa643390840736dd1d5de1ae6"
+    },
+    {
+      "path": "include/CGAL/function_objects.h",
+      "sha256": "5b5250419191d2d5a0dcc97e574cc2c1648f276c2511876dfdb353c86689187d"
+    },
+    {
+      "path": "include/CGAL/functional.h",
+      "sha256": "e3631491f7ae321a9e31293e2dba082bef926b3e8a41dcbe1540d1a0dd01aeef"
+    },
+    {
+      "path": "include/CGAL/generators.h",
+      "sha256": "b74426cea1d52df246bb928d19d899d803a4179563760f6257a2e9c42c8ff351"
+    },
+    {
+      "path": "include/CGAL/gmp.h",
+      "sha256": "8e9a4ff96fd2d0288a63786ad128ee959d6b5bb536f3800cffbfac92f945f975"
+    },
+    {
+      "path": "include/CGAL/hilbert_sort.h",
+      "sha256": "347d6445b5ca015bcac4c706a12b62bf828ef454aced8653d8c2eba273ddef1d"
+    },
+    {
+      "path": "include/CGAL/int.h",
+      "sha256": "b2064e530c5aef4a3ee6ec9ba5ca816d303396897a57548fe6ecbed021244eb9"
+    },
+    {
+      "path": "include/CGAL/intersection_2.h",
+      "sha256": "894248bdabea10ee8744e35a32c26a74069250badd721304ed90cb06ae3f2504"
+    },
+    {
+      "path": "include/CGAL/intersection_3.h",
+      "sha256": "3a84c98a5785802df4be01995fe2f624218b9383a03f1b1caa8e178509fb49f7"
+    },
+    {
+      "path": "include/CGAL/intersections.h",
+      "sha256": "11246a9a4d893b2e0a9e87ced6e8500d6dc2af6a22cff4b80b69227ddb43b95e"
+    },
+    {
+      "path": "include/CGAL/ipower.h",
+      "sha256": "29c2aa3a684b45e6c84969e7252f1b977244e3b18df38d5a37968ac5e42e4393"
+    },
+    {
+      "path": "include/CGAL/is_convertible.h",
+      "sha256": "ad10e8533d62e1dd1f65277a7059d56ca709ee7565e0038abdb41e03158337e8"
+    },
+    {
+      "path": "include/CGAL/is_streamable.h",
+      "sha256": "7a759c997be0e9d53e8dddfd0d10d5e1b5cb158f990ae1d245d2baee9ef07ce6"
+    },
+    {
+      "path": "include/CGAL/iterator.h",
+      "sha256": "68574e4d6c20a5597ad0f5a26ada8d1d94bfdde741170d0e1fd2f49be44f8636"
+    },
+    {
+      "path": "include/CGAL/kernel_assertions.h",
+      "sha256": "101a520af15428122d4fc3e5ab8e9955c4e684c6d5a673b6a3d0b774750a8b28"
+    },
+    {
+      "path": "include/CGAL/kernel_basic.h",
+      "sha256": "c2f8f832d695adf0d68cca0f3bb2ebec30c4a1087a1cd817262b7e375fafad43"
+    },
+    {
+      "path": "include/CGAL/kernel_config.h",
+      "sha256": "284e188065dce2e1bfc1bd93edbae52f38133cb007cf44031d9447579ac29eae"
+    },
+    {
+      "path": "include/CGAL/license/AABB_tree.h",
+      "sha256": "944974674d2ac9aa2eebf2855fcb2766724e2311dd1566c8d08adaaafa2f2cd5"
+    },
+    {
+      "path": "include/CGAL/license/Advancing_front_surface_reconstruction.h",
+      "sha256": "902e9d33fc14004a07b2d78c4127f0cc8daafde26aa7a180bd181f1fea9c31d8"
+    },
+    {
+      "path": "include/CGAL/license/Alpha_shapes_2.h",
+      "sha256": "8cb670231f6de468624e67ad715c33ace5722b427f16241f5b80fc99360d3de9"
+    },
+    {
+      "path": "include/CGAL/license/Alpha_shapes_3.h",
+      "sha256": "7937f1c11968899cc42e1b738f5b2647c9be1b0d32ac79661405dfa424f9871f"
+    },
+    {
+      "path": "include/CGAL/license/Alpha_wrap_3.h",
+      "sha256": "a2216960f5fdd0725ad9a8f8620cff1f0bc847a487f6e2b3c680189851acf394"
+    },
+    {
+      "path": "include/CGAL/license/Apollonius_graph_2.h",
+      "sha256": "59858bc1a26d2af6bba40b1a17a391de55539b69bf32948251faa87eafddc80a"
+    },
+    {
+      "path": "include/CGAL/license/Arrangement_on_surface_2.h",
+      "sha256": "d5c950028a9bface8269e2ee8f68bb011c84428e3ea32f3cf2537d32245e9e2e"
+    },
+    {
+      "path": "include/CGAL/license/Barycentric_coordinates_2.h",
+      "sha256": "960db6b33c7cd643516b0b1d2728f63afd1e88407a6efb1bca441b50d627bdf4"
+    },
+    {
+      "path": "include/CGAL/license/Boolean_set_operations_2.h",
+      "sha256": "651727214718f5da6a26b0040830e33130e8927e07748c75ad900f03d279bf2e"
+    },
+    {
+      "path": "include/CGAL/license/Bounding_volumes.h",
+      "sha256": "615c2987f728cf2d387995772b646248dec1c2e58b16ad45d62744f14063d12c"
+    },
+    {
+      "path": "include/CGAL/license/Box_intersection_d.h",
+      "sha256": "30f59061a50eb1e15f331894ac4ee230e3471b2d7594536e1a694c8487d810fa"
+    },
+    {
+      "path": "include/CGAL/license/Circular_kernel_2.h",
+      "sha256": "5f16c3c8a0a19d2405f226593073b3866c15a746f0ec08e9406d2f456015e22a"
+    },
+    {
+      "path": "include/CGAL/license/Circular_kernel_3.h",
+      "sha256": "85584961b762a0d4009247b56225943ffc9822a0ca96d7fdd31f8bac27b6976d"
+    },
+    {
+      "path": "include/CGAL/license/Classification.h",
+      "sha256": "09bcbc47812929e313714638aa6a669f98acbce3327004ca3e19859c7e980542"
+    },
+    {
+      "path": "include/CGAL/license/Cone_spanners_2.h",
+      "sha256": "67f63091a639795a64473de54a0136a4f0e4ab02d27d49dca5e4d7f5008fe297"
+    },
+    {
+      "path": "include/CGAL/license/Convex_decomposition_3.h",
+      "sha256": "7ac69e9bf4488f146313f49d4a37a940cb8aa4c5a99edd0d5ae712985152fe3b"
+    },
+    {
+      "path": "include/CGAL/license/Convex_hull_2.h",
+      "sha256": "4023fe18f6871cd3c3894b82067f1dc2d922990a4f3e83417edb7fb5e02d45d0"
+    },
+    {
+      "path": "include/CGAL/license/Convex_hull_3.h",
+      "sha256": "ceadac839c49b7e3de20df3107eda4ba1245c6e5dcc1d09f8e4db647ede7a409"
+    },
+    {
+      "path": "include/CGAL/license/Convex_hull_d.h",
+      "sha256": "b97786938881e40bb208c62aaa210dbbe4eba442120fc3ce02fbeff474416683"
+    },
+    {
+      "path": "include/CGAL/license/Envelope_2.h",
+      "sha256": "1178fa6a03a760daf96bf12cb20b1fdb94257a9c7ab53b9985fea065a1d45558"
+    },
+    {
+      "path": "include/CGAL/license/Envelope_3.h",
+      "sha256": "7b3f7937efb5006ffedf6d1c27debe34445b5b447294fd74fd3ec80cf9935397"
+    },
+    {
+      "path": "include/CGAL/license/GraphicsView.h",
+      "sha256": "7a0720615508f2b162ec19064bfc2fb4daab6a0d719610db234cb119cd8fee3e"
+    },
+    {
+      "path": "include/CGAL/license/Heat_method_3.h",
+      "sha256": "2d48e0c278d791491a9bd6e3d806317f7c260932f2686a7f23b3987272804d2f"
+    },
+    {
+      "path": "include/CGAL/license/Hyperbolic_triangulation_2.h",
+      "sha256": "199740345958702bfe408f7b1c54c4e275e1473aeb7eadbb21ac694786f8dccf"
+    },
+    {
+      "path": "include/CGAL/license/Inscribed_areas.h",
+      "sha256": "4553d3df40ea316d3550291bbe2a01f2138edceb4ea6faf30de80bccff9fd180"
+    },
+    {
+      "path": "include/CGAL/license/Interpolation.h",
+      "sha256": "b165ee80ece696f0164e233df8b546ee9465f07a448647b150b6d15b437c3459"
+    },
+    {
+      "path": "include/CGAL/license/Interval_skip_list.h",
+      "sha256": "6632028b7ce28b5d4b3ce014e3fbd7720c1786b977eeda4e69423adb77b9ad64"
+    },
+    {
+      "path": "include/CGAL/license/Jet_fitting_3.h",
+      "sha256": "d8f28096bd18c37962fab0acb3db101e4442ada2f4eda121e21c6f1740c1cbd2"
+    },
+    {
+      "path": "include/CGAL/license/Kinetic_space_partition.h",
+      "sha256": "93b26bae5d0a1ff0979f53dd2689e2129da3351e0387ea7da03d996611389be8"
+    },
+    {
+      "path": "include/CGAL/license/Kinetic_surface_reconstruction.h",
+      "sha256": "3504fc372578cb4954d731189a0c0e723d46547fe46c7a45c7e05886e65dd04d"
+    },
+    {
+      "path": "include/CGAL/license/Matrix_search.h",
+      "sha256": "d1111cc0f6191b90ce7036524b2b04c5cf782bce8e57ae7887e8f992de229bab"
+    },
+    {
+      "path": "include/CGAL/license/Mesh_2.h",
+      "sha256": "e9bf21c98aba48e0d2ba4f24646b4d68cff530c379ac12ffdab0a4cdd086be0a"
+    },
+    {
+      "path": "include/CGAL/license/Mesh_3.h",
+      "sha256": "4abfa49d0fa84a7caad3dd48c5f53b4a5512e2ae6541f4278e3d9cb3656063eb"
+    },
+    {
+      "path": "include/CGAL/license/Minkowski_sum_2.h",
+      "sha256": "0d9e60acd6b6941cc2147039b4edb98033b496e6496715cc8bb6e82c3c6fe43b"
+    },
+    {
+      "path": "include/CGAL/license/Minkowski_sum_3.h",
+      "sha256": "2b7ee0585f9b38295347f5192e6b8c1ebd231b4bca0dc61f7bb9a7451bedc426"
+    },
+    {
+      "path": "include/CGAL/license/Nef_2.h",
+      "sha256": "06a9debfb8e5e201f952b3e70de8310a2295a188bf13eb27a78a2bffcb6fd602"
+    },
+    {
+      "path": "include/CGAL/license/Nef_3.h",
+      "sha256": "d4d5ecf2f0046057c4d5b313c4f26ffe62107e0e7e67841266afc32d06371834"
+    },
+    {
+      "path": "include/CGAL/license/Nef_S2.h",
+      "sha256": "ba1d1e39b1c75ec5f7888a17b37b13c393e2562d362eb456a0b619ed87e44c2a"
+    },
+    {
+      "path": "include/CGAL/license/Optimal_bounding_box.h",
+      "sha256": "4d41ae7c87992d7d3a370d37d1cea758c44ed0dc4a0f6ba05ba90f81858d173e"
+    },
+    {
+      "path": "include/CGAL/license/Optimal_transportation_reconstruction_2.h",
+      "sha256": "f227923035987c8abee13802c6c71b38108ddfd69f259fecbb2933b478b332be"
+    },
+    {
+      "path": "include/CGAL/license/Orthtree.h",
+      "sha256": "3fa291bf6315d7695658435e0adeab08994bf689f8fff2b7c3a23d8274ee3851"
+    },
+    {
+      "path": "include/CGAL/license/Partition_2.h",
+      "sha256": "10a7b8d5b86ce959e942d745dfcaf2971b40844c26c1f2ee99e1712229e510e3"
+    },
+    {
+      "path": "include/CGAL/license/Periodic_2_triangulation_2.h",
+      "sha256": "660b7009341d5879e9392f1cb2123a4f7ffb9f4ef36356adc5c5ae6dc92e3b88"
+    },
+    {
+      "path": "include/CGAL/license/Periodic_3_mesh_3.h",
+      "sha256": "27cb71bd0b90f9438a693d1081144ddf8b39cc4b0b02deb63c61f1b4a3c84621"
+    },
+    {
+      "path": "include/CGAL/license/Periodic_3_triangulation_3.h",
+      "sha256": "7bbf7a05829de76442df84d8fa53f82fb6df4cd8082b2cda32af9190aee16659"
+    },
+    {
+      "path": "include/CGAL/license/Periodic_4_hyperbolic_triangulation_2.h",
+      "sha256": "bfbb22ebe6ae73fbe8799a0fe08a1d59ef655c49effb821e61eb1d34bd697d54"
+    },
+    {
+      "path": "include/CGAL/license/Point_set_2.h",
+      "sha256": "0dd2a02cf17f0354e3fd83b53c48c4939ef06b0cd838736b29243d071259b2f9"
+    },
+    {
+      "path": "include/CGAL/license/Point_set_3.h",
+      "sha256": "c39a5d2d478a6634282f1c4771eef9f934a73756fc5b0e2e9e3c045d5760a019"
+    },
+    {
+      "path": "include/CGAL/license/Point_set_processing_3.h",
+      "sha256": "9c819760a454e6e729dc13bde0cad3c1c1e5a19cedb6089ee06ced8b8b1efe80"
+    },
+    {
+      "path": "include/CGAL/license/Poisson_surface_reconstruction_3.h",
+      "sha256": "bbbc8c935ccac150397696f4e11d307955fb7080bf38ef911234c2b5e8b2e17c"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/Compute_normal.h",
+      "sha256": "e48bc6aafab8fe42a81eac3aafb3dbefd4cb3fdad12e5b109a9bb6670fc74471"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/Polyhedral_envelope.h",
+      "sha256": "58fda164cc7c83a20b1a7a98fbbf6e50b4a3df90133c784463c3cdf313e4e79a"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/autorefinement.h",
+      "sha256": "9ea43162b0ff1e9d7c363befd30d7887f726516a2227300648c2e2a498372d06"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/collision_detection.h",
+      "sha256": "3e75aabcd46dd1de428dd24cadc5d526c9735a1c1db0b50c8a3add05d871c3cf"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/combinatorial_repair.h",
+      "sha256": "bc7e17c5ec6b29652c1f81b26591484c7a18f9e300b997c7472e8084e13f042c"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/connected_components.h",
+      "sha256": "349e1dde4396e87af301897bb43da309dc1919a50ac61c31dbd1b3ecbd65d30e"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/core.h",
+      "sha256": "543f07e9161da2d0fcaf34b73bda77f8dba9f7cc3bf79c771e161c4588d29de7"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/corefinement.h",
+      "sha256": "06e4523fa5849ee6b1dd6e96e26858bba4abeca50a733b1431321685189a4ac5"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/detect_features.h",
+      "sha256": "0aa1cc6c599d536b7479953744bf7c1239af23c569025c6e5986e27ec5263f82"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/distance.h",
+      "sha256": "842ea170923b2dd42507286293d35bc42ea517b5a2e1854e345785efb19abc79"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/geometric_repair.h",
+      "sha256": "8e78b377e1544ee06847dfacd30d2ac120f4c685468f476caedc2a6f4fe8d26b"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/interpolated_corrected_curvatures.h",
+      "sha256": "afb87a60625ae4fff867322fee5bfd0f6aa29e31a5eb7a9bbd9e0f3f51c8576e"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/locate.h",
+      "sha256": "e9b331e09e91f8d1899f16eefc17e7c2255fda68cdff24a7ad362c234fc0edc3"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/measure.h",
+      "sha256": "4f77441fb5238b828eff5d98f6ee9a01e78aac627e50d4719e529b6aa89f4189"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/meshing_hole_filling.h",
+      "sha256": "200ac4180bbbf5d370ab025f52a614a7a086c238784ad6dc106731625604984c"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/miscellaneous.h",
+      "sha256": "f777983e6a6254a6dfbc605f36d0886dd8be23bf848581141542d55993185551"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/orientation.h",
+      "sha256": "51b6fbe29e17a1bea1538b452e3347da3f0c1491fcc023fb8dfb2ca3baab37f2"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing/predicate.h",
+      "sha256": "5e2c4e73559f70951ac6d4f79c96bf5d5bb3b1667e8a4aad3249d359ba814af8"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_mesh_processing.h",
+      "sha256": "fdb93c1a0dc3d399e1870e6431863c233179d3158964d9cb0fbf6f258f107407"
+    },
+    {
+      "path": "include/CGAL/license/Polygon_repair.h",
+      "sha256": "547b32209040de4642faf4d58dfb408eba349e77d07806251e8ba148dd7ed281"
+    },
+    {
+      "path": "include/CGAL/license/Polygonal_surface_reconstruction.h",
+      "sha256": "dd71d98540a090fdc205d3aad9f885b3d751d42ed63e9414d50c7278c94c5591"
+    },
+    {
+      "path": "include/CGAL/license/Polyhedron.h",
+      "sha256": "5419aa4c95a0ee014ac751512ea2c2ba9c7258717ebe9fb64515de733b875d28"
+    },
+    {
+      "path": "include/CGAL/license/Polyline_simplification_2.h",
+      "sha256": "cb1cd14333727fc89c5892dde00e0fa5f9a39b10dd4a665bb2974f124f399f66"
+    },
+    {
+      "path": "include/CGAL/license/Polytope_distance_d.h",
+      "sha256": "4d54bd9fd88ebb799ad2f294e659051f422674b223e165bf5bdd373356f21c02"
+    },
+    {
+      "path": "include/CGAL/license/Principal_component_analysis.h",
+      "sha256": "54a67019e0ae5fe5d56cfc09df54d288a704dcea5dfe4be0fab8cc26488597e0"
+    },
+    {
+      "path": "include/CGAL/license/QP_solver.h",
+      "sha256": "aeb063008f5d46d901e1326b6c65366dd34f161abffebe3d25613a34bc801fd0"
+    },
+    {
+      "path": "include/CGAL/license/Ridges_3.h",
+      "sha256": "6fd5da70ae315101df1c09f7e03bd46a409862a998e69c6acf7117b22ffce6c4"
+    },
+    {
+      "path": "include/CGAL/license/SMDS_3.h",
+      "sha256": "0ee66d75c5a9dcc55783ed8c1c74a28248fab80cf3888e61bababf7c6178edd7"
+    },
+    {
+      "path": "include/CGAL/license/Scale_space_reconstruction_3.h",
+      "sha256": "c74221557dde992f40b6da0857a7fdfea4a8bade4c4857369fa03a2b11a4d26a"
+    },
+    {
+      "path": "include/CGAL/license/SearchStructures.h",
+      "sha256": "07e3aac1e50e3cc14f9fc62c525bfae311fc4c4eeabd0860d0dbc32fe6c44432"
+    },
+    {
+      "path": "include/CGAL/license/Segment_Delaunay_graph_2.h",
+      "sha256": "c1cdfe578660c2877c893d153a19ee1c45d9e0b3f6c79dc4712401ecf79f163c"
+    },
+    {
+      "path": "include/CGAL/license/Segment_Delaunay_graph_Linf_2.h",
+      "sha256": "0f3cc290b6dc807cbf42705e463223fa20d1c238c908e765b36092537819d622"
+    },
+    {
+      "path": "include/CGAL/license/Set_movable_separability_2.h",
+      "sha256": "9048ef3bf9fa410d675f87ddcca6fa01d634738d4c53135c5c85ab5b8c163202"
+    },
+    {
+      "path": "include/CGAL/license/Shape_detection.h",
+      "sha256": "7ee6f2b69fd8cbb80bbf457b87190c93b8dea1678e9eed7ce46043c537cc1b13"
+    },
+    {
+      "path": "include/CGAL/license/Shape_regularization.h",
+      "sha256": "78a254126ef6885e916386060544339e2ce29f9721233cbba1f0c371b4b2e796"
+    },
+    {
+      "path": "include/CGAL/license/Skin_surface_3.h",
+      "sha256": "82944a3863ddac4e2b213e194851ced0f8f521db4554fa793f07462d05c6a671"
+    },
+    {
+      "path": "include/CGAL/license/Snap_rounding_2.h",
+      "sha256": "1192692bc48a625879e7e29611b400a68dc52e653bf6a1c52ba0a1e3e6ca9fa4"
+    },
+    {
+      "path": "include/CGAL/license/Spatial_searching.h",
+      "sha256": "de476ad82f385821c63be78fb5d55a86b1d273137af54d809fabb0284fe2952e"
+    },
+    {
+      "path": "include/CGAL/license/Straight_skeleton_2.h",
+      "sha256": "166f3eab58fc51b7e082894b241efcf000322a9406fc8a6d4d48add043981633"
+    },
+    {
+      "path": "include/CGAL/license/Straight_skeleton_extrusion_2.h",
+      "sha256": "5179c3325215dcc02ddb7d1472955c56ba373f06f174f39125f988739e67a33f"
+    },
+    {
+      "path": "include/CGAL/license/Stream_lines_2.h",
+      "sha256": "34024aa6864ce1bbbaa07129db3aa738e4fac8a3728638c807ce3f52b2606d5e"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh.h",
+      "sha256": "d68b9eda3d3f7e732371da69ac1edbbe2c75ae59004fcd91068f8f8e5aca6ac8"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_approximation.h",
+      "sha256": "06717eaa9bae35c5f520c7971e3afba36459685fcb5ab50b05ef78c837a3ed23"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_deformation.h",
+      "sha256": "8dd54f1c79174de74bb3ad2d66b32b2887ff06b44483f4dd57eb70072c39c713"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_parameterization.h",
+      "sha256": "f5e96d230909502aa9ffb8ea6546c9fdb187abab76a8ea512858b96177b25bc7"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_segmentation.h",
+      "sha256": "11220f9082d2932eef2167aa9f36815b65993a2ec8983ad25618247a63d5dd01"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_shortest_path.h",
+      "sha256": "d36646a1c8070eeca1c6da4f4f5ceb9c34ec0fd876b3d85cd05d4afe02983ac9"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_simplification.h",
+      "sha256": "af693325513d1594e18c910a8b3a2bcc38b962a4fac592309ca9242057b2c0c9"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_skeletonization.h",
+      "sha256": "0615ed587e6a137972daa6f147ec67949ed08dca6a2159ecbb85cbcffe461ac7"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesh_topology.h",
+      "sha256": "4b9fb005281a7a1e6c53eb0debf035a4ccc19539457697be12aa03d3346dee53"
+    },
+    {
+      "path": "include/CGAL/license/Surface_mesher.h",
+      "sha256": "9ef1bd3ae63534b6d318e4f6230618cee7335a90f5e96649870efa4d0da19e1e"
+    },
+    {
+      "path": "include/CGAL/license/Surface_sweep_2.h",
+      "sha256": "c5806377d9419ba0b0bedc1904ff62f49ad66ad65e987d82c909cdf268842dd1"
+    },
+    {
+      "path": "include/CGAL/license/TDS_2.h",
+      "sha256": "d61f1e073425cc81970fecd1eea5efb9c14f4e0bb15808e82f83f6e91c997279"
+    },
+    {
+      "path": "include/CGAL/license/TDS_3.h",
+      "sha256": "27614eea5898525285671c02dc61593c9168d735a9c3fa886bd102a41f237730"
+    },
+    {
+      "path": "include/CGAL/license/Tetrahedral_remeshing.h",
+      "sha256": "8f6972ab90246acfddef0ee089d06e2aa34bb4cde7487f93c2fac675054635fa"
+    },
+    {
+      "path": "include/CGAL/license/Three.h",
+      "sha256": "6f1f3090ba298fd8dee52a08a64c078d409bf065d4b6558b225ce81ecbb5f51c"
+    },
+    {
+      "path": "include/CGAL/license/Triangulation.h",
+      "sha256": "99a08babc1494bffa2eae7c31c940601c6f02d5c3aafa2ddbf7aac101ea30ac8"
+    },
+    {
+      "path": "include/CGAL/license/Triangulation_2.h",
+      "sha256": "b4e87a580f2e83bea8a77cc2cf113894717107ac46cb7ee805d0a27475843319"
+    },
+    {
+      "path": "include/CGAL/license/Triangulation_3.h",
+      "sha256": "43b2bfc07d27f4b2982a7b0315aaebb0e432d69169c5408596352430b6bf0665"
+    },
+    {
+      "path": "include/CGAL/license/Triangulation_on_sphere_2.h",
+      "sha256": "c347f3a382ab163412db2079aae18fb50cb7d8436309365b7551eadd69cd948a"
+    },
+    {
+      "path": "include/CGAL/license/Visibility_2.h",
+      "sha256": "cba4e0faa2230b8b1bd842d450424633f7d9e586e308b396675ba0da1e228680"
+    },
+    {
+      "path": "include/CGAL/license/Voronoi_diagram_2.h",
+      "sha256": "4ab5a9ed02cdf4c6c622f641fff096e62f1b4052c05aee5a79572d34b272be91"
+    },
+    {
+      "path": "include/CGAL/license/gpl_package_list.txt",
+      "sha256": "617affeceb7194d4047725b4cd21ede9d2336c3ada98fad10a6615f2e0910516"
+    },
+    {
+      "path": "include/CGAL/license/lgpl.h",
+      "sha256": "9052c18992357004f535dad6b22efcf3b7b0119b6c9f5f4783064e6a1a989b41"
+    },
+    {
+      "path": "include/CGAL/license.h",
+      "sha256": "0b5adb8ac8b0d5ad7b4b9afe5a1946278fead4b2105590f6243d92a8143a5688"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_3.h",
+      "sha256": "28b067f54dfe7cc482f2ac20305f72e68e2163ec03828368abf309d941b8e387"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_cuboids_3.h",
+      "sha256": "be83bbe2c4d5034f88807ff730adbc03aac82d2d049660ef7fed59d3fc57bc55"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_points_3.h",
+      "sha256": "2a2e6ba4e046bbe9bfac0497e6f2b17636ebbe744305ac239508827b522a6bd7"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_segments_3.h",
+      "sha256": "ae348cf4bd3c827494385f61f14b0fe71dcc2f9c7bfaaeea6653c8fb763f342f"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_spheres_3.h",
+      "sha256": "43f82d33f30c367b2d8686acfd0993baf4a048954c7ce8526238d6e5e90dcb40"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_tetrahedra_3.h",
+      "sha256": "b0748f9766a1ae4ff05b6e3084c6b16318ee82fa0ad369716eea90532b7706c4"
+    },
+    {
+      "path": "include/CGAL/linear_least_squares_fitting_triangles_3.h",
+      "sha256": "36969b2f88d096e854887f645db6bd61193e8c9e2302661f38029bfb6770ce38"
+    },
+    {
+      "path": "include/CGAL/lloyd_optimize_mesh_3.h",
+      "sha256": "9ae730c5682ff8a173773f498e4a38d3af1bc8dd4dbd1f1a07ae9d4e08af10ab"
+    },
+    {
+      "path": "include/CGAL/long_double.h",
+      "sha256": "09b4c60d4728b61368c6ae3a4ed0e87e6cd5756ac9401af00bd8ceedc10f724b"
+    },
+    {
+      "path": "include/CGAL/long_long.h",
+      "sha256": "07bc8a2ca1414394b5afb87cf050b583ed31ee45433d6b35ac86931c1abb3e48"
+    },
+    {
+      "path": "include/CGAL/make_mesh_3.h",
+      "sha256": "ce1c8407b5296b7ce781404b4fb7d5292a28ffa08540b33639cae351107ca87f"
+    },
+    {
+      "path": "include/CGAL/memory.h",
+      "sha256": "480834f55fe489fcd6effd38b8c8d9938e4e5d42fdf469a60ebe6bf43f1364aa"
+    },
+    {
+      "path": "include/CGAL/min_max_n.h",
+      "sha256": "d687d73c163bb9888c82935ffca126193851225bb101f80a542e19b8b68f83b2"
+    },
+    {
+      "path": "include/CGAL/mutex.h",
+      "sha256": "0a30504431719826bc29cf586965186a68fefda19b9226cb11409991ccf48b78"
+    },
+    {
+      "path": "include/CGAL/number_type_basic.h",
+      "sha256": "22435c2638e79e7c7c9a7c9c2188b38e7cc0949fc90af8e1d3c046da4d740fae"
+    },
+    {
+      "path": "include/CGAL/number_type_config.h",
+      "sha256": "33ff07b5b9252bbe521be53ca08b7d68fa1e6640fe944b149716e95fcba06c36"
+    },
+    {
+      "path": "include/CGAL/number_utils.h",
+      "sha256": "669350eaae578f301cc5b28c62129d23a41100e145139ce4d63e55c09f609059"
+    },
+    {
+      "path": "include/CGAL/number_utils_classes.h",
+      "sha256": "7206b926d0781b27662a22defdc33bf555abe306e77c03ae9da640e4c7da9cd1"
+    },
+    {
+      "path": "include/CGAL/odt_optimize_mesh_3.h",
+      "sha256": "3d914a6a7901fab25cc4a1cb683ec79e9a5ba7f04443ab0bf6f25a2597c29144"
+    },
+    {
+      "path": "include/CGAL/optimize_mesh_3.h",
+      "sha256": "9d72b03c5a7f09e23ec56b06e07d96254ee42efa9228f85320b9ec1b75d3e538"
+    },
+    {
+      "path": "include/CGAL/perturb_mesh_3.h",
+      "sha256": "b63b5cff178960873190ba58f6bed1ca1a2d6dce1c517c813fe2f02f6b49b84b"
+    },
+    {
+      "path": "include/CGAL/point_generators_2.h",
+      "sha256": "d9f948219c022e561a99a16c0a6589586649bbb7758a9fad10f0067a6b41aba8"
+    },
+    {
+      "path": "include/CGAL/point_generators_3.h",
+      "sha256": "f286477e2b01392feca094c64726d7fbb6382cdb812053511280ac7a3bb9d38b"
+    },
+    {
+      "path": "include/CGAL/predicates/kernel_ftC2.h",
+      "sha256": "2698df8ee702c8c116dd5268d0446e5b763549c411e33f362b4aa70fd8be1f39"
+    },
+    {
+      "path": "include/CGAL/predicates/kernel_ftC3.h",
+      "sha256": "741b4075430a48155321254dc0a7853464ecb74569cea57d449e8a155227fbc2"
+    },
+    {
+      "path": "include/CGAL/predicates/sign_of_determinant.h",
+      "sha256": "221b0de0555b1270a36ac242b1c2139d6258dfea0f451ccd76ec9369fc128b54"
+    },
+    {
+      "path": "include/CGAL/predicates_on_points_2.h",
+      "sha256": "7bb44dd40301fa31ec06872c5155f5801dc2ac5a303ac2d6d0724b3ed027c488"
+    },
+    {
+      "path": "include/CGAL/property_map.h",
+      "sha256": "9601d3fe61e422a576ca315e944ca53fd1271dd3d6eaf6e7b1a20c0a52d46e77"
+    },
+    {
+      "path": "include/CGAL/rank.h",
+      "sha256": "a10e81c9bfc97df6ab506e791abb8ef252301dcb396c9730e7d12595a5a1b083"
+    },
+    {
+      "path": "include/CGAL/rational_rotation.h",
+      "sha256": "aab3b52f85d64cbf9dee5193aea6106be898c1e7957d837398a87db7eb3ea3fe"
+    },
+    {
+      "path": "include/CGAL/refine_mesh_3.h",
+      "sha256": "427340e65710efb062e8a79d8c31bef55c6ac3294ffd30008629785a89c42178"
+    },
+    {
+      "path": "include/CGAL/representation_tags.h",
+      "sha256": "12727ec0ce6f9a80b6134b19369f5798c06aa566e7aca74857509ac6a0091f3e"
+    },
+    {
+      "path": "include/CGAL/spatial_sort.h",
+      "sha256": "c696d965cb455f2414f1a372038fb46e1acb53726f634ddca3276242ad4a4bf2"
+    },
+    {
+      "path": "include/CGAL/squared_distance_2.h",
+      "sha256": "1d53fbc97e670fc674c73625c45a207722221d9103f30074140792560625ac15"
+    },
+    {
+      "path": "include/CGAL/squared_distance_3.h",
+      "sha256": "3266edd41f9753628abf63c48a2aa3939af7db39ddcbade8f02c04b58d24b29a"
+    },
+    {
+      "path": "include/CGAL/tags.h",
+      "sha256": "f9cc746f18cb419beec7ec866bc8d336af5fa343c0cd6cf46efba265eda1b760"
+    },
+    {
+      "path": "include/CGAL/test_FPU_rounding_mode_impl.h",
+      "sha256": "c5a8a4f8fd70cfe1d3cfe151d01c8ba74ac9aad15199ea2a477c3a22b0bdc215"
+    },
+    {
+      "path": "include/CGAL/transforming_iterator.h",
+      "sha256": "e73376ab9e446c8a0ff4c488db3190060621ca71e41598c9add74ba156d92d1d"
+    },
+    {
+      "path": "include/CGAL/tss.h",
+      "sha256": "ee2cfae23dec82701196e861cf1761f52af5214d07382dbc6c53c70d6639163b"
+    },
+    {
+      "path": "include/CGAL/tuple.h",
+      "sha256": "71c96ce33f19a964782d84df4f028e2d1cb8af38be12550025c950d7836c460a"
+    },
+    {
+      "path": "include/CGAL/type_traits/is_iterator.h",
+      "sha256": "da6415b641136ba0dfe5a3f89736417235dd6cb59bc5aea90d1cac702b6aec94"
+    },
+    {
+      "path": "include/CGAL/type_traits.h",
+      "sha256": "5ae8cc198251e6b19567f8db8d57cb56cc45198430651fd339f3a7ffb82b1b64"
+    },
+    {
+      "path": "include/CGAL/use.h",
+      "sha256": "89369e57a3ffabc3ac333054512c7e6353b68164cf6f587cd64f9f3641cd9ae1"
+    },
+    {
+      "path": "include/CGAL/user_classes.h",
+      "sha256": "997d6ae1cd56e7da2e8fc1f81b0666b752def61ee2c4595343169f7dc58194f2"
+    },
+    {
+      "path": "include/CGAL/utility.h",
+      "sha256": "cf4b96e8537f91b90e42caebc1aacde8ca552e5bf3af62c894db0cadf0f7488b"
+    },
+    {
+      "path": "include/CGAL/utils.h",
+      "sha256": "6a8c5f72dd34ae42b0116737b7e7c846e6ead2df3b968f78bd9c18a029cd1948"
+    },
+    {
+      "path": "include/CGAL/utils_classes.h",
+      "sha256": "22d05059603aad89e6dd635966ac352c75a96f35cce0307a72f7149f075d181a"
+    },
+    {
+      "path": "include/CGAL/value_type_traits.h",
+      "sha256": "6900ace8431ffe8e3f1e414f69ad88e4f964c4abfe60fc9e00ffb88ce1fed7ce"
+    },
+    {
+      "path": "include/CGAL/version.h",
+      "sha256": "8b3f115e59c366323be4f1190357516bd552d7af84c627c84448a1c6ec489a0f"
+    },
+    {
+      "path": "include/CGAL/version_checker.h",
+      "sha256": "aeb2627cb884671db88a1b2d2be92ad2d2961762cf5560ca40c9b37f65b8a480"
+    },
+    {
+      "path": "include/CGAL/version_macros.h",
+      "sha256": "947652ef956354cb2d41bd22b6ad39a85ec88a6f3c7e3163d55a811af7b99cf0"
+    },
+    {
+      "path": "include/CGAL/wmult.h",
+      "sha256": "2b9eb82f5710a0d12e7ff80777c425d5b4e4e98e7472b6a3e4951de6c903b61c"
+    }
+  ]
+}

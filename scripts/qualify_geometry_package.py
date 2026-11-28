@@ -71,6 +71,17 @@ if 'mmg' in names:
     assert adapted.signed_volumes().min()>0
     result['native']['mmg']={'library':str(library_path()),'cells':len(adapted.cells),
         'phase_volume_errors':adapted.report['phase_volume_errors_relative_to_input_mesh']}
+if 'cgal' in names:
+    from morqex.modeling import smooth_voxels,SmoothingOptions,implicit_mesh,ImplicitMeshOptions,lower_resolution
+    from morqex.modeling.cgal_backend import library_path
+    assert library_path().resolve().is_relative_to(target)
+    # Preserve the tiny phase's continuous geometric volume; nodal labels stay
+    # unchanged. Allow a second bounded interface refinement, not looser gates.
+    prepared=smooth_voxels(model,options=SmoothingOptions(method='none',continuous_volume_calibration=True))
+    native=implicit_mesh(prepared,options=ImplicitMeshOptions(isolated=False,maximum_nodes=100000,maximum_cells=600000,maximum_quality_retries=2))
+    assert native.report['quality_limits_satisfied'] and native.report['geometry']['full_grid_retained']
+    assert native.signed_volumes().min()>0
+    result['native']['cgal']={'library':str(library_path()),'cells':len(native.cells),'quality':native.report['quality']}
 (output/'installed_smoke.json').write_text(json.dumps(result,indent=2))
 print(json.dumps({'installed_smoke_passed':True,'backends':names}),flush=True)
 '''
@@ -79,7 +90,7 @@ print(json.dumps({'installed_smoke_passed':True,'backends':names}),flush=True)
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--workspace',type=Path,default=os.environ.get('MORQEX_WORKSPACE'))
-    parser.add_argument('--backends',nargs='*',choices=['tetgen','acvd','mmg'],default=[])
+    parser.add_argument('--backends',nargs='*',choices=['tetgen','acvd','mmg','cgal'],default=[])
     parser.add_argument('--sdist',action='store_true')
     args=parser.parse_args();root=Path(__file__).resolve().parents[1]
     if args.workspace is None:parser.error('Specify --workspace or MORQEX_WORKSPACE')
@@ -91,7 +102,7 @@ def main():
     frozen=folder/'source';frozen.mkdir(parents=True)
     with tarfile.open(record['archive']) as archive:archive.extractall(frozen,filter='data')
     wheels=folder/'wheels';wheels.mkdir();env=os.environ.copy()
-    for name in ('GEOMETRY','TETGEN','ACVD','MMG'):env.pop('MORQEX_BUILD_'+name,None)
+    for name in ('GEOMETRY','TETGEN','ACVD','MMG','CGAL'):env.pop('MORQEX_BUILD_'+name,None)
     for name in args.backends:env['MORQEX_BUILD_'+name.upper()]='1'
     subprocess.run([sys.executable,'-m','pip','wheel',str(frozen),'--no-deps','--no-build-isolation',
         '--wheel-dir',str(wheels)],env=env,check=True)
@@ -103,6 +114,10 @@ def main():
         for name in required:
             if archive.read(name)!=(frozen/'src'/name).read_bytes():raise AssertionError('Wheel/source mismatch: '+name)
         files=archive.namelist()
+        cgal=json.loads((frozen/'src/morqex/vendor/cgal/provenance.json').read_text())
+        for row in cgal['files']:
+            name='morqex/vendor/cgal/'+row['path']
+            if hashlib.sha256(archive.read(name)).hexdigest()!=row['sha256']:raise AssertionError('CGAL wheel/source mismatch: '+name)
         for name in args.backends:
             if not any('/_'+name+'_native.' in p and p.endswith(('.so','.pyd')) for p in files):raise AssertionError('Native backend absent: '+name)
         if 'mmg' in args.backends and not any(p.endswith(('libmmg3d.so.5','libmmg3d.5.dylib','mmg3d.dll')) for p in files):raise AssertionError('Replaceable MMG runtime absent')
@@ -121,7 +136,7 @@ def main():
     installed=folder/'installed'
     subprocess.run([sys.executable,'-m','pip','install',str(wheel),'--no-deps','--no-compile','--target',str(installed)],env=env,check=True)
     env['PYTHONPATH']=str(installed)
-    for key in ('MORQEX_MMG_LIBRARY','MORQEX_TETGEN_LIBRARY'):env.pop(key,None)
+    for key in ('MORQEX_MMG_LIBRARY','MORQEX_TETGEN_LIBRARY','MORQEX_CGAL_LIBRARY'):env.pop(key,None)
     subprocess.run([sys.executable,'-c',SMOKE,str(installed),str(folder),json.dumps(args.backends)],cwd=folder,env=env,check=True)
     result={'passed':True,'source_snapshot':record,'wheel':str(wheel),
         'wheel_sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),

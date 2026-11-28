@@ -191,7 +191,10 @@ def capabilities():
     from .mmg_backend import library_path as mmg_library
     try:mmg={'compiled':True,'library':str(mmg_library())}
     except RuntimeError:mmg={'compiled':False,'enable':'MORQEX_BUILD_MMG=1 pip install . or build_mmg(workspace)'}
-    return {'frameworks':BACKENDS,'tetgen':tetgen,'weighted_acvd':acvd,'mmg':mmg,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
+    from .cgal_backend import library_path as cgal_library
+    try:cgal={'compiled':True,'library':str(cgal_library())}
+    except RuntimeError:cgal={'compiled':False,'enable':'MORQEX_BUILD_CGAL=1 pip install . or build_cgal(workspace, dependency_prefix=...)'}
+    return {'frameworks':BACKENDS,'tetgen':tetgen,'weighted_acvd':acvd,'mmg':mmg,'cgal_mesh3':cgal,'voxel_shape_limit':256**3,'coordinates':'ZYX arrays and SI spacing; XYZ FEM',
         'native_reconstruction':{'matlab':shutil.which('matlab'),'Rscript':shutil.which('Rscript'),
             'status':'Integrated MATLAB/R source; native execution requires original licensed runtimes and packages'},
         'optional':{name:importlib.util.find_spec(name) is not None for name in ['pyvoro','meshpy','gmsh','meshio','h5py','vtkmodules','triangle','tifffile']}}

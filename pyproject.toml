@@ -17,6 +17,7 @@ modeling = ["h5py>=3.11", "matplotlib>=3.8", "pillow>=10", "pyquaternion>=0.9.5"
 adaptive-meshing = ["h5py>=3.11", "scikit-image>=0.24", "pyquaternion>=0.9.5", "lsq-ellipse>=2.0", "meshio>=5.3"]
 multimaterial-meshing = ["vtk>=9.4,<9.7", "h5py>=3.11", "scikit-image>=0.24", "tifffile", "meshio>=5.3", "pyquaternion>=0.9.5", "lsq-ellipse>=2.0"]
 partitioned-meshing = ["vtk>=9.4,<9.7", "triangle>=20250106", "h5py>=3.11", "scikit-image>=0.24", "tifffile", "meshio>=5.3"]
+implicit-meshing = ["h5py>=3.11", "tifffile", "meshio>=5.3"]
 notebook = ["ipython>=8", "nbformat>=5", "nbclient>=0.10", "ipykernel>=6"]
 geometry = ["scikit-image>=0.24", "tifffile", "meshio", "matplotlib", "PyYAML", "edt"]
 ct = ["tifffile>=2024.1", "imagecodecs>=2024.1"]
@@ -43,7 +44,7 @@ where = ["src"]
 include = ["morqex*", "pybamm*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.html", "*.js", "*.cu", "*.pyx", "*.pxd", "*.h", "*.H", "*.hpp", "*.c", "*.cxx", "*.cpp", "*.sh", "*.pl", "*.F90", "*.yaml", "*.inputs", "CMakeLists.txt", "*.cmake", "*.in", "*.mk", "Makefile", "makefile", "JENKINSFILE*", "NOTICE", "pyproject.toml", "LICENSE", "COPYING*", "AUTHORS", "*.md", "provenance.json", "inputs*", "*.csv", "*.bib", "*.json", "*.txt", "*.rst", "*.xml", "*.m", "*.R", "*.Rd", "DESCRIPTION", "NAMESPACE"]
+"*" = ["*.html", "*.js", "*.cu", "*.pyx", "*.pxd", "*.h", "*.H", "*.hpp", "*.tcc", "*.c", "*.cxx", "*.cpp", "*.sh", "*.pl", "*.F90", "*.yaml", "*.inputs", "CMakeLists.txt", "*.cmake", "*.in", "*.mk", "Makefile", "makefile", "JENKINSFILE*", "NOTICE", "pyproject.toml", "LICENSE*", "VERSION", "COPYING*", "AUTHORS", "*.md", "provenance.json", "inputs*", "*.csv", "*.bib", "*.json", "*.txt", "*.rst", "*.xml", "*.m", "*.R", "*.Rd", "DESCRIPTION", "NAMESPACE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
